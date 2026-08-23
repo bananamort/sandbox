@@ -13,10 +13,11 @@ Implements `RBX::HitTest` — ray-vs-primitive intersection for the three legacy
 
 ## Usage
 
-Included by DrawAdorn.cpp and (UNKNOWN exactly where else) the drag/selection services that need cheap analytic picks before finer mesh tests. All math delegated to `G3D::CollisionDetection`.
+Included by `DrawAdorn.cpp` and by `App/v8datamodel/PartInstance.cpp` — whose line 1286 (`bool answer = HitTest::hitTest(getPart(), rayInPartCoords, hitPointInPartCoords, 1.0);`) is the **sole call site** in the tree, passing `gridToReal = 1.0`. All math delegated to `G3D::CollisionDetection`. Do not confuse with the separate handle-picker `HandleHitTest` in `App/util/HitTest.{h,cpp}`, which the Studio tools use.
 
 ## Gotchas
 
 - Cylinder is modeled as a capsule — includes rounded end caps, not flat cylinder caps.
-- `gridToReal` converts grid units to studs; callers must supply it (1.0 in most modern paths — UNKNOWN historical value).
+- `gridToReal` converts grid units to studs; the only real caller passes 1.0.
 - Upstream TODOs admit "big optimization possible" and "offset stuff going on" for the cylinder case.
+- Default case of the dispatch asserts then returns false — wedge/corner shapes are simply unhittable through this path.

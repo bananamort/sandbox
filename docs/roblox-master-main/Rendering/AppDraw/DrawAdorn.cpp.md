@@ -13,7 +13,7 @@ Implementation of `RBX::DrawAdorn` — the grab-bag of static drawing primitives
 - `handles2d(...)` — screen-space squares (6px rects via `camera.project`), aborts if projection is infinite.
 
 **Grids**
-- `zeroPlaneGrid(adorn, camera, studsPerBox, yLevel, smallColor, largeColor)` — the classic Studio baseplate grid. Small grid (400-stud window, fades by distance) only within `ZEROPLANE_GRID_SIZE_BASE` of the plane; large grid every `studsPerBox × 8`; both honor `FFlag::Studio3DGridUseAALines` (line3dAA vs line3d, thickness 2). Ends with red/green/blue origin rays (len 4) under `Material_SelfLitHighlight` if the frustum intersects a unit sphere at origin.
+- `zeroPlaneGrid(adorn, camera, studsPerBox, yLevel, smallColor, largeColor)` — the classic Studio baseplate grid. Small grid (400-stud window, fades by distance) only within `ZEROPLANE_GRID_SIZE_BASE` of the plane; large grid every `studsPerBox × 8`; both honor `FFlag::Studio3DGridUseAALines` (line3dAA vs line3d, thickness 2). Ends with red/green/blue origin rays (len 4) under `Material_SelfLitHighlight` if the camera frustum intersects a radius-4 sphere at origin (`camera.frustum().intersectsSphere(Vector3::zero(), 4)`).
 - `surfaceGridOnFace(prim, adorn, surfaceId, color, boxesPerStud)` — computes face bounds from primitive geometry verts then `surfaceGridAtCoord`.
 - `surfaceGridAtCoord(adorn, cF, bounds(Vector4=xmax,ymax,xmin,ymin), dirX, dirY, color, boxesPerStud)` — draws stud lines as thin cylinders (r=0.03 major, 0.01 sub-lines).
 - `circularGridAtCoord(...)` — radial tick lines around a rotation ring (`boxesPerStud` divisions).

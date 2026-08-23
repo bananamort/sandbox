@@ -1,0 +1,51 @@
+# App/include/script/ScriptContext.h
+
+## Purpose
+
+Declares `RBX::ScriptContext`, the creatable internal Service that owns every Lua VM: one global `lua_State` per security identity (`RBX::Security::COUNT_VM_Classes` states), script admission/queueing (`addScript`/`removeScript` via IScriptFilter), thread execution/resume, module require/reload machinery (local and asset-id), GC scheduling, script timeouts, stats, and the Lua-exposed globals (`wait`, `spawn`, `require`, `print`, `ypcall`, ...). Also declares `_DEBUG`-only `StackBalanceCheck` RAII guard macros. This is the heart of the scripting subsystem.
+
+## Declared API
+
+- Free function: `void registerScriptDescriptors();`
+- `extern const char* const sScriptContext;`
+- `class ScriptContext : public DescribedCreatable<ScriptContext, Instance, sScriptContext, INTERNAL_LOCAL>, public Service, public IScriptFilter`
+  - Friends: `LuaStatsItem`, `GcJob`, `WaitingScriptsJob`; later also `friend class BaseScript;`
+  - Public statics: `static const int hookCount;` bound props `propScriptsDisabled` (bool), `propLuaGcLimit`, `propLuaGcFrequency`, `propLuaGcStepSize` (int).
+  - Nested `struct ScriptStartOptions { struct LuaSyntaxError : std::runtime_error { int lineNumber; LuaSyntaxError(int, std::exception&); }; RBX::Security::Identities identity; Scripts::Continuations continuations; boost::function<std::string(const std::string&)> filter; /* may throw a LuaSyntaxError */ ScriptStartOptions(); }` — default identity `GameScript_`.
+  - Private nested:
+    - `class ScriptImpersonator : public RBX::Security::Impersonator { ScriptImpersonator(lua_State* thread); };`
+    - `struct GlobalState { lua_State* state; RunningAverage<double> gcAllocAvg; /* average lua memory allocation per luaGcFrequency in KB */ int gcCount; GlobalState(); }`
+    - `typedef boost::array<GlobalState, RBX::Security::COUNT_VM_Classes> GlobalStates;` member `globalStates;` ("separate Lua top-level states")
+    - `struct SecurityAnchor` — "An obfuscated pointer to a location near where the object was created. copying the object becomes detectable." with Wikipedia Feistel-cipher link and warning that "update" might be targeted even obfuscated. Members `size_t value[2]; FORCEINLINE void update(const void* ptr); FORCEINLINE bool checkAnchor(const void*) const;` — _WIN32-only Feistel round mixing ptr/~ptr with `RBX_BUILDSEED` and constant 20151112; non-Win32 checkAnchor returns true unconditionally.
+    - `struct WaitingThread { Lua::ThreadRef thread; shared_ptr<const Reflection::Tuple> arguments; }` + `rbx::safe_queue<WaitingThread> waitingThreads;`
+    - `struct AssetModuleInfo { enum State { NotFetchedYet=0, Fetching, Fetched, Failed }; State state; std::vector<Lua::WeakThreadRef> yieldedImporters; shared_ptr<ModuleScript> module; shared_ptr<ModelInstance> root; AssetModuleInfo(); }` + `typedef boost::unordered_map<int, AssetModuleInfo> LoadedAssetModules;` keyed by asset id.
+    - `struct ScriptStatInformation { std::string name; Instances scripts; }` + map by hash.
+  - Other private state: `Lua::WeakThreadRef commandLineSandbox;` `std::set<BaseScript*> scripts;` `RBX::Time nextPendingScripts;` `struct ScriptStart { shared_ptr<BaseScript> script; ScriptStartOptions options; }` + vectors `pendingScripts` / `loadingScripts`; `securityAnchor;` `shared_ptr<RunService> runService;` scoped_ptr `yieldEvent` ("collects all threads that have yielded, and periodically resumes them"); flags `robloxPlace`, `scriptsDisabled` ("don't run the scripts contained in BaseScript objects"), `preventNewConnection`; stats fields (`statsItem`, `collectScriptStats`, `scriptStats`, `loadedModules` set of weak ModuleScript); `int startScriptReentrancy;` timeout block: atomics `timedoutCount`/`timedout`, `Time::Interval timoutSpan` [sic] ("time allowed per heartbeat before scripts stop running (0 = none)"), `Time timoutTime`, boost thread/mutex, volatile `endTimoutThread`, `CEvent checkTimeout;` GC averages (`luaGcStartTime`, `avgLuaGcInterval`, `avgLuaGcTime`, `resumedThreads`, `throttlingThreads` "1 if threads are being deffered" [sic]); `bool statesClosed;` protected-side: `heartbeatConnection`, scoped_ptr `allocator` (LuaAllocator), jobs `gcJob`/`waitingScriptsJob`, methods `onHeartbeat`, `stepGc`, `resumeWaitingScripts(Time)`, statics `sandboxThread`, `setThreadIdentityAndSandbox`, `getThreadIdentity`, private `executeInNewThread` overload with pushArguments/readImmediateResults callbacks + optional globalStateToExecuteIn/extraGlobals/modkey, `resumeWithArgs`, callback-based `resume`, `onChangedScriptEnabled`, `onCheckTimeout`, `onHook`.
+  - Public lifecycle/config:
+    - ctor/virtual dtor; override `bool scriptShouldRun(BaseScript* script);`
+    - `static void setAdminScriptPath(const std::string& newPath);`
+    - `void setTimeout(double seconds); void setCollectScriptStats(bool);`
+    - Core/starter: `void addStarterScript(int assetId); void addCoreScript(int assetId, shared_ptr<Instance> parent, std::string name); void addCoreScriptLocal(std::string scriptName, shared_ptr<Instance> parent);`
+    - Signals: `errorSignal(string message, string callstack, shared_ptr<Instance>)` ("Experimental error signal for catching errors server-side"), `camelCaseViolation(shared_ptr<Instance>, string, shared_ptr<Instance>)` ("temporary signal used for diagnostic purposes"), `scriptErrorDetected(lua_State*)`.
+    - `void setRobloxPlace(bool); void initializeLuaStateSandbox(Lua::WeakThreadRef&, lua_State* parentState, Security::Identities); void setKeys(unsigned int scriptKey, unsigned int coreScriptModKey);`
+  - Public helpers: `Variant evaluateStudioCommandItem(const char*, shared_ptr<LuaSourceContainer>); static bool checkSyntax(const std::string& code, int& line, std::string& errorMessage); static lua_State* getGlobalState(lua_State* thread); static ScriptContext& getContext(lua_State* thread); static void printCallStack(lua_State*, std::string* output=NULL, bool dontPrint=false); static std::string extractCallStack(lua_State*, shared_ptr<BaseScript>& source, int& line);` shutdown: inline `shouldPreventNewConnections()/setPreventNewConnections()/haveStatesClosed()`, `void closeStates(bool resettingSimulation);` ("Closes down all threads") `void cleanupModules();`
+  - Script instance API ("Called by IScriptOwner implementers"): `void addScript(weak_ptr<BaseScript>, ScriptStartOptions = {}); void removeScript(weak_ptr<BaseScript>); size_t numScripts(); bool hasScript(BaseScript*);` (latter two inline)
+  - Execution ("Calls that make lua run/resume"): `void executeInNewThread(Identities, const ProtectedString&, const char* name);` overload returning `std::auto_ptr<Reflection::Tuple>` with arguments; `void executeInNewThreadWithExtraGlobals(...)` taking extra-globals map; `Reflection::Tuple callInNewThread(Lua::WeakFunctionRef& function, const Reflection::Tuple& arguments);` thread-safe `void scheduleResume(Lua::ThreadRef, shared_ptr<const Tuple> arguments);` enum `typedef enum { Success, Yield, Error } Result;` and `Result resume(RBX::Lua::ThreadRef thread, int narg);` — "Resumes the thread. Reports errors and queues yielding threads for later execution. NOTE: The caller is reponsible for balancing the stack" [sic].
+  - Stats: inline `void scriptResumedFromEvent();` `size_t getThreadCount() const; shared_ptr<const Tuple> getHeapStats(bool clearHighwaterMark); getScriptStats()` ("deprecated. Don't use it anymore"), `getScriptStatsNew()`, nested `struct ScriptStat { std::string hash; std::string name; Instances scripts; double activity; unsigned int invocationCount; }` + `void getScriptStatsTyped(std::vector<ScriptStat>& result);` inline `getAvgLuaGcTime/getAvgLuaGcInterval`; `void reloadModuleScript(shared_ptr<ModuleScript>);` inline `bool checkSecurityAnchorValid() const` (checks its own address).
+  - Lua-exposed section (public): `static void hook(lua_State*, lua_Debug*); void reportError(lua_State* thread); lua_State* getGlobalState(RBX::Security::Identities identity);`
+  - Private static C functions registered into Lua: print/doPrint/crash/tick/rbxTime/time/wait/delay/ypcall (+ instance handlers on_ypcall_success/on_ypcall_failure)/spawn/printidentity/loadfile/loadstring/notImplemented/dofile/settings/usersettings/pluginmanager/debuggermanager/loadLibrary/loadRobloxLibrary/requireModuleScript/stats/version/statsitemvalue/warn.
+  - Private require machinery: `requireModuleScriptFromInstance`, `requireModuleScriptFromAssetId`, `moduleContentLoaded`, `moduleContentLinkedSourcesResolved`, `startRunningModuleScript`, success/error continuations, `reloadModuleScriptInternal` + reload continuations, `validateThreadAccess`, `resumeImpl`; camelCase bookkeeping (`camelCaseViolationCount`, connection, `onCamelCaseViolation`); `void disassociateState(BaseScript*); bool openState(size_t idx); void closeState(lua_State*); void startScript(ScriptStart); static eraseScript(vector<ScriptStart>&, BaseScript*); void startPendingScripts(); unsigned int coreScriptModKey;`
+- `_DEBUG`-only: `class StackBalanceCheck { const int oldTop; lua_State* thread; bool cancelled; StackBalanceCheck(lua_State*); ~StackBalanceCheck(); void cancel(); }` and macros `RBXASSERT_BALLANCED_LUA_STACK(L)` / `...2(L)` / `CANCEL_BALLANCED_LUA_STACK_CHECK()` / `...CHECK2()` [BALLANCED sic] — no-ops in release.
+
+## Usage notes
+
+- Pairs with certified App/script docs (`docs/roblox-master-main/App/script/`) where resume semantics, require flows, key handling (`setKeys` → per-script vs `coreScriptModKey`) were verified claim-by-claim.
+- Certification cross-reference: `resume`'s Result contract (Success/Yield/Error) and stack-balance responsibility sit at the boundary with LuaBridge yield plumbing.
+
+## Gotchas
+
+- One VM per security identity: cross-identity calls go through separate globalStates; `getContext(thread)` walks up from coroutine to its root state.
+- `SecurityAnchor` only enforces on _WIN32 — other platforms return true unconditionally.
+- Typos are API-stable: `timoutSpan`/`timoutTime`/`endTimoutThread`, "reponsible", `RBXASSERT_BALLANCED_LUA_STACK` — do not "fix".
+- `getScriptStats()` is marked deprecated in-comment; use `getScriptStatsNew()` or `getScriptStatsTyped`.
+- `resume` requires the caller to balance the Lua stack — mismatch corrupts subsequent calls on that thread.

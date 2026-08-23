@@ -11,7 +11,7 @@ Implementation of `RBX::Draw` — the small selection/highlight adornment layer 
 - `selectionBox(part, adorn, SelectState, lineThickness=0.15f)` — SELECT_HOVER draws hover color at double thickness (only if `m_showHoverOver`); other states draw selectColor or **orange** (SELECT_? non-normal path) — see Gotchas.
 - `selectionBox(model(ModelInstance), adorn, color, thickness)` — delegates to `model.computePart()`.
 - `selectionBox(part, adorn, color, thickness)` — the real work: if camera exists and distance² − size² exceeds `(1500·thickness)²`, switches to `DrawAdorn::outlineBox` lines (cheap far-field rendering); otherwise draws 12 edge "boxes" (thin AABox slabs) with corner overlap compensation using ±highlight offsets.
-- Header also declares `selectionSquare(rect, thick)` (2D mode) — no implementation in this file (UNKNOWN: lives in a Studio-side TU or is dead).
+- Header also declares `selectionSquare(rect, thick)` (2D mode) — **dead**: no definition exists anywhere in the tree (verified by grep) and no call sites.
 
 ## Usage
 
