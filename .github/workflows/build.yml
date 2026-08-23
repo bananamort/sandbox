@@ -36,13 +36,18 @@ jobs:
         with:
           arch: x86
 
-      - name: Restore stripped Boost.Build sources (1.74.0)
+      - name: Fill stripped Boost sources from official 1.74.0 release
         shell: cmd
-        working-directory: roblox-sandbox/Library/boost
+        working-directory: ${{ github.workspace }}
         run: |
-          if not exist tools\build\src\build-system.jam (
-            rmdir /s /q tools\build
-            git clone --depth 1 --branch boost-1.74.0 https://github.com/boostorg/build tools\build
+          if not exist roblox-sandbox\Library\boost\tools\build\src\build-system.jam (
+            echo Restoring stripped Boost pieces from official 1.74.0 release
+            curl -L -o boost_1_74_0.zip https://archives.boost.io/release/1.74.0/source/boost_1_74_0.zip
+            7z x -y boost_1_74_0.zip >nul
+            robocopy boost_1_74_0 roblox-sandbox\Library\boost /E /XC /XN /XO /NFL /NDL /NP
+            if errorlevel 8 exit /b 1
+          ) else (
+            echo Boost build system present, nothing to restore
           )
 
       - name: Rebuild Boost (x86, msvc-14.3)
