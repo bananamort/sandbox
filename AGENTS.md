@@ -78,6 +78,7 @@ Tool-call read a file IN FULL before editing it or writing anything derived from
 - An INDEPENDENT reviewer subagent re-reads the sources and checks each doc claim-by-claim. Any doc that cannot be certified as read-grounded gets redone. Writer output is never trusted unread.
 - Layout mirrors the source tree under `docs/roblox-master-main/` (+ `INDEX.md` per module directory).
 - Path safety: writers verify every output path resolves under the docs root BEFORE writing. Any write that would land in the source tree is aborted and re-targeted — never "fixed" by restoring afterwards.
+- Writes are SOLO: never batch a documentation write into the same message as source reads. Three separate writer incidents have written doc content onto source files when reads and writes were interleaved; each was caught only by post-run git verification against the pristine tree. Solo writes make mis-paths impossible to miss.
 
 ## Security considerations
 
