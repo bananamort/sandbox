@@ -29,4 +29,5 @@ Consumed from outside App/script (Studio surfaces); within this module nothing c
 - builtinGlobals snapshot comes from a REAL VM's globals at analyze time — sandbox state influences lint results.
 - Deprecated-globals list documents which globals Roblox wanted gone in 2016 (incl. load/dofile/loadfile "security" stubs) — useful expectations inventory for the graft.
 - Disabled-but-present passes (LocalShadow/DotCall/Dataflow) show intended future surface; Dataflow already models Instance-property traversal via prop->getVariant on live objects (reads engine state during analysis).
+- Latent bug in the pass loop: when `StudioVariableIntellesense` is false the bound is `sizeof(passes)/sizeof(passes[0])` taken on a `std::vector` (not `.size()`), which evaluates to 1 under every mainstream STL layout — so with default flags only the FIRST pass (AnalyzerPassWarnGlobalLocal) actually executes. SameLine/MultiLine/UnknownType warnings only fire while the Intellesense flag is on.
 - The AST/lexer/parser here share names and design with upstream Luau's Luau/AST.cpp|Lexer.cpp|Parser.cpp — diffing against Luau is the fastest way to see what the graft adds.

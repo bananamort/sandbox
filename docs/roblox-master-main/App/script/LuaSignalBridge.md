@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Implements the Lua surface of Roblox events: `RBXScriptSignal` (Bridge<EventInstance>, exposing `connect`/`Connect`, `wait`/`Wait`, deprecated `connectFirst`/`connectLast`) and `RBXScriptConnection` (Bridge<rbx::signals::connection>, exposing `disconnect()` and read-only `connected`). Contains the two slot classes that translate engine signal firings into script-thread resumes — `FunctionScriptSlot` (runs a connected callback in a cached child coroutine) and `WaitScriptSlot (one-shot resume of a thread that yielded inside `signal:wait()`) — plus `EventBridge::connect/wait/disconnect`.
+Implements the Lua surface of Roblox events: `RBXScriptSignal` (Bridge<EventInstance>, exposing `connect`/`Connect`, `wait`/`Wait`, deprecated `connectFirst`/`connectLast`) and `RBXScriptConnection` (Bridge<rbx::signals::connection>, exposing `disconnect()` and read-only `connected`). Contains the two slot classes that translate engine signal firings into script-thread resumes — `FunctionScriptSlot` (runs a connected callback in a cached child coroutine) and `WaitScriptSlot (one-shot resume of a thread that yielded inside `signal:wait()`) — plus `EventBridge::connect`/`EventBridge::wait` and `SignalConnectionBridge::disconnect`.
 
 ## API
 

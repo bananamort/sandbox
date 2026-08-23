@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The server-side implementation of the `LuaVM` namespace: the only build flavor that can both compile Lua 5.1 source text (it statically compiles in lcode.c/lparser.c) and serialize compiled bytecode into the encrypted RSB1 containers (`LuaSerializer.inl` with LUAVM_SERIALIZER). Owns the process-wide encode/decode key pair used to scramble `InstructionV` values and derives the core-script transform key.
+The server-side implementation of the `LuaVM` namespace: the only build flavor that can both compile Lua 5.1 source text (it statically compiles in lcode.c/lparser.c) and serialize compiled bytecode into the encrypted RSB1 containers (`LuaSerializer.inl` with LUAVM_SERIALIZER). Owns the process-wide encode/decode key pair used to scramble serialized instruction words (`InstructionV.code[i].v`, see LuaSerializer.inl) and derives the core-script transform key.
 
 ## API
 

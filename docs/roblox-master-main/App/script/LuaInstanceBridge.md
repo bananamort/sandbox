@@ -30,7 +30,7 @@ This bridge is what makes the DataModel scriptable: registered per VM in `Script
 
 ## Gotchas
 
-- Member-function closure memoization lives in `LUA_ENVIRONINDEX` (a Roblox-patched 5.1 concept — stock Lua has no per-thread environment table usable this way); keyed by raw descriptor pointer, so identical descriptors share one closure per thread and relational comparison of methods is stable.
+- Member-function closure memoization lives in `LUA_ENVIRONINDEX` (a stock Lua 5.1 pseudo-index — the running function's environment table — repurposed here as a per-closure scratch cache); keyed by raw descriptor pointer, so identical descriptors share one closure per thread and relational comparison of methods is stable. Modern Luau removes function environments, so a graft must relocate this cache (e.g. the registry).
 - The Parent special case routes through `setParent2` (not `setParent`), checks RobloxLocked on BOTH old and new parent, and silently ignores no-op assignments; the `canSetParent` warning is commented out as spam.
 - RobloxLocked gating is inconsistent by design: plain property/event/function access only requires Plugin when the instance is RobloxLocked, but functions are additionally exempted unless the instance descends from CoreGuiService ("a service we control").
 - `on_index` tries children by name BEFORE the camelCase hack and before failing — so `part.Head` may resolve a child rather than a property, matching legacy behavior.

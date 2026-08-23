@@ -24,6 +24,6 @@ Consumed exclusively through `ScriptContext::loadLibrary`: find → miss trigger
 ## Gotchas
 
 - Library loading is intentionally synchronous-only: saveLibraryResult rejects results-count != 1 with the message "...shouldn't wait" — libraries cannot yield during definition (matching the RBXASSERT in loadLibrary).
-- Two parallel registry tables exist: `&push` caches userdata identity AND stores load-error strings (find returns them as nil+msg), while `&registerLibraryTable` holds the real member tables indexed by name. Indexing a library before its script completes hits `RBXASSERT(!lua_isnil...)` in debug and undefined behavior in release.
+- Two parallel registry tables exist: `&push` caches userdata identity AND stores load-error strings (find returns them as nil+msg), while `&registerLibraryTable` holds the real member tables indexed by name. Indexing a library whose backing table was never stored trips `RBXASSERT(!lua_isnil...)` in debug; in release the subsequent `lua_gettable` on the nil entry raises a Lua error.
 - Registry keys are lightuserdata addresses of static functions — unique per binary but fragile under any refactor that moves these symbols.
 - Errors are sticky: once an error string is cached under a name, subsequent finds keep returning nil+errormsg until the VM is torn down; there is no invalidation path.

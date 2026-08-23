@@ -20,7 +20,7 @@ Namespace `LuaVM` functions defined here:
 - `std::string getBytecodeCore(const std::string& name)` — looks up `RBX::rot13(name)` in the embedded array `gCoreScripts[]` (`struct CoreScriptBytecode { const char* name; const unsigned char* value; size_t dataSize; }`) and returns the bytes as a string; empty string if absent.
 - `boost::unordered_map<std::string, std::string> getBytecodeCoreModules()` — flattens embedded `gCoreModuleScripts[]` into a name→bytecode map.
 - `unsigned int rbxOldEncode(unsigned int i, int pc, unsigned int key)` / `unsigned int rbxDaxEncode(unsigned int i, int pc, unsigned int key)` — identity functions on the client.
-- File-local: `Proto *luaY_parser(lua_State*, ZIO*, Mbuffer*, const char*)` — replaces the stock parser: pushes "" and `luaD_throw(L, LUA_ERRSYNTAX)`, so any attempt to parse source text on a client fails.
+- Global (external linkage, replaces the stock parser for the whole binary): `Proto *luaY_parser(lua_State*, ZIO*, Mbuffer*, const char*)` — pushes "" and `luaD_throw(L, LUA_ERRSYNTAX)`, so any attempt to parse source text on a client fails.
 
 ## Usage
 

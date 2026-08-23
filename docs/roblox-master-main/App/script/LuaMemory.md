@@ -7,7 +7,7 @@ Implements `LuaAllocator`, the custom `lua_newstate` allocator used by every Rob
 ## API
 
 - Constants: `#define MEM_POOL_INCREMENT 4`, `#define MAX_NUM_MEM_POOLS 16`; `LOGGROUP(LuaMemoryPool)`; `FASTINTVARIABLE(LuaMemoryBonus, 0)`.
-- `static int getMemPoolIndex(int size)` — only sizes that are multiples of 4 AND yield index `(size - sizeof(Udata))/4 - 1` within [0,16) map to a pool; else -1.
+- `static int getMemPoolIndex(int size)` — only sizes that are multiples of 4 AND yield index `(size - sizeof(Udata))/4 - 1` in [0,16) map to a pool; anything else yields a non-pool result (the guard only tests `index < MAX_NUM_MEM_POOLS`, so sub-`sizeof(Udata)` sizes can produce values below -1 — callers therefore test `index > -1`).
 - `static size_t LuaAllocator::heapLimit` — process-wide static limit (0 = unlimited); set elsewhere (header/consumers outside this file).
 - `LuaAllocator::LuaAllocator(bool usePool)` — when pooled, creates 16 `boost::pool<>` of sizes `sizeof(Udata) + i*4`.
 - `~LuaAllocator()` — deletes pools.
@@ -24,6 +24,6 @@ Instantiated once per ScriptContext (`allocator.reset(new RBX::LuaAllocator(FLog
 
 - The memory limit discriminates by security identity at allocation time: GameScript_/RobloxGameScript_ hit the ceiling while Plugin/Studio/LocalUser identities allocate freely even past heapLimit — a sandbox-escape-relevant asymmetry.
 - Pool eligibility depends on sizeof(Udata): pool sizes shift if the VM's Udata layout changes (e.g., under a Luau graft where userdata headers differ), silently changing which sizes are pooled.
-- FInt::LuaMemoryBonus inflates ONLY non-pooled reallocations (padding for obfuscated double writes per LuaSecureDouble-style schemes); pooled paths ignore it.
+- FInt::LuaMemoryBonus inflates ONLY non-pooled reallocations; pooled paths ignore it.
 - getMemPoolIndex returns -1 for oversizes rather than clamping; the assert-balanced RBXASSERTs verify requested size matches pool granularity in debug.
 - heap accounting counts bytes requested by Lua, not pool slack — GetHeapStats numbers will diverge from actual RSS when pooling is on.

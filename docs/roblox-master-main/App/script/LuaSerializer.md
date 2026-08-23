@@ -24,7 +24,7 @@ Included only from App/script/LuaVMServer.cpp (LUAVM_SERIALIZER) and App/script/
 
 ## Gotchas
 
-- Container layout: `[0..3] scrambled hash bytes (= XXH32 adjusted against "RSB1"/multiplier)`, `[4..7] uncompressed dataSize`, `[8..] LZ4 payload`. The XOR keystream `hashbytes[i%4] + i*41` covers the entire post-magic buffer including the size field.
+- Container layout: `[0..3] scrambled hash bytes (= XXH32 adjusted against "RSB1"/multiplier)`, `[4..7] uncompressed dataSize`, `[8..] LZ4 payload`. The XOR keystream `hashbytes[i%4] + i*41` covers the ENTIRE container starting at offset 0 — including the "RSB1" magic bytes themselves, which is precisely how the deserializer recovers the hash (un-XOR the first 4 bytes against the known magic).
 - Instruction decode is multiplication by `modkey` (mod 2^32) — pairs with the encode side where keys are odd and decode keys are multiplicative inverses (see multiplicativeInverse in LuaVMServer.cpp). Any Luau graft replacing InstructionV must redefine this pipeline or ship its own container format end-to-end.
 - lineinfo is delta-coded both ways and already obfuscated upstream ("previously encoded").
 - Failure paths are deliberately opaque: deserializeFailure pushes an EMPTY error string so tampered bytecode yields no diagnostic, while still raising the HATE_INVALID_BYTECODE telemetry flag globally.
