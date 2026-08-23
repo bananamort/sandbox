@@ -1,0 +1,70 @@
+name: build
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'roblox-sandbox/App/**'
+      - 'roblox-sandbox/Base/**'
+      - 'roblox-sandbox/Network/**'
+      - 'roblox-sandbox/CSG/**'
+      - 'roblox-sandbox/Rendering/**'
+      - 'roblox-sandbox/ClientBase/**'
+      - 'roblox-sandbox/ClientShared/**'
+      - 'roblox-sandbox/Win/**'
+      - 'roblox-sandbox/WindowsClient/**'
+      - 'roblox-sandbox/RCCService/**'
+      - 'roblox-sandbox/boostlibs/**'
+      - 'roblox-sandbox/fmod/**'
+      - 'roblox-sandbox/Library/**'
+      - 'roblox-sandbox/PropertySheets/**'
+      - 'roblox-sandbox/CustomBuildRules.*'
+      - 'roblox-sandbox/Roblox.sln'
+      - '.github/workflows/build.yml'
+
+jobs:
+  windows-build:
+    runs-on: windows-latest
+    timeout-minutes: 340
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: microsoft/setup-msbuild@v2
+
+      - name: Rebuild Boost (x86, msvc-14.3)
+        shell: cmd
+        working-directory: roblox-sandbox/Library/boost
+        run: |
+          call bootstrap.bat
+          powershell -NoProfile -Command "$f='build_boost.bat'; $ws = Join-Path $env:GITHUB_WORKSPACE 'roblox-sandbox'; (Get-Content $f) -replace [regex]::Escape('D:\Roblox\Source'), $ws -replace 'msvc-14\.0','msvc-14.3' | Where-Object {$_ -notmatch '^\s*PAUSE\s*$'} | Set-Content $f"
+          type build_boost.bat
+          call build_boost.bat
+
+      - name: Build RCCService (ReleaseRcc)
+        shell: cmd
+        working-directory: roblox-sandbox
+        run: msbuild Roblox.sln -m -p:Configuration=ReleaseRcc -p:Platform=Win32 -flp:logfile=build-rcc.log;verbosity=normal
+
+      - name: Build WindowsClient (Release)
+        shell: cmd
+        working-directory: roblox-sandbox
+        run: msbuild Roblox.sln -m -p:Configuration=Release -p:Platform=Win32 -flp:logfile=build-client.log;verbosity=normal
+
+      - name: Collect binaries
+        shell: pwsh
+        run: |
+          $out = "artifacts"
+          New-Item -ItemType Directory -Force -Path $out | Out-Null
+          Get-ChildItem -Recurse -Include RCCService.exe,RobloxPlayerBetaRaw.exe | ForEach-Object { Copy-Item $_.FullName -Destination $out }
+          Get-ChildItem $out
+
+      - name: Upload artifacts and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-output
+          path: |
+            artifacts/
+            roblox-sandbox/build-rcc.log
+            roblox-sandbox/build-client.log
+          if-no-files-found: ignore

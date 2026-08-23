@@ -1,0 +1,25 @@
+name: validate
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'tools/**'
+      - 'roblox-sandbox/Roblox.sln'
+      - '.github/workflows/validate.yml'
+
+jobs:
+  prune-manifest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Prune manifest
+        run: python3 tools/verify_prune.py roblox-sandbox
+      - name: Solution surgery idempotency
+        run: |
+          python3 tools/slim_sln.py roblox-sandbox/Roblox.sln | tee /tmp/slim.out
+          grep -q "0 removed" /tmp/slim.out
+          grep -q "CHECK_OK" /tmp/slim.out
