@@ -115,28 +115,34 @@ def main():
 
     kept_pairs = [(c, p) for c, p in nested_pairs if c not in removed and p not in removed]
 
+    # Rebuild the nested section from validated pairs only. Filtering the
+    # original lines by regex proved lossy (MSB5023 orphan survived); a GUID
+    # referenced by a nested line may not have its own Project block at all,
+    # so every pair must reference a SURVIVING block, by construction.
+    surviving_guids = {b["guid"] for b in blocks if b["guid"] not in removed}
+    final_pairs = [(c, p) for c, p in kept_pairs
+                   if c in surviving_guids and p in surviving_guids]
+
     # Rebuild.
     out = []
     removed_block_lines = 0
     removed_cfg_lines = 0
-    removed_nested_lines = 0
+    removed_nested_lines = len(nested_pairs) - len(final_pairs)
     skip_until = -1
-    nest_i = 0
-    kept_pairs_by_child = dict(kept_pairs)
     for i, line in enumerate(lines):
         if i <= skip_until:
             continue
         in_cfg = cfg_start is not None and cfg_start < i < cfg_end
-        in_nest = nest_start is not None and nest_start < i < nest_end
+        if i == nest_start:
+            out.append(line)
+            for c, p in final_pairs:
+                out.append(f"\t\t{c} = {p}")
+            skip_until = nest_end - 1  # footer line emitted next iteration
+            continue
         if in_cfg:
             m = re.search(r"\{([0-9A-Fa-f-]+)\}", line)
             if m and "{" + m.group(1).upper() + "}" in removed:
                 removed_cfg_lines += 1
-                continue
-        if in_nest:
-            m = re.match(r"\s*(\{[^}]+\})\s*=\s*\{[^}]+\}", line)
-            if m and "{" + m.group(1).upper() + "}" in removed:
-                removed_nested_lines += 1
                 continue
         block = next((b for b in blocks if b["start"] == i), None)
         if block is not None:
@@ -147,6 +153,35 @@ def main():
         out.append(line)
 
     new_raw = eol.join(out) + eol
+
+    # Post-write structural check on the EMITTED text: every GUID referenced
+    # by a NestedProjects line must have its own Project block (MSB5023 guard).
+    out_lines = new_raw.splitlines()
+    emitted_block_guids = set()
+    emitted_nested = []
+    sec = None
+    for line in out_lines:
+        s = line.strip()
+        if s.startswith("GlobalSection("):
+            sec = s.split("(", 1)[1].split(")", 1)[0]
+        elif s == "EndGlobalSection":
+            sec = None
+        elif line.startswith("Project("):
+            m = PROJECT_LINE.match(line)
+            if m:
+                emitted_block_guids.add("{" + m.group(2).upper() + "}")
+        elif sec == "NestedProjects":
+            m = re.match(r"(\{[^}]+\})\s*=\s*(\{[^}]+\})", s)
+            if m:
+                emitted_nested.append((m.group(1).upper(), m.group(2).upper()))
+    orphans = [(c, p) for c, p in emitted_nested
+               if c not in emitted_block_guids or p not in emitted_block_guids]
+    if orphans:
+        print("FATAL: nested-section references to nonexistent projects remain:")
+        for c, p in orphans:
+            print(f"  {c} = {p}")
+        return 1
+
     sln.write_bytes(new_raw.encode("utf-8"))
 
     survived_projects = sum(1 for b in blocks if b["type"] == "project" and b["guid"] not in removed)
@@ -166,6 +201,7 @@ def main():
     print(f"projects: {survived_projects} kept, {len(removed)} removed "
           f"(incl. {survived_folders} solution folder(s))")
     print(f"lines removed: {removed_block_lines} block / {removed_cfg_lines} config / {removed_nested_lines} nested")
+    print(f"NESTED_OK: {len(emitted_nested)} pairs, all reference existing projects")
     print("CHECK_OK: no surviving project references a deleted tree")
     return 0
 
