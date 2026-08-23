@@ -30,7 +30,7 @@ This space turns the 2016 Roblox engine (`roblox-master-main/`) into a **sandbox
 macOS side (analysis, prune, solution surgery):
 
 ```sh
-# verify prune manifest (after T5 exists)
+# verify prune manifest (workstream 1)
 python3 tools/verify_prune.py roblox-sandbox/
 # slim solution (idempotent)
 python3 tools/slim_sln.py roblox-sandbox/Roblox.sln
@@ -39,7 +39,7 @@ python3 tools/slim_sln.py roblox-sandbox/Roblox.sln
 CI — GitHub Actions (the ONLY place the sandbox ever compiles or runs):
 
 ```yaml
-# roblox-sandbox/.github/workflows/build.yml (added in T6)
+# .github/workflows/build.yml at repo root (workstream 2)
 # runs-on: windows-latest        # VS2022 / v143 / Win SDK preinstalled
 # steps: rebuild Boost (msvc-14.3, address-model 32)
 #     -> msbuild Roblox.sln /p:Configuration=ReleaseRcc /p:Platform=Win32
@@ -54,10 +54,10 @@ Linux/Wine runtime (later phases): a second `ubuntu-latest` job adds wine prefix
 
 A phase is not done until its gate passes — link/run gates execute **in CI, never locally**; never report partial gates as complete:
 
-- **Prune (T5)**: manifest diff clean; slimmed `.sln` opens in VS2022 with zero unavailable-project dialogs.
-- **Build enablement (T6)**: `ReleaseRcc|Win32` and `Release|Win32` link successfully → `RCCService.exe` + `RobloxPlayerBetaRaw.exe`; `-Console` smoke-run OK.
-- **Luau graft (T4) / instrumentation (T1)**: globals-inventory dump identical pre/post graft; environment parity checklist passes; hooks emit logs on known-good test scripts.
-- **E2E (T3)**: real obfuscated targets reconstruct meaningfully; anti-probe smoke tests pass under Wine.
+- **1 Prune**: manifest diff clean; slimmed `.sln` opens in VS2022 with zero unavailable-project dialogs.
+- **2 Build enablement**: `ReleaseRcc|Win32` and `Release|Win32` link successfully → `RCCService.exe` + `RobloxPlayerBetaRaw.exe`; `-Console` smoke-run OK.
+- **3 Luau graft / 4 instrumentation**: globals-inventory dump identical pre/post graft; environment parity checklist passes; hooks emit logs on known-good test scripts.
+- **6 End-to-end validation**: real obfuscated targets reconstruct meaningfully; anti-probe smoke tests pass under Wine.
 
 ## Code style
 
@@ -65,6 +65,17 @@ A phase is not done until its gate passes — link/run gates execute **in CI, ne
 - Comments sparse and why-only. No narration of tasks, fixes, or callers in code.
 - Modifications stay additive and localized to mapped hot-spots. No drive-by refactors, no new abstractions, no speculative error handling.
 - New tooling (prune/slim/harness scripts) lives in `tools/`, Python 3 stdlib only.
+
+## Reading before writing
+
+Tool-call read a file IN FULL before editing it or writing anything derived from it — documentation, summaries, edits, all of it. No exceptions, including files touched earlier in the same session.
+
+## Documentation (workstream 7)
+
+- Docs are written by SUBAGENTS only: one writer per module, never the orchestrator (context rot). Writers read every source file completely via tool calls BEFORE emitting any `.md`.
+- Every claim in a doc must be grounded in the source text; anything undetermined is marked `UNKNOWN:` — speculation is deleted on sight.
+- An INDEPENDENT reviewer subagent re-reads the sources and checks each doc claim-by-claim. Any doc that cannot be certified as read-grounded gets redone. Writer output is never trusted unread.
+- Layout mirrors the source tree under `docs/roblox-master-main/` (+ `INDEX.md` per module directory).
 
 ## Security considerations
 

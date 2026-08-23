@@ -65,13 +65,13 @@ Logging cannot be disabled from inside the sandboxed environment.
 
 ## Pipeline and gates
 
-T5 prune → T6 enablement → T4 graft ∥ T1 instrumentation → T2 Wine runtime → T3 validation.
+Workstreams are numbered by execution order. Gates are pass/fail; link and run gates execute in CI only.
 
-Gates are pass/fail; link and run gates execute in CI only.
+- **1 Prune**: manifest diff clean; slimmed `.sln` parses with zero unavailable projects
+- **2 Build enablement**: CI links `ReleaseRcc|Win32` and `Release|Win32` into `RCCService.exe` + `RobloxPlayerBetaRaw.exe`; `RCCService -Console` smoke-runs
+- **3 Luau graft**: globals-inventory dump identical before and after; era test corpus compiles and runs under Luau
+- **4 Instrumentation**: hooks emit expected event streams on known-good scripts; parity checklist shows no behavioral delta
+- **5 Wine runtime**: harness runs headless under Xvfb; proxy intercepts all egress
+- **6 End-to-end validation**: real obfuscated targets reconstruct; anti-probe suite passes; probes that detect the sandbox are logged as fidelity findings
 
-- T5: manifest diff clean; slimmed `.sln` parses with zero unavailable projects
-- T6: CI links `ReleaseRcc|Win32` and `Release|Win32` into `RCCService.exe` + `RobloxPlayerBetaRaw.exe`; `RCCService -Console` smoke-runs
-- T4: globals-inventory dump identical before and after; era test corpus compiles and runs under Luau
-- T1: hooks emit expected event streams on known-good scripts; parity checklist shows no behavioral delta
-- T2: harness runs headless under Xvfb; proxy intercepts all egress
-- T3: real obfuscated targets reconstruct; anti-probe suite passes; probes that detect the sandbox are logged as fidelity findings
+Order: **1 → 2 → (3 ∥ 4) → 5 → 6**, with **7 Documentation** running as a parallel track: every kept first-party file gets a verbatim-grounded `.md` under `docs/roblox-master-main/` before surgery touches its area. Writer subagents read sources in full via tool calls before writing anything; independent reviewer subagents verify every claim against the sources, and any doc that fails certification is redone.
