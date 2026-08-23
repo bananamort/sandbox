@@ -44,7 +44,7 @@ jobs:
             echo Restoring stripped Boost pieces from official 1.74.0 release
             curl -L -o boost_1_74_0.zip https://archives.boost.io/release/1.74.0/source/boost_1_74_0.zip
             7z x -y boost_1_74_0.zip >nul
-            robocopy boost_1_74_0 roblox-sandbox\Library\boost /E /XC /XN /XO /NFL /NDL /NP
+            robocopy boost_1_74_0 roblox-sandbox\Library\boost /E /NFL /NDL /NP
             if errorlevel 8 exit /b 1
             exit /b 0
           ) else (
