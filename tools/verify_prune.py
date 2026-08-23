@@ -6,6 +6,7 @@ Usage: python3 tools/verify_prune.py <path/to/roblox-sandbox>
 Asserts every pruned path is gone and every required path (build graph,
 trap set, runtime data) survives. Exits 1 listing violations.
 """
+import re
 import sys
 from pathlib import Path
 
@@ -80,6 +81,21 @@ def main():
         seen_required.add(key)
         if not (root / key).exists():
             errors.append(f"MISSING (required): {key}")
+
+    # Solution integrity: no project in Roblox.sln may root into a pruned
+    # top-level directory. Catches orphan Project blocks whose directories
+    # are already gone from disk.
+    absent_roots = {rel.strip("/\\").lower() for rel in ABSENT if "." not in rel}
+    sln = root / "Roblox.sln"
+    if sln.exists():
+        proj_re = re.compile(r'^Project\("[^"]+"\)\s*=\s*"[^"]*",\s*"([^"]+)"')
+        for line in sln.read_text(encoding="utf-8-sig", errors="surrogateescape").splitlines():
+            m = proj_re.match(line)
+            if not m:
+                continue
+            first_seg = m.group(1).replace("/", "\\").split("\\")[0].strip().lower()
+            if first_seg in absent_roots:
+                errors.append(f"SLN ORPHAN: {m.group(1)}")
     if errors:
         print(f"VERIFY_FAILED: {len(errors)} violation(s)")
         for e in errors:

@@ -32,7 +32,8 @@ DELETE_PREFIXES = [
     "settingscomparisontool\\", "simulationtestutility\\", "studioplugins\\",
     "windowsclient.prepforupload\\", "xboxclient\\", "app.unittest\\",
     "app.unittest.lib\\", "app.unittest.run\\", "base.unittest\\",
-    "base.unittest.lib\\", "base.unittest.run\\", "robloxtest\\",
+    "base.unittest.lib\\", "base.unittest.run\\",
+    "robloxtest.", "robloxtest\\",
     "refreshpolicies\\", "cmake\\", "rendering\\shadercompiler\\",
     "boostlibs\\boost.test.vcxproj",
 ]
