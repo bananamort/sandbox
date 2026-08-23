@@ -56,7 +56,7 @@ jobs:
         working-directory: roblox-sandbox/Library/boost
         run: |
           call bootstrap.bat
-          powershell -NoProfile -Command "$f='build_boost.bat'; $ws = Join-Path $env:GITHUB_WORKSPACE 'roblox-sandbox'; (Get-Content $f) -replace [regex]::Escape('D:\Roblox\Source'), $ws -replace 'msvc-14\.0','msvc-14.3' | Where-Object {$_ -notmatch '^\s*PAUSE\s*$'} | Set-Content $f"
+          powershell -NoProfile -Command "$f='build_boost.bat'; $ws = Join-Path $env:GITHUB_WORKSPACE 'roblox-sandbox'; (Get-Content $f) -replace [regex]::Escape('D:\Roblox\Source'), $ws -replace 'msvc-14\.0','msvc-14.3' -replace 'b2 stage','b2 stage --address-model=32 --architecture=x86' | Where-Object {$_ -notmatch '^\s*PAUSE\s*$'} | Set-Content $f"
           type build_boost.bat
           call build_boost.bat
 
