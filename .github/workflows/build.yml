@@ -31,6 +31,11 @@ jobs:
 
       - uses: microsoft/setup-msbuild@v2
 
+      - name: Initialize MSVC x86 developer environment
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x86
+
       - name: Rebuild Boost (x86, msvc-14.3)
         shell: cmd
         working-directory: roblox-sandbox/Library/boost
