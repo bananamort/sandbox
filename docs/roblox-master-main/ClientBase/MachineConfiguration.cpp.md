@@ -23,7 +23,7 @@ static void HandleAsyncHttp(std::string *response, std::exception *exception);  
 
 Called from `WindowsClient/Application.cpp`. Internally it pulls from two settings singletons:
 
-- `RBX::DebugSettings::singleton()` — contributes every property whose descriptor category is `"Profile"` (vertex/pixel shader model, resolution string, etc.). Before reading, it forces `setVertexShaderModel(-1)` and `setPixelShaderModel(-1)` so the reported shader models come from actual device caps rather than cached values.
+- `RBX::DebugSettings::singleton()` — contributes every property whose descriptor category is `"Profile"` (vertex/pixel shader model, resolution string, etc.). Before serializing it forces `setVertexShaderModel(-1)` and `setPixelShaderModel(-1)`; the setters are plain member stores and the `"Profile"` descriptors (`prop_getVertexShaderModel` / `prop_getPixelShaderModel`) read those members back through their getters, so the POST payload actually reports `-1` for both unless something re-populates them between the reset and serialization (nothing here does).
 - `CRenderSettingsItem::singleton()` (`RenderSettingsItem.h`) — contributes every property in category `"General"`, plus `lastGfxMode:<n>;`.
 
 On `_WIN32` it parses `debugsettings.resolution()` with `sscanf_s("%d x%d")` into a `G3D::Vector2int16 displayResolution` and takes `rendersettings.getFullscreenSize()`. Note both variables are computed but never appended to the payload — dead data on the current build.
