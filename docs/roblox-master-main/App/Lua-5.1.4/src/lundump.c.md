@@ -16,7 +16,7 @@ static void error(LoadState*, const char*); /* pushfstring + throw LUA_ERRSYNTAX
 ```
 
 ## Usage
-- Dispatched by `lua_load` when the stream starts with the compiled-chunk signature. Engine path: LuaVMServer/ScriptContext feed ProtectedString-backed binary chunks here after compiling text on an internal-core VM; the resulting protos run under the target VM's `ckey`.
+- **No live dispatch in this tree**: `ldo.c`'s `f_parser` calls `luaY_parser` unconditionally (the stock binary-sniff branch was removed), and a repo-wide grep finds NO caller of `luaU_undump` outside lundump.c itself. The loader additionally compiles only under `#ifndef LUAVM_SECURE` — so this whole file is dead code at runtime in shipping configurations; Roblox's real chunk pipeline is LuaSerializer/LuaVMServer (`rbxDaxEncode`-keyed streams deserialized engine-side). Kept for tooling/non-secure builds.
 
 ## Roblox modifications (vs stock Lua 5.1.4)
 1. **`LoadCode` allocates and reads `InstructionV`** (`luaM_newvector(S->L,n,InstructionV)`, `LoadVector(...,sizeof(InstructionV))`) instead of stock `Instruction` — chunks carry the Roblox instruction container.
@@ -28,5 +28,5 @@ static void error(LoadState*, const char*); /* pushfstring + throw LUA_ERRSYNTAX
 ## Gotchas
 - Header mismatch throws `LUA_ERRSYNTAX` ("<name>: bad header in precompiled chunk") — engine callers must be inside protected frames.
 - `sizeof(size_t)` participates in the header: 32/64-bit mixing fails loudly, good.
-- Because validation runs `luaG_checkcode(f, 0)`, obfuscated streams must either be self-validating under key 0 semantics or bypass this path; treat any change to opcode encoding as breaking undump acceptance. UNKNOWN: exact `checkcode` key semantics (see ldebug.c.md).
+- Key-0 validation RESOLVED: `luaG_checkcode(f, 0)` (line 178) is safe only because this loader exists solely in non-secure builds, where every `rbxDecode*` in lopcodes.h is a compile-time identity passthrough that ignores its key argument — validation therefore runs on plaintext structure. Under keyed (`LUAVM_SECURE && !RBX_RCC_SECURITY`) compilation, `i.v * 0 == 0` would decode every word to the constant 0 (opcode value 0 = OP_LOADBOOL under the fixed shuffle; never OP_RETURN), so `precheck` would reject every chunk — key 0 validates nothing real and is never used against keyed data. Live keyed verification happens in LuaSerializer.inl with `L->l_G->ckey`, and `luaV_execute` additionally refuses live keys < 2.
 

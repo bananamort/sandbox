@@ -39,7 +39,7 @@ LUAI_FUNC const char *luaX_token2str  (luaX tokens) /* (LexState*, int token) */
 
 ## Roblox modifications (vs stock Lua 5.1.4)
 1. Token set is stock Lua 5.1: no Luau additions (`continue`, compound-assignment ops, type-annotation tokens are absent).
-2. UNKNOWN: whether llex.c body patched (e.g. error-message scrubbing or number-literal limits) — see llex.c.md; this header shows no deltas.
+2. RESOLVED (was UNKNOWN): the only llex.c body delta is `trydecpoint` switching to `getlocaledecpoint()` (`// ROBLOX`, macro from luaconf.h); no error-message scrubbing or literal-limit changes.
 3. Indirect: strings interned by `luaX_newstring` become plain TStrings; Roblox obfuscation never touches source text, only compiled code arrays.
 
 ## Gotchas

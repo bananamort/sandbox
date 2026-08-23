@@ -4,13 +4,13 @@
 State lifecycle (`$Id: lstate.c,v 2.36.1.2`): `lua_newstate` (allocates the `LG {lua_State, global_State}` block), thread create/free (`luaE_newthread`/`luaE_freethread`), `lua_close`, stack init/teardown, and `f_luaopen` bootstrap (globals table, registry, string table, tag methods, lexer reserved words).
 
 ## API
-- Internals: `state_size(x) = sizeof(x) + LUAI_EXTRASPACE`; `fromstate(l)` / `tosate(l)…` (`tostate`) pointer arithmetic across `RobloxExtraSpace`.
+- Internals: `state_size(x) = sizeof(x) + LUAI_EXTRASPACE`; `fromstate(l)` / `tostate(l)` pointer arithmetic across `RobloxExtraSpace`.
 - `static void stack_init(lua_State *L1, lua_State *L)` — BASIC_CI_SIZE CallInfos; BASIC_STACK_SIZE+EXTRA_STACK TValues; first dummy frame.
 - `static void f_luaopen(lua_State*, void*)` — globals+registry tables, `luaS_resize(MINSTRTABSIZE)`, `luaT_init`, `luaX_init` (lexer reserved words), fixes `MEMERRMSG`, sets `GCthreshold = 4*totalbytes`.
 - `static void preinit_state(lua_State*, global_State*)`
 - `static void close_state(lua_State*)`
 - `LUA_API lua_State *lua_newstate(lua_Alloc f, void *ud)` — allocates via `f`, initializes every GC field, **`g->ckey = 0;`** then runs `f_luaopen` under `luaD_rawrunprotected`, finally `luai_userstateopen(L)` (constructs `RobloxExtraSpace`).
-- `LUA_API void lua_close(lua_State *L)` — main-thread only: close upvalues, separate udata with `__gc`, loop `callall_gcTM` under rawrunprotected until clean, `luai_userstateclose`, `close_state`.
+- `LUA_API void lua_close(lua_State *L)` — main-thread only: close upvalues, separate udata with `__gc`, loop `callallgcTM` under rawrunprotected until clean, `luai_userstateclose`, `close_state`.
 - `lua_State *luaE_newthread(lua_State *L)` — `tostate(luaM_malloc(...))`, `luaC_link(LUA_TTHREAD)`, shares `gt` (globals table) and inherits hook settings.
 - `void luaE_freethread(lua_State *L, lua_State *L1)` — `luaF_close`, `luai_userstatefree`, freestack, free memory.
 

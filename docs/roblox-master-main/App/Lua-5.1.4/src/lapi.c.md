@@ -14,7 +14,7 @@ const char *lua_tolstringsecure (lua_State *L, int idx, size_t *len);
 
 ## Usage
 - This is THE boundary every file under App/script/ uses thousands of times; signatures here are the ground truth for all bridge code.
-- `lua_tolstringsecure` is used where strings cross trust boundaries (UNKNOWN exact call sites in App/script — grep recommended before graft).
+- `lua_tolstringsecure` is used where strings cross trust boundaries — RESOLVED via grep: its only engine caller is `safe_lua_tostring` (`App/script/LuaAtomicClasses.cpp:41`, passing `NULL` for len), so the hash check gates every bridge error/log string.
 - `lua_load` still routes into `luaD_protectedparser` (which always text-parses in this tree) — binary chunks therefore enter the VM via other paths (engine serializer / LuaVMServer), NOT via `lua_load`.
 
 ## Roblox modifications (vs stock Lua 5.1.4)

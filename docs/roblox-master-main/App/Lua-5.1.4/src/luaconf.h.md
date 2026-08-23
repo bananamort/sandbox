@@ -74,7 +74,7 @@ Plus `getlocaledecpoint()` with an `__ANDROID__` constant-dot special case.
 - Included first by `lua.h`; therefore transitively by **every** Lua core/lib file.
 - The engine headers mean Lua TUs only compile inside the Roblox build (CMake target `include_directories(App/Lua-5.1.4/src)` in `App/CMakeLists.txt`).
 - `ScriptContext.cpp` reaches through `l_G` to set per-VM keys; `RobloxExtraSpace` is how script code finds its `ScriptContext*` from any `lua_State`.
-- `lua_exception` type itself lives in `ldo.h`; `RBX::base_exception` in `security/securityContext.h`.
+- `lua_exception` type itself lives in **`ldo.c`** (class definition at ldo.c:91–129, befriending `luaD_throw`/`luaD_rawrunprotected`; only expanded at `LUAI_THROW` use sites); `RBX::base_exception` in `security/securityContext.h`.
 
 ## Roblox modifications (vs stock Lua 5.1.4, symbol-level)
 1. **Engine header injection**: `boost/*`, `script/ScriptContext.h`, `security/*`, `util/ProgramMemoryChecker.h`, `rbx/Intrusive/Set.h`, `Script/LuaVM.h`, `Script/ThreadRef.h` + `#undef check` on Apple.

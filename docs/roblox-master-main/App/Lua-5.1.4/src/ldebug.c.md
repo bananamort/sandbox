@@ -22,11 +22,13 @@ void luaG_typeerror/concaterror/aritherror/ordererror/runerror/errormsg (...);
 ## Roblox modifications (vs stock Lua 5.1.4)
 1. **Every code-reading path decodes through the VM key**: `symbexec` takes an `unsigned int ckey` and wraps each fetch as `rbxDecodeOp(pt->code[pc], pc, ckey)` (position-mixed); `precheck`'s final-OP_RETURN test uses `rbxDecodeOpPartial(...).p`; `checkopenop` macro becomes `rbxDecodeOp((pt)->code[(pc)+1], (pc)+1, ckey)`; `getobjname`/`getfuncname` decode with `L->l_G->ckey`. Stock read raw words.
 2. **NEW error hook event**: `luaG_errormsg` fires `luaD_callhook(L, LUA_HOOKERROR, -1)` when `L->hookmask & LUA_MASKERROR` (bracketed `// BEGIN/END ROBLOX CHANGES`) — runs BEFORE the errfunc; requires the new `LUA_HOOKERROR`/`LUA_MASKERROR` constants (see lua.h.md).
-3. Everything else structurally stock.
+3. **`lua_getlocal` pushes the value**: stock only returns the variable NAME and touches nothing; Roblox additionally does `luaA_pushobject(L, ci->base + (n - 1))` when a name is found. Symmetrically `lua_setlocal` assigns `L->top - 1` into the local's slot and then pops it (`L->top--`) — stock neither writes nor pops. Debugger watch/set features depend on this.
+4. **`getfuncname` name-kinds extended** beyond stock CALL/TAILCALL/TFORLOOP: decoding the caller's pc gives OP_GETTABLE/OP_SELF → `"index"` (name from `kname(..., GETARG_C(i))`) and OP_SETTABLE → `"newindex"` (name from `GETARG_B(i)`); stock falls through to NULL for those opcodes.
+5. Everything else structurally stock.
 
 ## Gotchas
 - Key mismatch during validation produces failing checks ("bad code" at undump) rather than targeted errors; when porting, keep the SAME decode helpers as lvm.c or verifier and interpreter disagree.
-- Passing `ckey == 0` (as lundump.c does) only validates if `rbxDecodeOp(·,·,0)` is effectively identity — engine-shipped keyed chunks are instead verified post-load by LuaSerializer with the real key. UNKNOWN: exact semantics of decode-at-key-0 (defined in lopcodes.h.md macros).
+- Key-0 semantics RESOLVED (see lopcodes.h.md / INDEX.md): the keyed `rbxDecode*` bodies compile only under `LUAVM_SECURE && !RBX_RCC_SECURITY`; in that configuration `i.v * 0 == 0` maps EVERY word to the constant 0 (opcode value 0 = OP_LOADBOOL after the fixed shuffle), so `precheck`'s final-instruction-must-be-OP_RETURN test fails and validation rejects everything. But lundump.c's loader (the only key-0 caller) is itself compiled only when NOT `LUAVM_SECURE`, where all decoders are identity passthroughs that ignore the key — so `luaG_checkcode(f, 0)` validates plaintext structure. Engine-shipped keyed chunks are verified post-load by LuaSerializer.inl with the live `L->l_G->ckey` instead.
 - `LUA_HOOKERROR` fires inside `errormsg` while the error value sits at stack top — hooks yielding here would corrupt error propagation; Roblox's debugger yields only from COUNT/LINE hooks.
 - `currentline` returns -1 for C functions and stripped protos; message prefixes then omit position info.
 

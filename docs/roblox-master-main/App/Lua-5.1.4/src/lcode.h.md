@@ -37,7 +37,7 @@ LUAI_FUNC void luaK_patchlist/concat (...);
 ## Roblox modifications (vs stock Lua 5.1.4)
 1. **`getcode` macro changed**: stock is `(fs)->f->code[(e)->u.s.info]`; this tree appends `.v`, i.e. `Proto::code` is an array of `InstructionV` (obfuscated instruction container), not raw `Instruction`. Every backpatch site inherits the change.
 2. Operator enum order preserved ("ORDER OPR" contract intact); no new operators (no Luau compound-assign, no `!=`).
-3. UNKNOWN: whether `luaK_numberK`/constant pooling gained Roblox-specific encoding — check lcode.c.md.
+3. Constant pooling (`luaK_numberK`/`addk` dedup table) is stock — RESOLVED via lcode.c: nothing there re-keys or re-encodes constants; only instruction storage gained the `InstructionV` `.v` indirection.
 
 ## Gotchas
 - Patch lists link jumps via their own sBx payloads: patching before all list members exist corrupts control flow silently.

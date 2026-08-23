@@ -18,6 +18,6 @@ LUALIB_API int luaopen_os (lua_State *L);
 
 ## Gotchas
 - `os.date` uses a 200-byte per-conversion buffer ("should be big enough") — pathological locale output could truncate silently.
-- `os.tmpname` behavior differs by platform macro (LUA_USE_POSIX tmpnam vs mkstemp path) — see luaconf.h.
+- `os.tmpname` uses `mkstemp` when `LUA_USE_MKSTEMP` is defined (implied by `LUA_USE_POSIX` in luaconf.h), else plain `tmpnam` — see the `lua_tmpnam` block in luaconf.h.
 - `setlocale` from script would change number parsing globally for the process (interacts with llex.c decimal-point handling).
 

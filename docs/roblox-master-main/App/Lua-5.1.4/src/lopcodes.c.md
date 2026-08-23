@@ -19,7 +19,7 @@ const lu_byte luaP_opmodes[NUM_OPCODES] = { /* 38 entries, ORDER OP */ };
 
 ## Roblox modifications (vs stock Lua 5.1.4)
 1. **`luaP_opnames` guarded by `#ifndef LUAVM_SECURE`** — secure builds strip opcode names entirely (anti-reverse-engineering).
-2. **`luaP_opmodes` initializer split into five `LUAVM_SHUFFLE9(...)` + one `LUAVM_SHUFFLE2(...)` blocks with `LUAVM_SHUFFLE_COMMA`** — the build-time shuffle machinery reorders the textual entries per build so binary diffs between builds differ while semantic order stays ORDER OP.
+2. **`luaP_opmodes` initializer split into four `LUAVM_SHUFFLE9(...)` + one `LUAVM_SHUFFLE2(...)` blocks with `LUAVM_SHUFFLE_COMMA`** — the build-time shuffle machinery (fixed permutations in `App/include/script/LuaVM.h`, active exactly when `LUAVM_SECURE`) reorders the textual entries so secure and non-secure configurations produce different enum/mode orderings while each stays internally consistent with its shuffled `OpCode` enum.
 3. **Inline annotation `(cvx: added op c)` on OP_MOVE** — CVX-era note claiming OpArgU for C added; the mode bytes themselves match stock values. Treat as historical comment, not a functional change.
 4. Opcode set itself unchanged: all 38 stock 5.1 opcodes, no additions/removals.
 

@@ -11,13 +11,13 @@ int main(int argc, char* argv[]);
 ```
 
 ## Usage
-- Build tool for producing binary chunks offline. In THIS tree it is only functional in `LUAVM_COMPILER` configurations (needs the real parser linked via ldo/lparser); its output is plaintext-instruction chunks — i.e. suitable for the internal-core compile path, not directly runnable in production keyed VMs without the engine's re-keying pipeline.
+- Build tool for producing binary chunks offline. In THIS tree the compiler proper (lparser.c/lcode.c) only compiles under `LUAVM_COMPILER` (defined by App/script/LuaVMDummy.cpp / LuaVMServer.cpp); luac.exe itself is not referenced by any engine build file. As written it cannot even compile against these headers: `llimits.h` is C++-only (`InstructionP` has a constructor, no `__cplusplus` guard; luaconf.h pulls in boost headers), and `combine()`'s `f->code=luaM_newvector(L,pc,Instruction)` assigns `Instruction*` to the `LuaVMValue<InstructionV*>` field — an ill-formed conversion. Treat as vestigial stock tooling, kept for reference.
 
 ## Roblox modifications (vs stock Lua 5.1.4)
-1. **`combine` allocates code as plain `Instruction`** (`luaM_newvector(L,pc,Instruction)`) while the rest of the tree types `Proto::code` as `InstructionV*` — a latent type mismatch tolerated by the C build of this tool; emitted instructions are unkeyed.
+1. **`combine` allocates code as plain `Instruction`** (`luaM_newvector(L,pc,Instruction)`, line 131) while the rest of the tree types `Proto::code` as `LuaVMValue<InstructionV*>` — a latent type mismatch that confirms this file is not built anywhere in the Roblox tree; emitted instructions are unkeyed.
 2. Otherwise stock 5.1.4 flow (options parsing, listing levels, strip flag).
 
 ## Gotchas
-- Chunks produced here carry `ckey`-agnostic instructions: loading them into a keyed VM fails luaG_checkcode(f,0)-style validation paths or faults at dispatch — engine chunks must go through the ScriptContext/LuaSerializer pipeline instead.
+- Chunks produced here carry key-agnostic plaintext instructions: loading them into a keyed VM fails validation or faults at dispatch — engine chunks must go through the ScriptContext/LuaSerializer pipeline instead.
 - `-l` listing requires luaP_opnames (compiled out under LUAVM_SECURE, see lopcodes.c.md).
 

@@ -15,15 +15,14 @@ LUAI_FUNC int    luaU_dump   (lua_State* L, const Proto* f, lua_Writer w, void* 
 ```
 
 ## Usage
-- `lua_load` in `ldo.c` sniffs the first `LUAC_HEADERSIZE` bytes via `luaZ_read`; if they match `luaU_header` output it dispatches to `luaU_undump`, else to `luaY_parser`.
-- In this Roblox tree, plaintext source never reaches `luaY_parser` from engine callers: `App/script/LuaVMServer.cpp` compiles text with an internal-core VM keyed by `LUAVM_INTERNAL_CORE_ENCODE_KEY`/`DECODE_KEY` (641/6700417) and ships the resulting binary chunk through this path, while client VMs receive precompiled chunks decoded with their per-VM `global_State::ckey`.
+- **Not dispatched in this tree**: `ldo.c`'s `f_parser` calls `luaY_parser` unconditionally (no signature sniff, no `luaU_undump` call anywhere in the repo), and lundump.c's loader is `#ifndef LUAVM_SECURE`. Engine path instead: `App/script/LuaVMServer.cpp` compiles text with an internal-core VM keyed by `LUAVM_INTERNAL_CORE_ENCODE_KEY`/`DECODE_KEY` (641/6700417) and ships LuaSerializer-keyed binary chunks; client VMs receive them keyed by their per-VM `global_State::ckey`, deserialized engine-side. This header/lundump pair survives for tooling and non-secure builds.
 
 ## Roblox modifications (vs stock Lua 5.1.4)
-1. File content itself is stock 5.1.4 — version/format constants untouched.
-2. Semantics change arrives via `lundump.c`/`ldump.c`: dumped protos carry Roblox-opfuscated `InstructionV` arrays keyed by the dumping state's `ckey`, so a chunk is only loadable by a VM whose `ckey` matches (see lstate.h.md). UNKNOWN: whether Roblox altered `LUAC_FORMAT` to tag its own chunks (no evidence in this header; check lundump.c's `LoadHeader` for deviations).
-3. `luac.c`/`print.c` in this tree operate under `luac_c` assumptions that no longer hold for runtime chunks (they assume unobfuscated instructions).
+1. File content itself is stock 5.1.4 — version/format constants untouched (`LUAC_FORMAT` stays 0; RESOLVED: nothing in luaU_header/LoadHeader re-tags chunks).
+2. Semantics change arrives via `lundump.c`/`ldump.c` (both compiled out under `LUAVM_SECURE`) and via the engine's LuaSerializer pipeline: dumped protos carry Roblox-obfuscated `InstructionV` arrays keyed by the dumping state's key, so a chunk is only loadable by a VM whose key matches (see lstate.h.md). Note ldump.c itself references no key — the obfuscated words are simply stored as-is.
+3. `luac.c`/`print.c` in this tree operate under `luac_c` assumptions that no longer hold for runtime chunks (they assume unobfuscated instructions) and are `#ifndef LUAVM_SECURE` anyway.
 
 ## Gotchas
-- Header check is exact-match over all 12 bytes including `\x64` format byte; any drift silently routes binary data into the text parser.
-- A chunk undumped into a VM with mismatched `ckey` produces garbage instructions rather than a clean error — the decode multiply happens per-instruction at run time, not at load validation time (UNKNOWN: whether LoadFunction validates ckey; verify in lundump.c).
+- Header check is exact-match over all 12 bytes including the format byte `\x00`; any drift silently routes binary data into the text parser.
+- No load-time ckey binding exists anywhere (RESOLVED, was UNKNOWN): `LoadFunction` validates only structural integrity via `luaG_checkcode(f, 0)` — inert-key identity validation that works because the loader exists solely in non-secure builds where decoders ignore keys entirely.
 

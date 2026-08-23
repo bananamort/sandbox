@@ -14,7 +14,7 @@ Implementation of the generic input stream (`$Id: lzio.c,v 1.31.1.1`): refills t
 - `lundump.c` reads the entire bytecode header/protos through `LoadBlock`→`luaZ_read`; `llex.c` consumes source text via `zgetc`/`luaZ_lookahead`; `lauxlib.c` sets up ZIO for `lua_load`.
 
 ## Roblox modifications (vs stock Lua 5.1.4)
-None — stock 5.1.4 verbatim. Note however that in Roblox's pipeline the *content* flowing through this stream is frequently already obfuscated (`LUAVM_INTERNAL_CORE_*_KEY`-encoded chunks handled above/below this layer by `luaU_undump`+`ckey`), so plaintext assumptions about what a reader returns don't hold.
+None — stock 5.1.4 verbatim. Note however that in the engine pipeline the *content* flowing through these streams is plaintext source on internal-core compile VMs; keyed/obfuscated bytecode never crosses this layer at runtime (the in-tree `luaU_undump` path is compiled out under `LUAVM_SECURE` and is not dispatched by `lua_load` — see lundump.c.md).
 
 ## Gotchas
 - The `lua_unlock/lua_lock` pair here is significant on Win32 non-studio builds: `lua_unlock` is redefined in `luaconf.h` to run the `_ReturnAddress()` anti-tamper check (`lua_chk_ptr_rblx`) — every buffer refill crosses that tripwire.

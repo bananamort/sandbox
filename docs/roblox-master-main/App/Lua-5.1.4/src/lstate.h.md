@@ -55,5 +55,5 @@ struct lua_State {
 
 ## Gotchas
 - A thread created under one `global_State` can never migrate to another: `l_G` is set at birth and `ckey` differs per state, so bytecode decoded for one VM faults in another.
-- `g->ckey == 0` means "no valid key" — running obfuscated code then multiplies instructions by zero and corrupts dispatch; Roblox sets keys only after ProtectedString load decisions.
+- `g->ckey == 0` means "no valid key" (`LUAVM_KEY_INVALID`); 1 is `LUAVM_KEY_DUMMY`. On Win32 optimized builds `luaV_execute` refuses such states outright — `if (ckey+2 < 4) break;` exits the dispatch loop after the first fetch (falling into the end-of-loop SEH tripwire and returning), so execution silently stops rather than corrupting dispatch; other configurations only have a debug `lua_assert(ckey)`. Roblox sets real keys only after ProtectedString load decisions.
 - Because `savedpc` points into `Proto::code` (obfuscated), stack dumps must decode via the same `ckey` before printing opcodes (`print.c`/`luac.c` are build tools operating on plaintext assumptions).

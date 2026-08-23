@@ -30,6 +30,6 @@ LUAI_FUNC void           luaV_concat    (lua_State *L, int total, int last);
 
 ## Gotchas
 - `tonumber(o,n)` ASSIGNS to `o` as a side effect on success (macro trick) — reusing `o` afterwards sees the converted number.
-- `luaV_tostring` only converts actual numbers, and formats via `LUAI_NUMFFORMAT`; it does NOT call `__tostring` (that is `luaL_tolstring`'s job at the aux level).
+- `luaV_tostring` only converts actual numbers, and formats via `lua_number2str` → `LUA_NUMBER_FMT "%.14g"` (luaconf.h); it does NOT call `__tostring` — 5.1 handles that in `luaL_callmeta(L, obj, "__tostring")` inside lbaselib.c's `luaB_tostring` (no `luaL_tolstring` exists in this tree).
 - Re-entrancy: metamethods triggered inside gettable/concat can reallocate the stack — all StkId caches must use savestack/restorestack.
 

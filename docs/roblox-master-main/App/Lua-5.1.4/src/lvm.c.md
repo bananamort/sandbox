@@ -27,7 +27,7 @@ static FORCEINLINE void lua_rbx_encoding_check(lua_State* L, Instruction i);
 4. **Win32-optimized kill-switch** (guarded `_WIN32 && !_DEBUG && !_NOOPT && !RBX_TEST_BUILD && !RBX_RCC_SECURITY && !RBX_STUDIO_BUILD && !LOVE_ALL_ACCESS && !RBX_PLATFORM_DURANGO`): `if (ckey+2 < 4) break;` — invalid (0) or dummy (1) keys abort interpretation mid-loop.
 5. **Jump-target decoding**: EQ/LT/LE/TEST/TESTSET and TFORLOOP's back-jump read the NEXT instruction through `rbxDecodeOpFast(*pc, ckey)`; SETLIST's overflow count through `rbxDecodeFakeOp(*pc++, ckey)`; OP_RETURN's debug assert decodes `(ci)->savedpc - 1` — i.e. pseudo-instructions following comparison ops are also encoded.
 6. **`luaV_settable` readonly enforcement** (`// ROBLOX`): raises `"Attempt to modify a readonly table"` when `h->readonly` — but AFTER `luaH_set(L,h,key)` has already run (see Gotchas).
-7. **End-of-interpreter tripwire**: after loop exit (incl. the kill-switch break), Win32 optimized builds run `RBX::detectDllByExceptionChainTeb<2>(...)` and set `Security::hackFlag8 |= HATE_SEH_CHECK` (comment `// added to counter an exploit.`).
+7. **End-of-interpreter tripwire**: after loop exit (incl. the kill-switch break), Win32 optimized builds run `RBX::detectDllByExceptionChainTeb<2>(RBX::Security::kCheckDefault)` and on hit call `RBX::Security::setHackFlagVs<0>(RBX::Security::hackFlag8, HATE_SEH_CHECK)` (comment `// added to counter an exploit.`).
 8. `traceexec` signature changed to take `const InstructionV*`; `L->savedpc` is encoded throughout.
 9. Opcode semantics otherwise identical to stock 5.1.4 (same register windows, same result placement, same PCRYIELD returns from CALL/TAILCALL).
 

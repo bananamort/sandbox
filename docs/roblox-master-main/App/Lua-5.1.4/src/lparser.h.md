@@ -35,15 +35,15 @@ LUAI_FUNC Proto *luaY_parser (lua_State *L, ZIO *z, Mbuffer *buff, const char *n
 ```
 
 ## Usage
-- Reached from `lua_load` (ldo.c) when the input fails the binary-chunk sniff. In stock Lua this is THE compile path; in this Roblox tree:
-  - Client VMs stub it to throw `LUA_ERRSYNTAX` (no text compilation on the client).
-  - The core/internal path still compiles text (used by ScriptContext's loadstring-equivalent decisions and by LuaVMServer's key-641 internal VM).
+- Reached from `lua_load` via ldo.c's protected parser — which calls it UNCONDITIONALLY in this tree (the stock binary-chunk sniff branch was removed; there is no undump dispatch anywhere). In this Roblox tree:
+  - The whole parser body compiles only under `LUAVM_COMPILER`; client builds instead link the stub at `App/script/LuaVMClient.cpp:24`, which pushes an empty string and throws `LUA_ERRSYNTAX` — no text compilation on the client.
+  - The core/internal path still compiles text (LuaVMServer's internal VM keyed 641/6700417).
 - `App/script/ScriptAnalyzer.cpp` re-implements parsing as an embedded AST-based analyzer for linting; it does NOT call `luaY_parser`.
 
 ## Roblox modifications (vs stock Lua 5.1.4)
 1. Header content is stock 5.1.4; no added syntax kinds, no Luau-style type annotations, no compound assignment.
-2. Downstream effect: protos produced here get their `code` array obfuscated into `InstructionV` keyed by the compiling state's `ckey` before use (obfuscation applied at emit/dump time — see ldump.c.md / lopcodes.h.md).
-3. UNKNOWN: whether Roblox patched anything inside lparser.c body (verify against lparser.c.md); the public surface in this header shows zero deltas.
+2. Downstream effect: protos produced here carry plaintext code/lineinfo at emit time; obfuscation happens afterwards — `finalize()` XOR-encodes lineinfo under `LUAVM_SECURE`, and instruction keying happens only in the engine's LuaSerializer pipeline (nothing in this header or lparser.c multiplies by `ckey`).
+3. RESOLVED (was UNKNOWN): lparser.c body carries five Roblox deltas — `LUAVM_COMPILER` unit guard, dead-coded tail calls (`&& false`), `InstructionV` code-array typing, secure-build `finalize()` lineinfo encoding, and a non-secure `luaG_checkcode(f, 0)` debug assert — while the public surface in this header stays untouched.
 
 ## Gotchas
 - `expdesc.u.s.aux` doubles as "index register OR RK constant" depending on kind — misreading it corrupts indexed access codegen.

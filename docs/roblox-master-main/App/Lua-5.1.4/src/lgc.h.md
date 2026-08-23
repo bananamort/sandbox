@@ -37,7 +37,7 @@ LUAI_FUNC void   luaC_barrierback (lua_State *L, Table *t);
 
 ## Roblox modifications (vs stock Lua 5.1.4)
 1. Header content is stock 5.1.4 — no added colors, no generational mode.
-2. Interaction notes: `InstructionV` protos and `ckey` are ordinary heap objects to the collector; nothing here decodes instructions. UNKNOWN: whether lgc.c gained Roblox hooks (e.g. memory accounting for LuaMemory module) — see lgc.c.md.
+2. Interaction notes: `InstructionV` protos and `ckey` are ordinary heap objects to the collector; nothing here decodes instructions. RESOLVED (was UNKNOWN): lgc.c's only Roblox delta is the `GCTM` early-return on `Udata::may_gc == false` (see lgc.c.md); no extra memory-accounting hooks were added.
 3. The `SFIXEDBIT` "main thread only" semantics matter because Roblox runs many `global_State`s, each with its own super-fixed mainthread.
 
 ## Gotchas

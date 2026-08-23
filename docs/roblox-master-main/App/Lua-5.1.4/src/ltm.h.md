@@ -20,7 +20,7 @@ typedef enum {
 - `void luaT_init(lua_State*)`
 
 ## Usage
-`fasttm` is used by `lvm.c` (GETTABLE/arithmetic), `lvm.h` (`luaV_index`, `luaV_getnotm`...), `ltable.c`, `ldo.c` (`__call`), `lgc.c` (`TM_GC` finalization), `lapi.c`.
+`fasttm` is used by `lvm.c` (GETTABLE/arithmetic), `ltable.c`, `ldo.c` (`__call` via `tryfuncTM`), `lgc.c` (`TM_GC` finalization), `lapi.c`, `lbaselib.c`.
 
 ## Roblox modifications (vs stock Lua 5.1.4)
 The `TMS` enumerator order is wrapped in `LUAVM_SHUFFLE4/7/5(LUAVM_SHUFFLE_COMMA, …)` — with `LUAVM_SECURE` the numeric values of `TM_INDEX…TM_CALL` differ from stock and between builds. Constraint preserved: `TM_EQ` remains the last "fast access" tag method and the stock `/* ORDER TM */` contract (eventname array in `ltm.c` must match enum order) still holds because both sides are shuffled identically.

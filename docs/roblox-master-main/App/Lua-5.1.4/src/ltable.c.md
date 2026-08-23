@@ -20,7 +20,7 @@ int    luaH_getn (Table *t);
 
 ## Usage
 - Backs every table operation in the VM and C API; Roblox bridge code touches it directly only through luaH_* calls (e.g. LuaInstanceBridge memoization tables).
-- `luaH_set*` reset `t->flags = 0`, invalidating cached metamethod lookups (`fasttm`) — next access re-reads metatables.
+- `luaH_set` resets `t->flags = 0`, invalidating cached metamethod lookups (`fasttm`) — next access re-reads metatables; NOTE this is stock asymmetry: `luaH_setnum`/`luaH_setstr` do NOT touch `flags`.
 
 ## Roblox modifications (vs stock Lua 5.1.4)
 1. **`luaH_new` initializes the NEW `readonly` field to 0** (`// ROBLOX`) — the flag consumed by lapi.c/lvm.c write guards lives on every Table.

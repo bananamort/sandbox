@@ -22,7 +22,7 @@ void   luaC_barrierback (lua_State *L, Table *t);
 - Finalizers (`__gc`) run from `luaC_callGCTM` between normal VM steps — Roblox bridge userdata rely on ordering here.
 
 ## Roblox modifications (vs stock Lua 5.1.4)
-1. **`GCTM` honors a NEW `Udata::may_gc` flag** (`// ROBLOX:`): if false, returns before invoking the `__gc` metamethod (the udata has already been relinked/whitened, so it just skips finalization). Lets the engine pin bridge objects (e.g. during shutdown or script-held instances) from being finalized. UNKNOWN: all engine setters of `may_gc` (declared in lobject.h; grep App/script for assignments).
+1. **`GCTM` honors a NEW `Udata::may_gc` flag** (`// ROBLOX:`): if false, returns before invoking the `__gc` metamethod (the udata has already been relinked/whitened, so it just skips finalization). Lets the engine pin bridge objects (e.g. during shutdown or script-held instances) from being finalized. Setters RESOLVED via repo-wide grep: `may_gc` is set true only at creation (lstring.c:107) and false in exactly one place — `luaB_newproxy` (lbaselib.c:437); engine code relies on that default.
 2. Everything else is byte-for-byte stock 5.1.4 collector logic.
 
 ## Gotchas

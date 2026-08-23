@@ -4,7 +4,7 @@
 Core object-layout header: `TValue` tagged values, GC object headers, `TString`/`Udata`/`Proto`/`UpVal`/`Closure`/`Table` structures and their accessor macros. This is where Roblox's structural hardening is most visible: **field order shuffling**, **pointer-obfuscating `LuaVMValue<T>` wrappers**, **encrypted doubles (`LuaSecureDouble`)**, the `InstructionV*` bytecode array, and the `Table::readonly` flag.
 
 ## API
-Tags: `LAST_TAG (LUA_T___COUNT-1)`, `NUM_TAGS`; internal tags `LUA_TPROTO/LUA_TUPVAL/LUA_TDEADKEY`. `CommonHeader` = `GCObject *next; lu_byte tt; lu_byte marked;` (tt/marked order subject to `LUAVM_SHUFF2`). `GCheader`, `GCObject` union (defined in `lstate.h`).
+Tags: `LAST_TAG (LUA_T___COUNT-1)`, `NUM_TAGS`; internal tags `LUA_TPROTO/LUA_TUPVAL/LUA_TDEADKEY`. `CommonHeader` = `GCObject *next; lu_byte tt; lu_byte marked;` (tt/marked order subject to `LUAVM_SHUFFLE2`). `GCheader`, `GCObject` union (defined in `lstate.h`).
 
 **Value/TValue**: `union Value { GCObject *gc; void *p; lua_Number n | LuaSecureDouble n; int b; }`; `struct lua_TValue { Value value; int tt; }`.
 Type tests: `ttisnil/number/string/table/function/boolean/userdata/thread/lightuserdata`, `ttype(o)`, accessors `gcvalue/pvalue/nvalue/rawtsvalue/tsvalue/rawuvalue/uvalue/clvalue/hvalue/bvalue/thvalue`, `l_isfalse`, debug helpers `checkconsistency/checkliveness`, setters `setnilvalue/setnvalue/setpvalue/setbvalue/setsvalue/setuvalue/setthvalue/setclvalue/sethvalue/setptvalue/setobj` + aliases (`setobjs2s`, `setobj2s`, `setsvalue2s`, …), `setttype`, `iscollectable(o) = ttype(o) >= LUA_TSTRING`.
@@ -62,7 +62,7 @@ Hash/util: `lmod(s,size)` (power-of-2 mask), `twoto(x)`, `sizenode(t)`, `luaO_ni
 1. **Field-order obfuscation**: nearly every structure's fields are wrapped in `LUAVM_SHUFFLE2/3/6/7/9(;)` from `App/include/script/LuaVM.h` — under `LUAVM_SECURE` compiled field order differs from source and from stock (e.g. `CommonHeader` puts `marked` before `tt`; `TString` puts `len` before `hash`).
 2. **NEW template `LuaVMValue<T>`** wrapping pointer/hash/function fields (`Proto::k/code/p/lineinfo/locvars/upvalues/source`, `Table::metatable/array/node`, `CClosure::f`, `LClosure::p`, `Udata::metatable/env`, `TString::hash`): under `LUAVM_SECURE` stores `value - this` and returns `storage + this` (pointer-delta encoding; documented as unsafe for `float`).
 3. **`LuaSecureDouble`**: `Value::n` becomes an encrypted double type on `_WIN32` and macOS non-iOS **non-studio** builds (line 62 condition) — numeric payloads at rest are not plaintext IEEE doubles.
-4. `Proto::code` is `LuaVMValue<InstructionV*>*` (stock: plain `Instruction*`) — ties into `llimits.h` `InstructionV` + per-VM `ckey` decode.
+4. `Proto::code` is `LuaVMValue<InstructionV *>` (stock: plain `Instruction*`) — ties into `llimits.h` `InstructionV` + per-VM `ckey` decode.
 5. **NEW `bool may_gc`** in `Udata` (`// ROBLOX`).
 6. **NEW `lu_byte readonly`** in `Table` (comment: *"ROBLOX patch to Lua. search code for readonly"*).
 7. Tag arithmetic derives from shuffled enum (`LAST_TAG = LUA_T___COUNT-1`).

@@ -15,13 +15,12 @@ LUAI_FUNC int luaU_dump (lua_State* L, const Proto* f,
 ```
 
 ## Usage
-- This is how compiled text becomes shippable binary chunks in the engine pipeline: an internal-core VM compiles script text (key 641 path), then dump hands the Proto to a memory writer whose buffer goes to ProtectedString storage; clients later undump it into per-VM-keyed states.
+- **No engine callers**: repo-wide grep finds no caller of `luaU_dump` outside ldump.c itself; Roblox's real pipeline is `LuaSerializer::serialize` (+`rbxDaxEncode`, key 641) writing ProtectedStrings directly. Like lundump.c's loader, the dump body compiles only under `#ifndef LUAVM_SECURE`, so this file is tooling/non-secure-only.
 - Format written here must match lundump.c's reader byte-for-byte (`DumpInt` = 4 bytes native-endian, strings length+1 including trailing NUL).
 
 ## Roblox modifications (vs stock Lua 5.1.4)
 1. **Everything except `DumpHeader` is wrapped in `#ifndef LUAVM_SECURE`** — secure builds emit only the header from `luaU_dump` (status stays 0), i.e. dumping is disabled in production/secure configurations.
-2. **Code dumped via `sizeof(Instruction)`**: in this tree `Instruction` is the Roblox value type (see lopcodes.h.md — `InstructionV` union with `.v`); the dumped payload is therefore the obfuscated instruction stream of the compiling VM, not stock words.
-3. UNKNOWN: whether the writer callback in engine use post-processes the buffer further (e.g. re-keying ckey) — that logic would live in App/script callers, not here.
+2. **Code dumped via `sizeof(Instruction)` from the `InstructionV` array**: `f->code` is `InstructionV*` but the stride used is plain `sizeof(Instruction)` (works because `struct InstructionV { Instruction v; }` has identical size/layout). In non-secure builds nothing ever encoded the words, so the payload is plaintext stock-format code; keyed obfuscation happens only in LuaSerializer, not here.
 
 ## Gotchas
 - No byte-swapping: chunks are only portable between same-endian, same-`sizeof(int)`/`sizeof(lua_Number)` platforms (stock limitation, unchanged).
