@@ -76,7 +76,7 @@ namespace std
 #endif
 
 #ifdef _WIN32
-static void MicroProfileDebugPrintf(const char* format, ...)
+void MicroProfileDebugPrintf(const char* format, ...)
 {
     char message[256];
 
