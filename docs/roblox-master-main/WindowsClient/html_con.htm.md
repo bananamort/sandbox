@@ -10,8 +10,8 @@ Plain HTML fragment (no DOCTYPE, uppercase legacy tags). Body text verbatim: "Co
 
 ## Usage
 
-Paired with html_can.htm as the two local HTML assets of WindowsClient; loaded by the same browser-host plumbing.
+The only one of the two HTML assets actually wired into the build: `WindowsClient.rc:143` maps it to HTML resource `IDR_HTML_CONTACTINGSERVER` (ID 114 in resource.h), so it compiles into the exe as a Win32 HTML resource. `html_can.htm` has NO such wiring (orphan — see its doc).
 
 ## Gotchas
 
-- Filename "con" collides with the DOS reserved device name CON — tools that extract/copy this tree to certain Windows filesystem contexts can choke on `html_con.htm`? No: reserved names apply to base names like `con.*`; `html_con` is safe. The real hazard is only cosmetic confusion with html_can.htm.
+- Filename "con" invites confusion with the DOS reserved device name CON, but reserved names apply only to bare base names like `con.*`; `html_con.*` is safe on Windows filesystems. The practical hazard is merely mix-ups with the similarly named (and unwired) html_can.htm.

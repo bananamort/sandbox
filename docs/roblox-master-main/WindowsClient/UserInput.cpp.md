@@ -35,5 +35,5 @@ Per-frame flow: TaskScheduler → RenderJob/renderStep side-band earlyRenderSign
 - Alt+F4 inside the game posts WM_CLOSE directly — bypasses any quit confirmation.
 - `doWrapHybrid` and `doDiagnostics` are dead (empty body / no callers in this file; doDiagnostics is private).
 - WM_CALL_SETFOCUS (WM_USER+187) is posted constantly on mouse clicks; UNKNOWN where it is consumed in this module (not handled in View.cpp/main.cpp dispatch shown) — likely Document or legacy.
-- RBX_DI_BUFFER_SIZE=2048 stack arrays of DIDEVICEOBJECTDATA (~16 bytes each) per call ≈ 32 KB stack per device per frame.
+- RBX_DI_BUFFER_SIZE=2048 stack arrays of DIDEVICEOBJECTDATA (5 DWORD-sized members = 20 bytes on x86) per call ≈ 41 KB stack per device per frame.
 - Sensitivity uses fractional accumulation; changing getMouseSensitivity mid-session leaves residue in previousCursorPosFraction.

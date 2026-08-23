@@ -15,16 +15,16 @@ Real signatures:
   4. Patch pass 1: write diffLocation into the aligned maskAddr slot; if useImageInfo also write `imageBase = 0x00401000` and `imageSize = codeLen`; rewrite the exe.
   5. Re-run with buffer2.bin; read the freshly calculated goldHashValue from codeLen offset.
   6. Patch pass 2: write goldHashValue into the aligned goldHash slot, rewrite, run again dumping buffer3.bin; require `goldHashValue == cmpBufferGold[codeLen..]` AND `== cmpBufferGold[codeLen+4..]` else "Error, golden hash didn't work!". Exit 0.
-- Helpers: `int readFile(const char*, std::vector<char>&)` (−1 on open failure); `int writeFile(const char*, const std::vector<char>&)` (opens with `std::ifstream::binary` mode flag on an ofstream — verbatim bug that happens to work since the value equals the desired ios_base::binary bit pattern... actually it compiles because the numeric constant matches; flagged as quirk); `std::string getFileName(sysPath, fileName)` joins with `\`; `std::string setCommand(...)` builds `<path>\<exe> -w 195936478 --globalBasicSettingsPath <file>`; `size_t findAndSetOffset(const std::vector<char>&, size_t idx, const char* search, size_t& location)` — strcmp-at-offset uniqueness tracker (returns −1 on duplicate).
+- Helpers: `int readFile(const char*, std::vector<char>&)` (−1 on open failure); `int writeFile(const char*, const std::vector<char>&)` (opens an ofstream with the `std::ifstream::binary` constant — verbatim sloppiness; harmless because it is the same enumerator as `ios_base::binary`, inherited by all stream classes); `std::string getFileName(sysPath, fileName)` joins with `\`; `std::string setCommand(...)` builds `<path>\<exe> -w 195936478 --globalBasicSettingsPath <file>`; `size_t findAndSetOffset(const std::vector<char>&, size_t idx, const char* search, size_t& location)` — strcmp-at-offset uniqueness tracker (returns −1 on duplicate).
 
 ## Usage
 
-Build-system context: separate RobloxGoldenHashPatcher.sln/vcxproj; retarget_v143 touched its vcxproj too but it is not part of the main client build. Historically run once per release before shipping; today it documents how the magic `-w` gate and the dump path (`--globalBasicSettingsPath`) were consumed by the shipped client.
+Build-system context: separate RobloxGoldenHashPatcher.sln/.vcxproj/.filters; not referenced by WindowsClient.vcxproj, so it is not part of the main client build. Historically run once per release before shipping; today it documents how the magic `-w` gate and the dump path (`--globalBasicSettingsPath`) were consumed by the shipped client.
 
 ## Gotchas
 
-- The `-w 195936478` literal here is a DIFFERENT magic than ReleasePatcher's self-relaunch (` -w 10558381 `) — both satisfy Application.cpp's congruence test mod 0x01234567/0x89ABCDEF (0x0BADC0DE family), i.e., multiple valid keys exist.
+- The `-w 195936478` literal here is a DIFFERENT magic than ReleasePatcher's self-relaunch (` -w 10558381 `), and they do NOT satisfy the same gate: only 195936478 (= 0x0BADC0DE) passes the patcher congruence at Application.cpp:1053; 10558381 (= 0x00A11BAD) hits the second no-op branch (Application.cpp:1060) that just returns false.
 - Requires the target build to still contain the dump-mode handler for `--globalBasicSettingsPath` writing `<file>` = `.text` + 2 ints — UNKNOWN whether that code path survived pruning in App/ sources; if pruned, this tool cannot work against the sandbox tree.
 - `writeFile` uses `std::ifstream::binary` as the ofstream openmode constant — same numeric value as ios_base::binary so behavior is accidentally correct.
-- All writes go through `system()` — the patched exe is executed up to 5 times per patch session; each run must exit quickly via the magic-key branch.
+- All writes go through `system()` — the patched exe is executed up to SIX times per patch session (1 + up to 3 diff-finding iterations + 1 hash re-run + 1 verification = between four and six); each run must exit quickly via the magic-key branch.
 - Assumes non-ASLR image base 0x00401000 and 32-bit size_t.

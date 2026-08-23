@@ -22,7 +22,7 @@ Real signatures:
 
 ## Usage
 
-Lifecycle pattern across the client: `marshaller = FunctionMarshaller::GetWindow()` at View/Document construction on the UI thread; engine threads (RenderJob via TaskScheduler view-thread, TeleportService callbacks) Submit/Execute onto it; `ReleaseWindow` at teardown. RenderJob additionally calls ProcessMessages() from the scheduler thread to flush its own submissions without a pump.
+Lifecycle pattern across the client: `marshaller = FunctionMarshaller::GetWindow()` at View/Document construction on the UI thread; engine threads (RenderJob via TaskScheduler view-thread, TeleportService callbacks) Submit/Execute onto it; `ReleaseWindow` at teardown. ProcessMessages() is used ONLY by View::RemoveJobs — once as the callback handed to `TaskScheduler::removeBlocking` and once directly afterwards — to drain a final marshalled renderPerform before the RenderJob dies; RenderJob.cpp itself never calls it.
 
 ## Gotchas
 

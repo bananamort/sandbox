@@ -37,5 +37,5 @@ Shown when game Lua/server triggers an URL open through GuiService; closed via W
 
 ## Gotchas
 
-- Same header quirk as WebBrowserAxDialog.h line 74: `STDMETHOD(QueryInterface(REFIID riid, ...))` with nested parens.
+- Same header quirk as WebBrowserAxDialog.h (line 77 there): `STDMETHOD(QueryInterface(REFIID riid, ...))` with nested parens — at line 74 of THIS header.
 - `SHDocVw::IWebBrowserAppPtr RbxWebView::getWebBrowser();` — member redundantly qualified inside its own class; verbatim.

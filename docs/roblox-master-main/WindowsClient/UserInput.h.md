@@ -53,4 +53,4 @@ Constructed by `View::initializeInput()` (`new UserInput(GetHWnd(), game, this)`
 ## Gotchas
 
 - `#pragma comment(lib, ...)` for dxguid/dxerr9/dinput8 — DirectX SDK link deps live here.
-- Includes "SDLGameController.h" — resolved from App/util in this tree (UNKNOWN original location pre-prune).
+- Includes "SDLGameController.h" — resolves to ClientShared/SDLGameController.h in this tree (UNKNOWN original location pre-prune).

@@ -41,7 +41,7 @@ public:
 
 ## Usage
 
-Constructed by GameVerbs (askUploadScreenshot / uploadVideo) with a BaseUrl-derived `/UploadMedia/...` URL; also referenced by Document/Application plumbing. See .cpp.md for the external-name contract.
+Constructed ONLY by GameVerbs.cpp (askUploadScreenshot's 2-arg modal and uploadVideo's 3-arg form with the EnableVideUpload callback), with BaseUrl-derived `/UploadMedia/...` URLs. Document/Application use RbxWebView instead — they include RbxWebView.h, not this header. See .cpp.md for the external-name contract.
 
 ## Gotchas
 

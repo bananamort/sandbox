@@ -26,7 +26,7 @@ Real signatures:
 
 ## Usage
 
-The patch/update flow verifies a freshly written exe before swapping it in; see ReleasePatcher.cpp for the call site and the failure policy. Any sandbox rebuild that self-verifies will fail this pin — the serial number belongs to Roblox's real Symantec cert and cannot be reproduced by a test signer.
+The ONLY call site in the tree is `Application::setWindowFrame()` (Application.cpp:1104-1115): a release-only startup self-verification of the running exe (`VerifyCryptSignature(utf8_decode(moduleFilename))`). On `false` it does not abort — it prints the deliberately bogus "Important !Loading shader files" message and sets `RBX::DataModel::sendStats |= HATE_SIGNATURE`. It does NOT gate any patch/update swap (ReleasePatcher.cpp never calls it). Any sandbox rebuild that self-verifies will fail this pin — the serial number belongs to Roblox's real Symantec cert and cannot be reproduced by a test signer.
 
 ## Gotchas
 

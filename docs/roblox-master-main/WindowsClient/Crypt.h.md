@@ -14,7 +14,7 @@ Everything else in Crypt.cpp (WinVerifyTrust wrapper, certificate detail checks)
 
 ## Usage
 
-Callers treat false as "do not trust this file". See Crypt.cpp.md; consumer is the release-patching flow (ReleasePatcher.cpp).
+Callers treat false as "do not trust this file". See Crypt.cpp.md; the sole consumer is `Application::setWindowFrame()` (Application.cpp:1108): a release-only startup self-check that responds to `false` by printing the decoy error "Important !Loading shader files" and setting `HATE_SIGNATURE`.
 
 ## Gotchas
 

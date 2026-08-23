@@ -13,7 +13,7 @@ Real signatures:
   - `TeleportService::SetBaseUrl(GetBaseURL().c_str())` — hands the engine the same `BaseUrl` parsed from AppSettings.xml (see AppSettings.xml.md), so the TeleportService can build its own request URLs.
 - `void Teleporter::doTeleport(const std::string& url, const std::string& ticket, const std::string& script)` (virtual override) — single statement: `marshaller->Submit(boost::bind(&Application::Teleport, app, url, ticket, script))`. The teleport request arrives on an engine/Lua thread; the marshaller hops it onto the main UI thread before any teardown runs.
 - `bool Teleporter::isTeleportEnabled() const` (virtual override) — inline `return true;` (header). Teleporting is always enabled in this client.
-- File-scope `static boost::thread releaseGameThread;` — declared at lines 11–12 but **never referenced again in this file**. Dead global.
+- File-scope `static boost::thread releaseGameThread;` — declared at line 11 but **never referenced again in this file**. Dead global.
 
 ## Usage
 
