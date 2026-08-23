@@ -68,10 +68,11 @@ Logging cannot be disabled from inside the sandboxed environment.
 Workstreams are numbered by execution order. Gates are pass/fail; link and run gates execute in CI only.
 
 - **1 Prune**: manifest diff clean; slimmed `.sln` parses with zero unavailable projects
-- **2 Build enablement**: CI links `ReleaseRcc|Win32` and `Release|Win32` into `RCCService.exe` + `RobloxPlayerBetaRaw.exe`; `RCCService -Console` smoke-runs
-- **3 Luau graft**: globals-inventory dump identical before and after; era test corpus compiles and runs under Luau
-- **4 Instrumentation**: hooks emit expected event streams on known-good scripts; parity checklist shows no behavioral delta
-- **5 Wine runtime**: harness runs headless under Xvfb; proxy intercepts all egress
-- **6 End-to-end validation**: real obfuscated targets reconstruct; anti-probe suite passes; probes that detect the sandbox are logged as fidelity findings
+- **2 Documentation**: every kept first-party file gets a verbatim-grounded `.md` under `docs/roblox-master-main/`. Writer subagents read sources in full via tool calls before writing anything; independent reviewer subagents verify every claim against the sources, and any doc that fails certification is redone
+- **3 Build enablement**: CI links `ReleaseRcc|Win32` and `Release|Win32` into `RCCService.exe` + `RobloxPlayerBetaRaw.exe`; `RCCService -Console` smoke-runs. CI infrastructure itself may run alongside 2 for signal, but any fix touching engine source waits until the docs covering that area are certified
+- **4 Luau graft**: globals-inventory dump identical before and after; era test corpus compiles and runs under Luau
+- **5 Instrumentation**: hooks emit expected event streams on known-good scripts; parity checklist shows no behavioral delta
+- **6 Wine runtime**: harness runs headless under Xvfb; proxy intercepts all egress
+- **7 End-to-end validation**: real obfuscated targets reconstruct; anti-probe suite passes; probes that detect the sandbox are logged as fidelity findings
 
-Order: **1 → 2 → (3 ∥ 4) → 5 → 6**, with **7 Documentation** running as a parallel track: every kept first-party file gets a verbatim-grounded `.md` under `docs/roblox-master-main/` before surgery touches its area. Writer subagents read sources in full via tool calls before writing anything; independent reviewer subagents verify every claim against the sources, and any doc that fails certification is redone.
+Order: **1 → 2 → 3 → (4 ∥ 5) → 6 → 7**. No engine source file is modified before its documentation exists and passes review — this applies to every workstream, including conformance fixes during build enablement.
