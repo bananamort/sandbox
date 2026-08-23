@@ -38,3 +38,4 @@ Owned by DeviceGL; obtained each frame from `beginFrame()`. All higher-layer dra
 - copyFramebuffer requires exact size match and 2D type (asserts); it also invalidates texture stage 0 because it hijacks that unit.
 - Debug markers on desktop silently require GL 4.3 core functions; ARB extension variants are deliberately not used.
 - discardFramebuffer is effectively dead code unless both ext3 and the flag are on.
+- `setWorldTransforms4x3`/`setConstant` dereference `cachedProgram` without a null check (unlike the D3D11 context, there is not even an assert) — calling them before any `bindProgram`, or after `clearStates()`/`invalidateCachedProgram()` zeroed the cache, is a null-pointer dereference; correctness depends on the renderer always binding a program first.

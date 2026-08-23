@@ -8,7 +8,7 @@ Class declarations for the GL shader stack: `VertexShaderGL`, `FragmentShaderGL`
 
 - `class VertexShaderGL : public VertexShader`
   - `VertexShaderGL(Device*, const std::string& source)` / `~VertexShaderGL()`.
-  - `void reloadBytecode(const std::vector<char>& bytecode)` — recompiles from new source.
+  - `void reloadBytecode(const std::vector<char>& bytecode)` — throws ("Bytecode reloading is not supported"); GL cannot hot-swap.
   - `unsigned int getId()` — GL shader object id.
   - `unsigned int getAttribMask()` — bitmask of active vertex attributes.
 - `class FragmentShaderGL : public FragmentShader`
@@ -29,6 +29,6 @@ Created by DeviceGL factories from GLSL source strings. Runtime flow: DeviceCont
 
 ## Gotchas
 
-- GL compiles at construction time (source in = compiled object out); "bytecode" reloads are actually full source recompiles.
+- GL compiles at construction time (source in = compiled object out); `reloadBytecode` is not supported — it throws rather than recompiling.
 - Uniform handles are indices into the program's own `uniforms` vector, not packed VS/FS pairs like D3D11.
 - The globals model differs from D3D11's constant-buffer scheme: one flat byte block + per-program uniform offsets, re-uploaded only when `globalVersion` changes.

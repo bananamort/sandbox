@@ -18,5 +18,5 @@ The bootstrap path for every client: callers pass an API enum (chosen by platfor
 
 ## Gotchas
 
-- D3D9 is compiled out on Xbox 360 (Durango codename in this tree); GL is likewise unavailable on Durango — D3D11 is the only backend there.
+- D3D9 is compiled out on Durango (Xbox One codename; `RBX_PLATFORM_DURANGO` in this tree); GL is likewise unavailable on Durango — D3D11 is the only backend there.
 - Backend headers are included unconditionally on their platforms (GL always; D3D* only under `_WIN32`), so this file is the compile-time linkage point for the whole backend set.

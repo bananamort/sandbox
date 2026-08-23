@@ -32,7 +32,7 @@ Buffers are filled via lock/unlock or upload before first use. The renderer call
 
 ## Gotchas
 
-- Buffer destruction does NOT invalidate the context caches — GeometryD3D9's dtor clears cachedGeometry but a destroyed VertexLayout/VertexBuffer referenced by a still-alive geometry leaves stale COM pointers in cachedVertexLayout/stream slots until the next different-geometry bind.
+- Buffer destruction does NOT invalidate the context caches — GeometryD3D9's dtor clears cachedGeometry and VertexLayoutD3D9's dtor clears cachedVertexLayout, but a destroyed VertexBuffer/IndexBuffer still referenced by a live geometry leaves stale device-side stream/index bindings until the next different-geometry bind (COM refcounts keep the objects alive, so this is staleness, not a dangling pointer).
 - Dynamic buffers are created WRITEONLY: reading via lock() on them is illegal by D3D semantics despite returning a pointer.
 - Lock failure returns NULL silently (log only); upload() would memcpy to NULL+offset if unchecked by callers.
 - Stream rebinding always uses offset 0 and assumes each vertex buffer holds exactly one attribute stream laid out per the declaration — no interleaved-offset support here.

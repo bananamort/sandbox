@@ -16,7 +16,7 @@ Base class of every GfxCore GPU object (`Texture`, `Framebuffer`, `Renderbuffer`
 
 ## Usage
 
-Every abstraction in this directory inherits from it; `Device::fireDeviceLost()/fireDeviceRestored()` walk `resourceListHead → tail` calling the virtuals. Backends keep their native object pointers as members and null them in `onDeviceLost`.
+Every abstraction in this directory inherits from it; `Device::fireDeviceLost()` walks the list **tail→head** and `fireDeviceRestored()` walks **head→tail**, calling the virtuals. Backends keep their native object pointers as members and null them in `onDeviceLost`.
 
 ## Gotchas
 

@@ -32,6 +32,6 @@ DeviceD3D11::createShaderSource/Bytecode delegate here; runtime flow per draw: b
 
 ## Gotchas
 
-- Bytecode is parsed by hand (UNKNOWN exact format — likely D3D compiler reflection blob or a Roblox custom container; confirmed only in ShaderD3D11.cpp) rather than via D3DReflect at use time... the cpp must be consulted for specifics.
-- The vertex shader keeps a `sharedThis` self-reference — programs hold cycles carefully; destruction order matters.
+- Bytecode is standard D3D compiler output reflected at construction time via `D3DReflect` (see `extractCbuffers` in ShaderD3D11.cpp): cbuffers, `$Globals` uniforms and sampler bind points all come from that reflection pass.
+- The header declares a `sharedThis` self-reference member on VertexShaderD3D11, but nothing in this tree ever assigns or reads it (dead field as shipped) — no cycle exists in practice despite the declaration.
 - World transforms are a special-cased cbuffer (`worldMatrixCbuffer`) separate from named uniforms.

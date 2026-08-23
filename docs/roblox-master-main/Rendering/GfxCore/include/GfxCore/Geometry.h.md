@@ -31,5 +31,5 @@ Renderers fill VertexBuffers via `lock(Lock_Discard)` for dynamic geometry or `u
 
 - Multi-stream support exists (`Element::stream`, multi-buffer `createGeometry` overload) but most call sites use a single interleaved stream.
 - `baseVertexIndex` shifts all indices at draw time (used to pack multiple meshes into one buffer).
-- The two-arg GeometryBatch ctor computes an implicit index range from `count`/`indexRangeSize` — UNKNOWN exact formula here (defined in Geometry.cpp); it feeds D3D9's min/max index.
+- The two-arg GeometryBatch ctor maps `indexRangeSize` directly to the index span: offset=0, indexRangeBegin=0, indexRangeEnd=indexRangeSize (`count` is stored separately and does not affect the range); this feeds D3D9's min/max index.
 - IndexBuffer element size is caller-chosen (16 vs 32 bit) via `createIndexBuffer(elementSize,...)`; backends map it to D3DFMT_INDEX16/32 or GL_UNSIGNED_SHORT/INT.

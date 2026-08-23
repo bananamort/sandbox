@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Class declaration for `TextureGL` — the OpenGL/GLES Texture backend. Owns the GL texture object, a PBO-style scratch buffer for deferred uploads (GLES path), per-stage sampler caching, and lazy renderbuffer views for render-to-texture.
+Class declaration for `TextureGL` — the OpenGL/GLES Texture backend. Owns the GL texture object, a PBO-style scratch buffer for deferred uploads (enabled by `GraphicsTextureCommitChanges` + Usage_Dynamic + caps.ext3, i.e. GLES3 *or* desktop GL3), per-stage sampler caching, and lazy renderbuffer views for render-to-texture.
 
 ## API
 
@@ -15,7 +15,7 @@ Class declaration for `TextureGL` — the OpenGL/GLES Texture backend. Owns the 
 
 ## Usage
 
-Created by DeviceGL::createTexture or wrapped around external ids. DeviceContextGL::bindTexture delegates to bind(); FramebufferGL pulls attachments via getRenderbuffer. Uploads on GLES accumulate into pendingChanges flushed at commitChanges.
+Created by DeviceGL::createTexture or wrapped around external ids. DeviceContextGL::bindTexture delegates to bind(); FramebufferGL pulls attachments via getRenderbuffer. Uploads on ext3 dynamic textures behind `GraphicsTextureCommitChanges` accumulate into pendingChanges flushed at commitChanges (desktop GL3 included, not just GLES).
 
 ## Gotchas
 

@@ -27,7 +27,7 @@ Class declarations for the Direct3D 9 backend: `DeviceCapsD3D9` (caps + GPU vend
 
 ## Usage
 
-Instantiated by the Device factory for `API_D3D9`. Higher layers use the abstract interfaces; GL-of-D3D9-specific surface (`getCapsD3D9`, `getImmediateContextD3D9`, `getDevice9`) serves sibling D3D9 classes. All D3D9 COM interface types are forward-declared (`struct IDirect3D9;` etc.), so including this header does not pull in d3d9.h.
+Instantiated by the Device factory for `API_Direct3D9`. Higher layers use the abstract interfaces; the D3D9-specific surface (`getCapsD3D9`, `getImmediateContextD3D9`, `getDevice9`) serves sibling D3D9 classes. All D3D9 COM interface types are forward-declared (`struct IDirect3D9;` etc.), so including this header does not pull in d3d9.h.
 
 ## Gotchas
 

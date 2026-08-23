@@ -16,7 +16,7 @@ Included by every file under GL/ (Device*, Shader/Texture/Geometry/Framebuffer G
 
 ## Gotchas
 
-- The GLES extension functions are declared but never defined in this header — they are resolved at runtime by DeviceContextGL.cpp via eglGetProcAddress-style lookup; linking against these names directly would fail on iOS/Android.
+- The GLES extension functions are declared but never defined in this header — they are resolved at runtime by the platform context files (ContextGLAndroid.cpp via eglGetProcAddress; ContextGLiOS.mm via OES/EXT/APPLE-suffixed and GLES3-framework stub functions); linking against these names directly would fail on iOS/Android.
 - Enum values are hardcoded hex mirrors of the extension specs — safe only because they match upstream; do not "fix" them to different aliases.
 - On Android the header manually typedefs GLsync/GLuint64, assuming an ES2-era system header lacking them.
 - Desktop path depends on the vendored glew/ directory (excluded from docs scope); GLEW must be initialized before use.

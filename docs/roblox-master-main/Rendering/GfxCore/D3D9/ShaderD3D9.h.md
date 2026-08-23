@@ -30,7 +30,7 @@ Created via DeviceD3D9's shader factories. The context binds a `ShaderProgramD3D
 
 ## Gotchas
 
-- Constants are addressed by raw register index (`handle`), not by name — name→handle mapping lives in ShaderProgramD3D9::getConstantHandle against the uniforms vectors.
+- Constants are addressed by a packed per-stage index (`handle` = `(vsIndex+1) | ((fsIndex+1) << 16)` into each stage's `uniforms` vector), not by name — name→handle mapping lives in ShaderProgramD3D9::getConstantHandle; register indices come from the referenced UniformD3D9 at set time.
 - World matrix registers are special-cased (`registerWorldMatrix`/`registerWorldMatrixArray`) rather than being ordinary named constants.
 - `createShaderBytecode` shells out to the HLSL compiler with a `target` profile string — invalid profiles fail at runtime, not compile time.
 - Sampler mask comes from the fragment shader only; vertex-stage samplers are not modeled.

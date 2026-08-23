@@ -30,5 +30,5 @@ Offscreen targets are built from RenderbufferD3D9 views created by TextureD3D9::
 
 - The first six `OwnerType` values double as cube-face indices for TextureD3D9 surface lookup — reordering breaks every cube render target.
 - A RenderbufferD3D9 created by adoption does not own its surface; one created standalone must release it in its destructor (ownership differs per constructor).
-- D3D9 has no framebuffer "object": binding is just setting up to 4 render targets + depth stencil, so multi-render-target support is capped at 4 and resolveFramebuffer is a no-op/MSAA handled implicitly.
+- D3D9 has no framebuffer "object": binding is just SetRenderTarget/SetDepthStencilSurface, so MRT support is capped by `caps.maxDrawBuffers` (= NumSimultaneousRTs probed at device creation). MSAA resolution is explicit — `DeviceContextD3D9::resolveFramebuffer` performs a `StretchRect` from the MSAA surface to the single-sample target; `discardFramebuffer` is the no-op on this backend.
 - `grabCopy` allocates a system-memory surface each call — repeated use leaks unless the caller releases it.

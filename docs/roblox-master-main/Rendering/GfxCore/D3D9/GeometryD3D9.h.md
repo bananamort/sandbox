@@ -28,6 +28,6 @@ Buffers are created by DeviceD3D9 factories, filled via lock/unlock or upload, t
 ## Gotchas
 
 - The `layoutCache`/`geometryCache` in-out pointers are the context's cache — callers must pass the same slots every frame or redundant state changes occur.
-- `indexRangeBegin/indexRangeEnd` exist for API parity (used for range checks elsewhere); on D3D9 the indexed draw does not exploit them beyond choosing indexed vs non-indexed path.
+- `indexRangeBegin/indexRangeEnd` are consumed by the indexed draw on this backend: they are passed straight into `DrawIndexedPrimitive` as MinVertexIndex and NumVertices (= end − begin). GL and D3D11 ignore them; D3D9 is the reason the parameters exist.
 - Buffers created with dynamic usage behave differently under lock (discard/no-overwrite semantics resolved in the .cpp); locking static buffers is a slow path.
 - Device-lost restore recreates the underlying COM objects — any raw `getObject()` pointer captured before a reset is stale.
