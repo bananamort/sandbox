@@ -40,7 +40,7 @@ template<typename T> class timestamped_safe_queue : protected safe_queue<...item
     size_t size() const; bool empty() const;
 };
 
-template<typename T> class safe_heap : boost::noncopyless { // sic: noncopyable
+template<typename T> class safe_heap : boost::noncopyable {
     void clear(); void push_heap(const T&); bool pop_heap_if_present(T&); ...
 };
 

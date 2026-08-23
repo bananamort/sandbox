@@ -17,7 +17,8 @@ void GetConfidenceInterval(double average, double variance, Confidence conf, dou
 Header pair rbx/MathUtil.h. `IsValueOutlier` is the intended consumer entry point (profiler-style sample filtering). Includes rbx/Debug.h for RBXASSERT and uses the ARRAYSIZE macro.
 
 ## Gotchas
-- `GetMappedDOF` collapses ranges (e.g., 31–39 → row "40", 121+ → row "121") — precision silently degrades for large samples.
+- `GetMappedDOF`'s actual bucket→row-index mapping (table has 37 rows, indices 0–36): dof<=0→0; 1–30→itself; 31–39→31 (row "50"); 40–49→32 ("60"); 50–59→33 ("80"); 60–79→34 ("100"); 80–99→35 ("120"); 100–119→36 (the z-value row "121"); **dof==120→37 and dof>=121→38 — BOTH OUT OF BOUNDS** (RBXASSERT fires in debug; release reads past the array).
+- Even in-range buckets are shifted one row up from their natural match (bucket 31–39 reads the "50" row, not "40"), and the exact 1–30 range indexes DOFs[dof], i.e. the row LABELED dof+1 — every lookup uses critical values one degree of freedom looser than the textbook entry.
 - The last DOFs row `{121,...}` actually holds the NORMAL (z) distribution values (1.645/1.96/2.576/3.291), used as the asymptotic approximation.
 - `GetConfidenceInterval` ignores the t-table entirely and uses textbook integer-ish multipliers; results differ from TCritical at equal conf levels.
 - Division by `std` in IsValueOutlier with std==0 → inf/nan propagation, no guard.

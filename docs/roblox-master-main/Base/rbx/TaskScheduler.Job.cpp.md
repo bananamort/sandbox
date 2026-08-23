@@ -10,7 +10,7 @@ static double throttledSleepTime = 0.01;                 // min sleep when arbit
 static SleepAdjustMethod sleepAdjustMethod = AverageInterval;
 Error  computeStandardError(stats, desiredHz);           // timespanSinceLastStep * desiredHz
 Error  computeStandardErrorCyclicExecutiveSleeping(...); // zero-out error <0.98 while cyclic-executive sleeping
-Interval computeStandardSleepTime(stats, desiredHz);     // interval - timespanSinceLastStep, floor=throttledSleepTime
+Interval computeStandardSleepTime(stats, desiredHz);     // interval - timespanSinceLastStep; floored at throttledSleepTime ONLY while job's arbiter reports isThrottled
 void preStep();   // state=Running; FASTLOG JobStart; arbiter->preStep
 void postStep(StepResult); // records timespanOfLastStep, samples dutyCycle(+window), arbiter->postStep, state=Unknown
 void updatePriority();     // FIFO:1.0 | LastError:error | AccumulatedError:(avg||err)*factor/max(0.01,dutyCycle)
@@ -18,7 +18,7 @@ void updatePriority();     // FIFO:1.0 | LastError:error | AccumulatedError:(avg
 Log group declared: FLog::TaskSchedulerSteps.
 
 ## Usage
-Linked into every binary that runs jobs; jobs across DataModel/physics/rendering/network rely on computeStandard* helpers instead of rolling their own cadence math. The extern `RBX::Time::Interval maxDutyCycleWindow` is DEFINED in TaskScheduler.cpp and read at Job construction — cross-TU init-order dependency.
+Linked into every binary that runs jobs; jobs across DataModel/physics/rendering/network rely on computeStandard* helpers instead of rolling their own cadence math. The extern `RBX::Time::Interval maxDutyCycleWindow` is DEFINED in TaskScheduler.Thread.cpp and read at Job construction — cross-TU init-order dependency.
 
 ## Gotchas
 - postStep's over-budget branch is an EMPTY if-body ("We were over budget") — stepBudget enforcement never implemented.

@@ -25,7 +25,7 @@ void initBaseLog();                                // empty
 Every subsystem writes through FLog channels defined here or locally; TaskScheduler/boost.cpp pass FLog group ids around. FLog::Init(nowFastSec) (called from Time.cpp on Windows) wires the fast clock into FastLog.
 
 ## Gotchas
-- formatTime: `time==0.0` case has NO break — falls into `<0.0` check then else-if chain; for exactly 0 it prints "0s" AND continues to `%.3gs` branch? No — first snprintf executes, then the if-chain still runs: 0.0 is not <0.0, not >=0.1 → prints "%.3gms" of 0 OVERWRITING buffer... actually second snprintf overwrites the same buffer so output is "0ms" not "0s". Subtle formatting bug.
+- formatTime: the `time==0.0` branch prints "0s" but does NOT return — control falls through the chain and the final `else` re-formats the same buffer as "%.3gms", so exactly-zero input actually renders as "0ms". Subtle formatting bug.
 - writeEntry(wchar_t) conversion math: newsize=origsize+100 but wcstombs_s told to convert only origsize chars; convertedChars>=origsize-1 guard then force-NULs.
 - formatMem's GB threshold branch is _WIN32-only because "100000000000 too big for uint" — non-Windows skips the .1fGB tier.
 - Timestamps use LOCAL time + fast-clock seconds; correlating logs across machines needs timezone care.

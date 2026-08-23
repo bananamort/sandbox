@@ -20,5 +20,5 @@ namespace RBX::simd {
 Included by simd.h after the backend .inl; callers use these instead of hand-writing shuffles.
 
 ## Gotchas
-- The 3-arg overloads pass `c` twice as `d` — for sumAcross2/3 that means c contributes TWO lanes into what is documented as a 3-way sum? No — zip pairs recombine so each element counted once; but reading the code requires trusting the zip algebra.
+- The 3-arg sumAcross2/3/4 overloads pass `c` twice as the `d` argument. The zip algebra still counts each element exactly once per output lane (e.g. sumAcross2(a,b,c) yields {a0+a1, b0+b1, c0+c1, c0+c1}); the duplicated tail lane is officially "undefined" per simd.h comments.
 - All functions assume 16-byte-aligned data implicitly via backend loads.

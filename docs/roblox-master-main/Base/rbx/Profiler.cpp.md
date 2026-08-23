@@ -19,4 +19,4 @@ Linked wherever Profiler.h macros are used; the render path is driven by the cli
 - gProfileRenderer is a raw global used by MicroProfileDraw callbacks; rendering from two threads concurrently would race it.
 - GPU timers: D3D11 on Windows (MICROPROFILE_GPU_TIMERS_D3D11=1), GL macro defined 0 on Mac (!iOS) despite including gl3.h — GL timing effectively disabled there.
 - Durango defines getenv(name) NULL — environment-based MicroProfile config impossible on Xbox.
-- Every public function begins `if (!FFlag::OnScreenProfiler) return ...` — flag flips at runtime are safe-ish but tokens/labels created while off are dropped.
+- Every runtime-effect function begins `if (!FFlag::OnScreenProfiler) return ...` — BUT token creators (`getToken`/`getLabelToken`/`getCounterToken`) are NOT gated and always hit MicroProfile; only region/label/counter/thread/GPU/render calls are dropped while the flag is off.

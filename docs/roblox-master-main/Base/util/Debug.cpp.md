@@ -11,7 +11,7 @@ volatile bool RBX::Debugable::doCrashEnabled = true; // "overload this in the de
 void Debugable::doCrash();      // DebugBreak() if enabled
 void Debugable::doCrash(const char* message);        // Durango: OutputDebugStringA + early-out w/o debugger
 ```
-Both doCrash bodies sit inside `#pragma optimize("", off/on)`.
+Only the `doCrash(const char*)` overload sits inside `#pragma optimize("", off/on)`; the parameterless `doCrash()` precedes the pragma and compiles normally.
 
 ## Usage
 RBXCRASH() (RbxCrash.cpp) delegates here; RBX_LOG_ASSERT's failure path calls ReleaseAssert with FLog::Asserts.

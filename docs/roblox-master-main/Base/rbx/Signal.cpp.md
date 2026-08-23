@@ -14,7 +14,7 @@ LOGVARIABLE(ScopedConnection, 0);       // log group, off by default
 ```
 
 ## Usage
-Pairs with include/rbx/signal.h. The exception handler stays null unless some startup code assigns it — with no handler, exceptions from slots propagate out of operator().
+Pairs with include/rbx/signal.h. The exception handler stays null unless some startup code assigns it — but note operator() catches RBX::base_exception unconditionally, so even with NO handler installed those exceptions are swallowed (on_error just no-ops); only exceptions NOT deriving from base_exception propagate out of operator().
 
 ## Gotchas
 - `struct Init` calls an EMPTY initStaticData through boost::call_once — dead scaffolding from an earlier static-init scheme; harmless.

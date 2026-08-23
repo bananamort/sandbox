@@ -17,3 +17,4 @@ Inline utility included wherever case-insensitive comparisons are prepared (e.g.
 ## Gotchas
 - Uses C locale `isupper/tolower` per byte — not UTF-8 aware; multibyte sequences pass through untouched (which is the "safe" part).
 - Loop index is `unsigned` against `s.size()` — fine on 32-bit size_t builds, narrowing-free but stylistically dated.
+- Header includes nothing beyond `#pragma once`: relies on transitive `<string>`/`isupper`/`tolower` declarations from whatever includes it first — not self-contained.

@@ -22,7 +22,7 @@ FASTINT knobs: SpeedTestPeriodMillis(1000), MaxSpeedDeltaMillis(300), SpeedCount
 Backs rbx/rbxTime.h. FLog::Init is handed `nowFastSec` — the Fast clock becomes the logging timestamp source on Windows.
 
 ## Gotchas
-- checkDbg reads fs:[0x30] PEB BeingDebugged via inline __asm — x86-only; compiles out under __RBX_NOT_RELEASE and is skipped entirely on non-Windows.
+- checkDbg walks fs:[0x18] → TEB linear address, loads dword at TEB+0x30 (PEB pointer), then tests bit 16 (0x00010000) of the PEB's first dword — that byte is PEB->BeingDebugged. Inline `__asm` is x86-only; body compiles out under __RBX_NOT_RELEASE and the whole function is skipped on non-Windows.
 - Speed-hack detector: |multimediaDelta − wallDelta| > MaxSpeedDeltaMillis increments violations; SpeedCountCap consecutive violations latch `cheater` forever (never resets).
 - interpolatedCallback self-tunes secsPerTick but silently ignores out-of-band samples (0.95–1.05 window) — suspension of the timer thread stalls the Fast clock until next correction.
 - recguard atomic guards re-entrancy of MM callbacks; currentSeconds/cheater/isDebuggedValue are plain volatile doubles/bools written cross-thread — data-race-by-todays-standards, benign-by-2016-compiler.

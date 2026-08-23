@@ -15,8 +15,8 @@ typedef std::runtime_error base_exception;
 #else
 typedef std::exception base_exception;
 #endif
-class physics_receiver_exception : public base_exception { explicit physics_receiver_exception(const std::string& m); };
-class network_stream_exception : public base_exception { explicit network_stream_exception(const std::string& m); };
+class physics_receiver_exception : public base_exception { physics_receiver_exception(const std::string& m); };
+class network_stream_exception : public base_exception { network_stream_exception(const std::string& m); };
 ```
 
 ## Usage

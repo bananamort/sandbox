@@ -8,7 +8,7 @@ A weak-reference smart pointer extending `boost::intrusive_ptr` semantics. Targe
 namespace rbx {
 template<class T> class intrusive_weak_ptr {
     intrusive_weak_ptr();                                   // null
-    explicit-ish intrusive_weak_ptr(T* p);                  // adds weak ref
+    intrusive_weak_ptr(T* p);                               // adds weak ref (NOT explicit: implicit T* conversion compiles)
     template<class U> intrusive_weak_ptr(const intrusive_weak_ptr<U>& rhs); // copies only if !expired()
     template<class U> intrusive_weak_ptr(const boost::intrusive_ptr<U>& rhs);
     intrusive_weak_ptr& operator=(T* p / const intrusive_weak_ptr<U>& / const boost::intrusive_ptr<U>&);

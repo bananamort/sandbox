@@ -6,7 +6,7 @@ Cross-platform Win32-event analogue `RBX::CEvent` (modeled on ATL::CEvent per in
 ## API (CEvent.h)
 ```cpp
 class CEvent : public boost::noncopyable {
-    explicit CEvent(bool bManualReset);
+    CEvent(bool bManualReset);
     ~CEvent() throw();
     void Set() throw();
     void Wait();                                   // infinite

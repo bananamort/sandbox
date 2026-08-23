@@ -9,7 +9,7 @@ namespace rbx::signals {
     extern boost::function<void(std::exception&)> slot_exception_handler;
     class connection { void disconnect() const; bool connected() const; ==,!=; flogPrint(); };  // weak ref to slot
     class scoped_connection : noncopyable { connect/assign auto-disconnect in dtor; get(); };
-    class scoped_connection_logged : same + FASTLOG on assign/disconnect/dtor (FLog::ScopedConnection group);
+    class scoped_connection_logged : same + FASTLOG on assign/disconnect/dtor (all via FLog::Always — the header's LOGGROUP(ScopedConnection) is declared but never logged to);
     template<typename Signature> class signal : noncopyable {
         connection connect(const Delegate& function);
         void disconnectAll();
@@ -32,7 +32,7 @@ Included everywhere events exist. Slots are `boost::function`-like delegates wra
 
 ## Gotchas
 - Thread-safety contract (in-file comment): connect/disconnect from any thread; FIRING is NOT thread-safe — one thread at a time per signal.
-- operator() catches ONLY RBX::base_exception from slots, routes to slot_exception_handler, then `goto begin` RESUMES FROM HEAD of the list — a throwing slot causes already-fired slots to fire AGAIN (at-least-once, not exactly-once).
+- operator() catches ONLY RBX::base_exception from slots, routes to slot_exception_handler once, then `goto begin` RESUMES ITERATION — and because the `item` iterator is declared BEFORE the `begin:` label, state persists across the jump: dispatch resumes with the slot AFTER the one that threw. Already-fired slots do NOT re-fire (exactly-once per slot per fire), but the throwing slot is abandoned mid-call (its partial side effects remain). If slot_exception_handler itself throws base_exception, the catch/goto loop repeats indefinitely.
 - disconnectAll uses "chunk" logic (DE131): nulls 10 sigs per locked pass then drops refs outside the lock to avoid stack crash from recursive destruction.
 - SAFE_HEAP_STATIC (not SAFE_STATIC) for the shared per-signature mutex — comment: global objects using signals outlive static destruction order otherwise.
 - Header #errors if windows.h was included without NOMINMAX (`#ifdef max`).

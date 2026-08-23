@@ -34,7 +34,7 @@ template<class T> class Allocator {           // custom new/delete; singleton_po
 
 class AutoMemPool {
     class Object { /* new(size, AutoMemPool*) hides a back-pointer to the pool */ };
-    explicit AutoMemPool(int requested_size);
+    AutoMemPool(int requested_size);
     void* malloc(); void free(void* p); int getRequestedSize();
 };
 }

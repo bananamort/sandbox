@@ -42,3 +42,4 @@ Used where vector's allocator can't guarantee alignment or where per-type trait 
 - Inverted-looking trait logic in `copyTrivial`: the `boost::true_type isFundamentalOrPointer` overload does element-wise placement-new for ≤16 elements, while `false_type` does memcpy — i.e., memcpy path is taken when T is NOT fundamental/pointer. Verify intent before "fixing".
 - Growth doubles from capacity 2; never shrinks.
 - `pop_back` destroys the popped element ONLY when mNoInit is set — backwards relative to normal C++ semantics (in normal mode destruction happens later via clear/resize).
+- Consequence of the above in NORMAL mode: after `pop_back`, the popped slot still holds a live object; a later `push_back` placement-news over it WITHOUT running its destructor — for non-trivial T the popped element's destructor NEVER executes. Treat ArrayDynamic as POD-only unless you control every mutation.

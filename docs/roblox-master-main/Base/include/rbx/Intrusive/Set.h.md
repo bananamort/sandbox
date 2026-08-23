@@ -20,7 +20,7 @@ template<class Item, class Tag = Item> class Set : boost::noncopyable {
     Iterator iterator_to(Item&);
 };
 ```
-The `Tag` parameter lets one item live in multiple distinct set types (each tag = separate hook storage).
+The `Tag` template parameter is declared but NEVER REFERENCED in the implementation — unlike boost::intrusive's tag pattern it provides no per-tag hook storage and does NOT enable multi-set membership for one item (an Item can hold only the single Hook base).
 
 ## Usage
 Membership tracking without allocation — job lists, listener sets, reflection child collections.

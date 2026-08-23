@@ -11,7 +11,7 @@ protected: PerfCounter(); CQuery hQuery;
     static void GetData2(HCOUNTER, long&); static void GetData2(HCOUNTER, double&);
 public: void CollectData();
 };
-class CProcessPerfCounter : PerfCounter, RBX::ScopedSingleton<CProcessPerfCounter> {
+class CProcessPerfCounter : public PerfCounter, public RBX::ScopedSingleton<CProcessPerfCounter> {
     CProcessPerfCounter();            // current process
     CProcessPerfCounter(int pid);
     double GetProcessCores();         // totalCPU% * procCPU% * cores / 10000
@@ -25,6 +25,6 @@ class CProcessPerfCounter : PerfCounter, RBX::ScopedSingleton<CProcessPerfCounte
 Used by diagnostics/stats reporting to log process resource usage (pairs with RbxDbgInfo — init() writes s_instance.NumCores). Requires pdh.lib.
 
 ## Gotchas
-- The class hierarchy privately inherits PerfCounter but the getters call PerfCounter::GetData2 explicitly — protected inheritance quirk.
+- Both base classes are inherited PUBLICLY; the getters still qualify calls as `PerfCounter::GetData2(...)` explicitly (unambiguous qualification, not a private-inheritance workaround).
 - GetProcessCores multiplies two percentages then by core count — an approximation of "core-equivalents", not a real measurement.
 - "Working Set - Private" falls back to "Working Set" on WinXP (see .cpp) — values differ in meaning on the fallback path.

@@ -37,6 +37,6 @@ class RemoteTime : public Time { RemoteTime(); RemoteTime(double); RemoteTime(co
 The universal clock of the engine — TaskScheduler, profiler, network timeouts, animation all sample `Time::now<...>()`. Header undefines min/max on Windows before everything else.
 
 ## Gotchas
-- `preciseOverride` semantics (comment): if it equals Precise, Fast AND Benchmark become precise; if Benchmark, only Benchmark is precise. Default is Precise ⇒ Fast/Benchmark are just QPC/mach clocks.
+- `preciseOverride` semantics (in-file comment): if it equals **Fast**, then Fast AND Benchmark become precise; if it equals Benchmark, only Benchmark is precise. Default value set in Time.cpp determines the shipping clock behavior (see that doc).
 - `sec` is private with a `friend operator-`; the ONLY sanctioned way to read elapsed time is subtraction. `timestampSeconds()`/`RemoteTime` are the acknowledged encapsulation leaks.
 - Time values are process-relative (getStart() epoch), NOT wall-clock — persisting them across sessions is meaningless.

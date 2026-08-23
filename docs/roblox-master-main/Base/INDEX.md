@@ -1,6 +1,6 @@
 # Base Module Index
 
-Base is the engine's foundation library: everything above it links against it and almost every other module includes it first. It contains the platform abstraction and time sources (`RBX::Time` over QPC/mach/CLOCK_MONOTONIC plus the Windows multimedia-timer Fast clock with speed-hack/debugger detection), the cooperative job scheduler (`TaskScheduler`/`Job`/`Thread`, arbiters, `Tasks::Coordinator` policies, cyclic-executive frame pacing), concurrency primitives (`rbx::signal` slots-and-slots events built on intrusive refcounts, atomics, `CEvent`, spin mutexes, debug-only "concurrency catcher" crash locks), memory utilities (custom allocators, object pools, dense hash/intrusive containers), diagnostics (FastLog channels, `RBXASSERT` hooks, `RbxDbgInfo` crash metadata, PDH perf counters), trust anchors for content verification (`RBX::Crypt` — two hardcoded RSA public keys, CryptoAPI on Win32 and OpenSSL on Apple/Android), and vendored support libraries: boost glue (`Boost.hpp` umbrella with global `shared_ptr` usings, `placement_any`, thread-naming shims), a hand-written SSE/NEON SIMD layer, MicroProfile (in-engine profiler with web server, ETW/DTrace context-switch tracing, GPU timers), and small BSD/Android shims (`ifaddrs`). Recurring patterns: `RBX::base_exception` as the base caught by signal slot dispatch; `SAFE_STATIC`/`SAFE_HEAP_STATIC` lazy statics to survive shutdown-order; platform forks via per-OS directories (`rbx/{Win,Darwin,Android,Durango}/`); UNKNOWN-marker discipline applies where behavior could not be verified from source alone.
+Base is the engine's foundation library: everything above it links against it and almost every other module includes it first. It contains the platform abstraction and time sources (`RBX::Time` over QPC/mach/CLOCK_MONOTONIC plus the Windows multimedia-timer Fast clock with speed-hack/debugger detection), the cooperative job scheduler (`TaskScheduler`/`Job`/`Thread`, arbiters, `Tasks::Coordinator` policies, cyclic-executive frame pacing), concurrency primitives (`rbx::signal` slots-and-slots events built on intrusive refcounts, atomics, `CEvent`, spin mutexes, debug-only "concurrency catcher" crash locks), memory utilities (custom allocators, object pools, dense hash/intrusive containers), diagnostics (FastLog channels, `RBXASSERT` hooks, `RbxDbgInfo` crash metadata, PDH perf counters), trust anchors for content verification (`RBX::Crypt` — two hardcoded RSA public keys, CryptoAPI on Win32 and OpenSSL on Apple/Android), and vendored support libraries: boost glue (`Boost.hpp` umbrella with global `shared_ptr` usings, `placement_any`, thread-naming shims), a hand-written SSE/NEON SIMD layer, MicroProfile (in-engine profiler; the HTTP web server and its HTML viewer are vendored but compiled OUT in this tree via `MICROPROFILE_WEBSERVER 0`, while ETW/DTrace context-switch tracing and GPU timers remain), and small BSD/Android shims (`ifaddrs`). Recurring patterns: `RBX::base_exception` as the base caught by signal slot dispatch; `SAFE_STATIC`/`SAFE_HEAP_STATIC` lazy statics to survive shutdown-order; platform forks via per-OS directories (`rbx/{Win,Darwin,Android,Durango}/`); UNKNOWN-marker discipline applies where behavior could not be verified from source alone.
 
 ## Roster
 
@@ -12,10 +12,11 @@ Base is the engine's foundation library: everything above it links against it an
 | Base/cpucount.cpp | `RbxTotalUsableCoreCount` — Win32 hardware_concurrency vs SystemUtil |
 | Base/include/CPUCount.h | Declares RbxTotalUsableCoreCount |
 | Base/include/HardwareInfo.h | Declares RBX::CPUCount topology query |
-| Base/include/RbxAssert.h | FASTASSERT macros + AssertionHook type |
+| Base/include/RbxAssert.h | AssertionHook type + hook setters/getters (assert macros live in rbx/Debug.h) |
 | Base/include/RbxBase.h | stdint include + MSVC _DEBUG/release build guards |
 | Base/include/RbxFormat.h | RBX::format declarations |
-| Base/include/RbxHash.h | xxhash-based hashing helpers |
+| Base/include/RbxHash.h | Deprecated stdext/__gnu_cxx hash_map portability shim (no xxHash) |
+| Base/include/rbx/Memory.h | roblox_allocator + Allocator<T> pool allocator + AutoMemPool |
 | Base/include/RbxPlatform.h | windows.h hygiene umbrella |
 | Base/include/SelectState.h | selection-state enum helper |
 | Base/include/XStudioBuild.h | studio build configuration flags |
@@ -29,6 +30,7 @@ Base is the engine's foundation library: everything above it links against it an
 | Base/rbx/Android/SystemUtil.cpp | Android sysconf + hardcoded RAM/GPU values |
 | Base/rbx/Win/SystemUtil.cpp | Windows GetVersionEx/IsWow64/DDirect video memory |
 | Base/rbx/Durango/SystemUtil.cpp | Xbox One constant stubs |
+| Base/rbx/Android/ifaddrs.c | Vendored netlink getifaddrs/freeifaddrs implementation |
 | Base/rbx/ProcessPerfCounter.cpp | PDH process counters (CPU/mem/pagefaults) |
 | Base/rbx/boost.cpp | isFinite, thread naming, worker_thread |
 | Base/rbx/Signal.cpp | connection impls + slot_exception_handler global |
@@ -36,6 +38,7 @@ Base is the engine's foundation library: everything above it links against it an
 | Base/rbx/Crypt.cpp | Win32 CryptoAPI RSA signature verification (hardcoded key) |
 | Base/rbx/Unix/Crypt.cpp | OpenSSL RSA signature verification (second hardcoded key) |
 | Base/rbx/Memory.cpp | Custom allocator hooks/tracking |
+| Base/rbx/Profiler.cpp | Profiler facade impl; compiles MicroProfile/MicroProfileUI into the TU (web server disabled via MICROPROFILE_WEBSERVER 0) |
 | Base/rbx/Tasks/Coordinator.cpp | Barrier/Sequence/Exclusive coordinator policies |
 | Base/include/rbx/rbxTime.h | RBX::Time/Interval/Timer/RemoteTime API |
 | Base/include/rbx/Thread.hpp | worker_thread + thread_specific_reference decls |
@@ -46,8 +49,8 @@ Base is the engine's foundation library: everything above it links against it an
 | Base/include/rbx/DenseHash.h | open-addressing hash map |
 | Base/include/rbx/BaldPtr.h | non-owning raw pointer wrapper |
 | Base/include/rbx/ArrayDynamic.h | dynamic array container |
-| Base/include/rbx/Intrusive/Set.h | intrusive red-black set |
-| Base/include/rbx/Nil.h | nil-type sentinel |
+| Base/include/rbx/Intrusive/Set.h | intrusive unordered doubly-linked set (O(1) hook-based, NOT red-black) |
+| Base/include/rbx/Nil.h | #undef nil hygiene for Apple headers |
 | Base/include/rbx/make_shared.h | boost make_shared shim |
 | Base/include/rbx/intrusive_weak_ptr.h | lock-free weak pointer |
 | Base/include/rbx/intrusive_ptr_target.h | refcounted base template |
@@ -57,7 +60,7 @@ Base is the engine's foundation library: everything above it links against it an
 | Base/include/rbx/Log.h | ILogProvider + Log channel declarations |
 | Base/include/rbx/Debug.h | RBXASSERT/RBXCRASH/FASTLOG-facing debug decls |
 | Base/include/rbx/RbxDbgInfo.h | crash-dump debug info struct (place IDs, HW strings) |
-| Base/include/rbx/Declarations.h | forward declarations umbrella |
+| Base/include/rbx/Declarations.h | RBXInterface/RBXBaseClass novtable decoration macros |
 | Base/include/rbx/MathUtil.h | Confidence enum + outlier/interval decls |
 | Base/include/rbx/Crypt.h | RBX::Crypt RAII signature verifier decl |
 | Base/include/rbx/SystemUtil.h | SystemUtil hardware/OS inventory decls |

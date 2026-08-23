@@ -20,6 +20,7 @@ Included by simd.h when RBX_SIMD_USE_SSE. "Do not include directly."
 ## Gotchas
 - operator!= for v4i/v4u is implemented as ANDNOT(eq, all-ones) rather than a real cmpneq_epi32 (SSE2 lacks integer neq) — fine but slower than needed under SSE4.
 - inverseEstimate1's inf handling returns SIGNED zero matching input sign bit — sign-preserving quirk callers may rely on.
-- The *Fast estimate variants skip the denormal/NaN fixups entirely.
+- The *Fast RECIPROCAL variants skip the denormal/NaN fixups entirely (`inverseEstimate0Fast`/`inverseEstimate1Fast`); note `inverseSqrtEstimate1Fast` does NOT — it calls the CORRECTED `inverseSqrtEstimate0`, so negative-denormal→NaN handling still applies there.
+- DEBUG-build surprise: `loadUnaligned` still fires `RBX_SIMD_ALIGN_ASSERT(s, 16)` (16-byte check) even though `_mm_loadu_ps` legally accepts any alignment — asserting debug builds reject legitimately unaligned loads that release builds accept.
 - rotateLeft here takes const ref (header decl shows non-const in one place) — harmless overload mismatch avoided by template instantiation at call site.
 - Double semicolons after moveHighLow/moveLowHigh casts (cosmetic).

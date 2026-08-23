@@ -35,7 +35,7 @@ Engine objects needing cheap shared ownership inherit e.g. `rbx::intrusive_ptr_t
 ## Gotchas
 - The counts block lives immediately BEFORE the object (`fetch` subtracts `sizeof(counts)`); you cannot free such objects with plain `free(p)` — release paths handle it, but raw-pointer ownership of these types is a footgun.
 - `maxRefs/maxStrong/maxWeak == 0` means unlimited; enforcement of the limit throws `rbx::too_many_refs` mid-increment (count already advanced past max on failure path — the throw leaves strong temporarily > max).
-- Refcount ops are non-fenced increments on `rbx::atomic<Count>`; destruction ordering relies on those atomics' semantics (see rbx/atomic.h).
+- Refcount ops go through `rbx::atomic<Count>`'s Interlocked/`__sync` primitives — full-barrier RMW on both backends (no relaxed/acquire-release tuning available in this pre-C++11 model).
 - `#pragma pack(8)` around counts exists so Count=byte/short keeps objects small.
 - Header includes `"rbx/declarations.h"` lowercase — fine on case-insensitive filesystems (macOS default), breaks on Linux case-sensitive checkouts.
 - TODO in-file: custom allocators unsupported; make_shared.h notes shared_from_this interplay unverified.

@@ -12,7 +12,7 @@ const char* get_thread_name();   // valid only for named-created threads
 
 class worker_thread : public boost::noncopyable {
     enum work_result { done, more };
-    explicit worker_thread(const boost::function0<work_result>& work_function, const char* name);
+    worker_thread(const boost::function0<work_result>& work_function, const char* name);
     ~worker_thread();
     void wake();  // run work_function again if sleeping
     void join();  // request stop + join
@@ -20,7 +20,7 @@ class worker_thread : public boost::noncopyable {
 };
 }
 ```
-Implementation is UNKNOWN from this header alone — no matching .cpp exists under Base/ in this snapshot (grep of CMakeLists/vcxproj would confirm where it links from).
+Implemented in rbx/boost.cpp (worker_thread methods, threadProc, and the naming helpers all live there).
 
 ## Usage
 Background jobs that poll or process streams at low priority while remaining wakeable (e.g. network/asset workers).

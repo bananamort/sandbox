@@ -21,7 +21,7 @@ template<class T, class U> T rbx_static_cast(U u); // RBXASSERT_SLOW(dynamic_cas
 #define LEGACY_ASSERT(expr)      // no-op unless FIRE_LEGACY_ASSERT defined
 // tiers: RBXASSERT / _VERY_FAST / _SLOW / _IF_VALIDATING / _FISHING; RBXASSERT_NOT_RELEASE()
 ```
-Build matrix (from header): DEBUG enables all but FISHING; NoOpt enables RBXASSERT+VERY_FAST and defines `__RBX_CRASH_ON_ASSERT`; ReleaseAssert keeps plain RBXASSERT; Release strips everything.
+Build matrix (from header macros): `_DEBUG` defines `__RBX_VERY_FAST_ASSERT`, `__RBX_VALIDATE_ASSERT`, `__RBX_NOT_RELEASE`; `_NOOPT` additionally defines `__RBX_CRASH_ON_ASSERT`; Release leaves RBXASSERT mapped to RBX_LOG_ASSERT while the auxiliary tiers become no-ops. Note `__RBX_SLOW_ASSERT` and `__RBX_FISHING_ASSERT` are left commented out (`// TODO: Hire a physics guy to enable them`), contradicting the header's own overview table which claims SLOW always runs in debug.
 
 ## Usage
 `RBXASSERT(cond)` everywhere in engine code; `RBXASSERT_VERY_FAST` for inner-loop invariants; `RBXCRASH("reason")` as deliberate fatal-error primitive (used by allocators, concurrency catchers, task scheduler).
@@ -31,5 +31,5 @@ Build matrix (from header): DEBUG enables all but FISHING; NoOpt enables RBXASSE
 - iOS debug maps RBXASSERT to LOG variant because "iOS has no way to step over asserts".
 - Windows debug path routes through `_ASSERTE` after trying `_debugHook`.
 - `__RBX_CRASH_ON_ASSERT` (NoOpt) turns every assert into a hard crash via RBX_CRASH_ASSERT.
-- rbx_static_cast's guard uses dynamic_cast — requires polymorphic U.
+- rbx_static_cast's guard uses dynamic_cast — requires polymorphic U. Because `__RBX_SLOW_ASSERT` is disabled, this guard is currently a no-op in ALL builds, so `rbx_static_cast` behaves exactly like `static_cast`.
 - Header undefs min/max on Win32 and includes FastLog (LOGGROUP(Asserts)).
