@@ -125,4 +125,11 @@ namespace DFLog {
 #define FASTLOGS(group, msg, s) \
     ::RBX::FastLogImpl::emit(msg, s)
 
+// Group registration marker. In the original logger this registered the
+// group with the runtime dump machinery; here it is intentionally empty --
+// every group referenced anywhere in the tree is already declared in the
+// FLog/DFLog enums above (harvested exhaustively). A call site using an
+// unlisted group fails to compile, which is the desired tripwire.
+#define LOGGROUP(name)
+
 #endif // RBX_FASTLOG_H
