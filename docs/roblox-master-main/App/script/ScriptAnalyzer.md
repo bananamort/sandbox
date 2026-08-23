@@ -1,0 +1,32 @@
+# App/script/ScriptAnalyzer.cpp
+
+## Purpose
+
+A fully self-contained Lua 5.1 static analyzer embedded in the engine: a region-allocated lexer (`Lexer`), an interning name table (`AstNameTable`), a complete AST hierarchy with visitor dispatch (`AstNode`/`AstExpr*`/`AstStat*`, RTTI via `AstRtti`/ASTRTTI macro), a recursive-descent parser (`Parser::parse`), and a pass framework (`AnalyzerPass` list) producing the Studio "Script Analysis" warnings defined in App/include/script/ScriptAnalyzer.h (UnknownGlobal, DeprecatedGlobal, GlobalUsedAsLocal, LocalShadow, SameLineStatement, MultiLineStatement, UnknownType, DotCall, UnknownMember, BuiltinGlobalWrite, Placeholder) plus an experimental IntellesenseResult local-variable map. Structurally this file is the direct ancestor of Luau's frontend (Lexer/Parser/Ast) — highly relevant reference material for the graft.
+
+## API
+
+Flags/knobs: `FASTFLAGVARIABLE(StudioVariableIntellesense, false)`, `FASTFLAGVARIABLE(DebugScriptAnalyzer, false)` (per-pass timing logs >0.05 msec), `FASTINTVARIABLE(ScriptAnalyzerIgnoreWarnings, 0)` (bitmask per WarningCode).
+
+Infrastructure: `RBX::ScriptParser::Allocator` — 8KB page bump allocator; placement `operator new/delete(size_t, Allocator&)` overloads. `class Error : std::exception` carrying `Location`. `kReserved[]` — the 21 Lua 5.1 keywords. `struct Lexeme` with Type enum (Eof, char literals 1..255 as Char_END=256 convention, multi-char ops Equal/LessEqual/GreaterEqual/NotEqual/Dot2/Dot3, String/Number/Name, Reserved_BEGIN..Reserved_END); `AstName` (interned `const char*` compared by pointer); `AstNameTable` (DenseHashMap with Reflection string hash predicates; addStatic/getOrAddWithType). Lexer: whitespace/comment skipping (`--` line and `--[==[ long ]==]` via skipLongSeparator/readLongString), strings with escapes incl. `\ddd`, numbers skipped Lua-lexer-style then validated later by strtod/strtoul hex fallback in the parser ("Malformed number").
+
+AST: AstLocal{name, location, shadow chain, functionDepth}; AstVisitor with visit() overloads defaulting through the base; nodes AstExprGroup/ConstantNil/ConstantBool/ConstantNumber/ConstantString/Local(upvalue flag)/Global/Varargs/Call(func,args,self)/IndexName(expr,index,indexLocation)/IndexExpr/Function(self,args,vararg,body)/Table(pairs interleaved key,NULL/value slots)/Unary(Not|Minus|Len)/Binary(Add..Or with CompareNe..CompareGe, And, Or); stats Block/If/While/Repeat/Break/Return/Expr/Local/For/ForIn/Assign.
+
+Parser: standard Lua grammar with `binaryPriority[]` table copied from lcode.c priorities (unaryPriority 8), functionStack tracking vararg+loopDepth ("No loop to break", "Cannot use '...' outside a vararg function"), localMap shadow-chain save/restore per block, ambiguous-syntax guard ("Ambiguous syntax: this looks like an argument list..." when call paren starts a new line), expectMatch diagnostics with line/column of the opener, table constructors storing key/value pairs adjacently (NULL key = array element). Function statements desugar to AstStatAssign{funcname-chain, AstExprFunction}; `local function` binds the local before parsing the body.
+
+Analysis: `emitWarning(result, code, location, ...)` honoring FInt::ScriptAnalyzerIgnoreWarnings bit per code. `AnalyzerContext` holds Result*, root, "_" placeholder name, builtinGlobals (Variant values harvested by iterating LUA_GLOBALSINDEX of a live thread through LuaArguments::get, swallowing exceptions for exotic tables), deprecatedGlobals (Game→game, Workspace→workspace, Delay→delay, ElapsedTime→elapsedTime, Spawn→spawn, Wait→wait plus NULL-deprecated DebuggerManager, PluginManager, printidentity, Stats, stats, Version, version, settings, load, dofile, loadfile). Passes: AnalyzerPassWarnGlobalLocal (unknown/deprecated/builtin-write/global-used-as-local detection with firstRef/onlyFunctionRef tracking), AnalyzerPassWarnSameLineStatement (once per line), AnalyzerPassWarnMultiLineStatement (column-indentation heuristic, tables excluded), AnalyzerPassWarnDotCall (member-call-without-colon on non-local/global bases), AnalyzerPassWarnUnknownType (IsA/GetService/FindService/Instance.new first-string args validated against Reflection::ClassDescriptor binary search + Creatable check), AnalyzerPassWarnLocalShadow (uses AstLocal shadow chains; DISABLED), AnalyzerPassDataflow (abstract Value{Null,Object,Class,Table,Bottom} lattice over locals/globals/tables validating member reads against descriptors and table keys; DISABLED), AnalyzerPassIntellesenseLocal (block-structured variable map; gated by FFlag).
+
+Entry point: `static ScriptAnalyzer::Result ScriptAnalyzer::analyze(DataModel* dm, shared_ptr<Instance> script, const std::string& code)` — asserts dm->currentThreadHasWriteLock(), builds a throwaway GameScript_ thread via file-static `createScriptThread(ScriptContext*, script)` (declares "script" global), parses, fills context, runs enabled passes (`PASS()` macro list: WarnGlobalLocal, WarnMultiLineStatement, WarnUnknownType, + IntellesenseLocal under flag; WarnLocalShadow/WarnDotCall/WarnDataflow commented out), catches ScriptParser::Error into result.error, sorts warnings by WarningComparator.
+
+## Usage
+
+Consumed from outside App/script (Studio surfaces); within this module nothing calls it — consistent with it being invoked through reflection/Studio tooling. It depends on ScriptContext (thread creation), ObjectBridge/LuaArguments (builtin-global harvesting), Reflection ClassDescriptor lookups, and Name/Creatable registries.
+
+## Gotchas
+
+- This duplicates the entire Lua grammar in-engine, separate from lparser.c: two parsers can (and eventually do) disagree; warnings are advisory only.
+- The parser rejects some stock-Lua-tolerated patterns explicitly (ambiguous call syntax across newlines) — behavior differences vs luaY_parser matter if scripts are linted before execution.
+- builtinGlobals snapshot comes from a REAL VM's globals at analyze time — sandbox state influences lint results.
+- Deprecated-globals list documents which globals Roblox wanted gone in 2016 (incl. load/dofile/loadfile "security" stubs) — useful expectations inventory for the graft.
+- Disabled-but-present passes (LocalShadow/DotCall/Dataflow) show intended future surface; Dataflow already models Instance-property traversal via prop->getVariant on live objects (reads engine state during analysis).
+- The AST/lexer/parser here share names and design with upstream Luau's Luau/AST.cpp|Lexer.cpp|Parser.cpp — diffing against Luau is the fastest way to see what the graft adds.

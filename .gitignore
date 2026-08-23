@@ -1,5 +1,4 @@
-roblox-master-main/
-roblox-sandbox/
+/roblox-master-main/
 *.pyc
 __pycache__/
 .DS_Store

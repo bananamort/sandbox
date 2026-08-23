@@ -55,9 +55,10 @@ Linux/Wine runtime (later phases): a second `ubuntu-latest` job adds wine prefix
 A phase is not done until its gate passes — link/run gates execute **in CI, never locally**; never report partial gates as complete:
 
 - **1 Prune**: manifest diff clean; slimmed `.sln` opens in VS2022 with zero unavailable-project dialogs.
-- **2 Build enablement**: `ReleaseRcc|Win32` and `Release|Win32` link successfully → `RCCService.exe` + `RobloxPlayerBetaRaw.exe`; `-Console` smoke-run OK.
-- **3 Luau graft / 4 instrumentation**: globals-inventory dump identical pre/post graft; environment parity checklist passes; hooks emit logs on known-good test scripts.
-- **6 End-to-end validation**: real obfuscated targets reconstruct meaningfully; anti-probe smoke tests pass under Wine.
+- **2 Documentation**: every in-scope file has a mirrored `.md` whose claims a reviewer agent certified against a full source read; scripted reconciliation shows zero undocumented files.
+- **3 Build enablement**: `ReleaseRcc|Win32` and `Release|Win32` link successfully → `RCCService.exe` + `RobloxPlayerBetaRaw.exe`; `-Console` smoke-run OK.
+- **4 Luau graft / 5 instrumentation**: globals-inventory dump identical pre/post graft; environment parity checklist passes; hooks emit logs on known-good test scripts.
+- **7 End-to-end validation**: real obfuscated targets reconstruct meaningfully; anti-probe smoke tests pass under Wine.
 
 ## Code style
 
@@ -76,6 +77,7 @@ Tool-call read a file IN FULL before editing it or writing anything derived from
 - Every claim in a doc must be grounded in the source text; anything undetermined is marked `UNKNOWN:` — speculation is deleted on sight.
 - An INDEPENDENT reviewer subagent re-reads the sources and checks each doc claim-by-claim. Any doc that cannot be certified as read-grounded gets redone. Writer output is never trusted unread.
 - Layout mirrors the source tree under `docs/roblox-master-main/` (+ `INDEX.md` per module directory).
+- Path safety: writers verify every output path resolves under the docs root BEFORE writing. Any write that would land in the source tree is aborted and re-targeted — never "fixed" by restoring afterwards.
 
 ## Security considerations
 
