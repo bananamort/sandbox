@@ -46,6 +46,9 @@ jobs:
             7z x -y boost_1_74_0.zip >nul
             robocopy boost_1_74_0 roblox-sandbox\Library\boost /E /NFL /NDL /NP
             if errorlevel 8 exit /b 1
+            rem Release zips put headers in boost\; our tree consumes the git-layout include\boost\ (normally made by b2 install)
+            robocopy boost_1_74_0\boost roblox-sandbox\Library\boost\include\boost /E /NFL /NDL /NP
+            if errorlevel 8 exit /b 1
             exit /b 0
           ) else (
             echo Boost build system present, nothing to restore
