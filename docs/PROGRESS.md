@@ -5,7 +5,7 @@ Workstream numbers follow execution order per docs/ARCHITECTURE.md (Pipeline sec
 | # | Workstream | Status | Gate evidence |
 |---|---|---|---|
 | 1 | Prune | DONE | `verify_prune.py` VERIFY_OK (63 absent / 45 required); `slim_sln.py` CHECK_OK (37 projects removed, 19 kept); idempotent rerun removes zero |
-| 2 | Build enablement | IN PROGRESS | v143 retarget applied (219 vcxprojs, 592 edits); validate+build workflows added; first CI runs pending |
+| 2 | Build enablement | IN PROGRESS | v143 retarget applied (219 vcxprojs, 592 edits); CI live at github.com/bananamort/sandbox: `validate` green, first `build` run executing |
 | 3 | Luau graft | NOT STARTED | — |
 | 4 | Instrumentation | NOT STARTED | — |
 | 5 | Wine runtime | NOT STARTED | — |
