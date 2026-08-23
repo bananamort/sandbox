@@ -27,7 +27,7 @@ Drop-in alternative to the 1.1 service class:
 RCCServiceSoap12Service service;   // same bind/accept/serve/copy flow
 ```
 
-Compiled into the binary (it is in the vcxproj's generated sources) but unreferenced by `RCCService.cpp`, which uses `ExceptionAwareSoap<RCCServiceSoapService>`.
+Not compiled into the RCCService binary — `RCCService.vcxproj` lists only `soapC.cpp`, `soapRCCServiceSoapService.cpp`, and `stdsoap2.cpp` from `gSOAP/` — and unreferenced by `RCCService.cpp`, which uses `ExceptionAwareSoap<RCCServiceSoapService>`.
 
 ## Gotchas
 

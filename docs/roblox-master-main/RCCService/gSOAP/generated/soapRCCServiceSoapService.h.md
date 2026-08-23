@@ -4,7 +4,7 @@ Source: `roblox-sandbox/RCCService/gSOAP/generated/soapRCCServiceSoapService.h` 
 
 ## Purpose
 
-Generated **SOAP 1.1 server skeleton** for RCCService: declares class `RCCServiceSoapService`, which publicly inherits the whole gSOAP engine (`class RCCServiceSoapService : public soap`) and adds the accept/serve loop plus 18 pure-virtual-style operation methods that the application must override. `RCCServiceSoapServiceImpl.cpp` defines `RCCServiceSoapServiceImpl` as a subclass implementing exactly these methods.
+Generated **SOAP 1.1 server skeleton** for RCCService: declares class `RCCServiceSoapService`, which publicly inherits the whole gSOAP engine (`class RCCServiceSoapService : public soap`) and adds the accept/serve loop plus 18 virtual operation methods that the application must define. `RCCServiceSoapServiceImpl.cpp` implements exactly these 18 methods **out-of-class** (`int RCCServiceSoapService::OpenJob(...)` etc.) — there is no `RCCServiceSoapServiceImpl` subclass; the process-global instance is the `ExceptionAwareSoap<RCCServiceSoapService>` template instantiated in `RCCService.cpp`.
 
 ## API
 

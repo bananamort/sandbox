@@ -46,7 +46,7 @@ One request+response pair per operation (18 ops: HelloWorld … DiagEx), matchin
 
 ### Base typedefs
 
-`typedef char *_QName` (5), `typedef char *_XML` (6).
+`typedef char *_QName` (1370), `typedef char *_XML` (1375).
 
 ## Usage
 

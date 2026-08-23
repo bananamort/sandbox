@@ -64,7 +64,7 @@ Regenerated wholesale by generate.bat — never hand-edit.
 | `soapH.h` | [doc](gSOAP/generated/soapH.h.md) | Serializer prototypes + dispatch/instantiate declarations |
 | `soapC.cpp` | [doc](gSOAP/generated/soapC.cpp.md) | Serializer implementations (15k lines) |
 | `soapRCCServiceSoapService.h/.cpp` | [h](gSOAP/generated/soapRCCServiceSoapService.h.md) · [cpp](gSOAP/generated/soapRCCServiceSoapService.cpp.md) | SOAP 1.1 server class (used) |
-| `soapRCCServiceSoap12Service.h/.cpp` | [h](gSOAP/generated/soapRCCServiceSoap12Service.h.md) · [cpp](gSOAP/generated/soapRCCServiceSoap12Service.cpp.md) | SOAP 1.2 twin (compiled, unused) |
+| `soapRCCServiceSoap12Service.h/.cpp` | [h](gSOAP/generated/soapRCCServiceSoap12Service.h.md) · [cpp](gSOAP/generated/soapRCCServiceSoap12Service.cpp.md) | SOAP 1.2 twin (not in the vcxproj — compiled out, unused) |
 | `RCCServiceSoap.nsmap` / `RCCServiceSoap12.nsmap` | [11](gSOAP/generated/RCCServiceSoap.nsmap.md) · [12](gSOAP/generated/RCCServiceSoap12.nsmap.md) | Identical namespace tables (wildcard rows cover both bindings) |
 
 ### Binaries (no documentation)

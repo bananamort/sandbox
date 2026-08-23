@@ -33,7 +33,7 @@ Namespace-level entry points (declared in `OperationalSecurity.h`):
 
 ### Guard-page scheme baseline (precision target)
 
-**Canary construction**: `template<int N> rccBigFunc()` recursively `__forceinline`s itself, each level emitting an inline-asm block of nine `RBX_NOP6` plus one `RBX_NOP3` (macro-expanded multi-byte NOPs from `security/JunkCode.h`; source comment notes the last emits "4 bytes"). `rccBigFuncStorage()` instantiates `rccBigFunc<128>` in release builds only (`#if !defined(_NOOPT) && !defined(_DEBUG)`), producing ≈128×58 = 7424 bytes of NOP sled. The comment at line 40 records why: `__declspec(align(4096))` did not work, so the function was padded past 8192 bytes to guarantee it fully covers at least one page.
+**Canary construction**: `template<int N> rccBigFunc()` recursively `__forceinline`s itself, each level emitting an inline-asm block of nine `RBX_NOP6` plus one `RBX_NOP3` (macro-expanded multi-byte NOPs from `security/JunkCode.h`; source comment notes the last emits "4 bytes"). `rccBigFuncStorage()` instantiates `rccBigFunc<128>` in release builds only (`#if !defined(_NOOPT) && !defined(_DEBUG)`), producing ≈128×58 = 7424 bytes of NOP sled. The comment at line 40 records why: `__declspec(align(4096))` did not work, so the storage was padded (nominally 8192 bytes) to guarantee it fully covers at least one page — the ≈7424-byte sled exceeds one 4096-byte page even if it falls short of the nominal target.
 
 **Placement**: `getGuardPageBase()` (line 50) rounds `&rccBigFuncStorage` up to the next `kPageSize` (hardcoded 4096) boundary — the first full page inside the function body.
 
@@ -71,4 +71,4 @@ Called during RCCService startup/teardown (from the engine web layer / `_tmain`)
 - Analytics reporting is probabilistic and silent at `US30484p2=0`.
 - Includes `security/JunkCode.h`, `util/Analytics.h` — engine-tree headers outside this folder.
 
-UNKNOWN: which component calls `initAntiMemDump`/`initHwbpVeh`/`initLuaReadOnly` (not called anywhere in this folder); definition values shipped for the four fast flags in production config.
+Caller inside this folder: the `CWebService` constructor (`RCCServiceSoapServiceImpl.cpp:1348–1353`) invokes `RBX::initAntiMemDump()` (only when `DFFlag::US30476` is set) and then `RBX::initLuaReadOnly()` / `RBX::initHwbpVeh()` unconditionally during service bootstrap. UNKNOWN: definition values shipped for the four fast flags in production config.

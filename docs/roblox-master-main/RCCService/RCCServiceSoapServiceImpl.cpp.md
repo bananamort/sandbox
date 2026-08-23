@@ -57,7 +57,7 @@ Collects `ProcessVariable(name,data,dynamic)` entries; `DefaultHandler` accepts 
 
 ### `class CWebService` (383–1211)
 
-State: `JobMap jobs` (`std::map<std::string, shared_ptr<JobItem>>`), `sync` mutex, `currentlyClosingMutex`, `dataModelCount`, settings caches, `isThumbnailer` flag, three updater threads + perf-data thread, `ATL::CEvent doneEvent` (auto-reset, initially unset), static `singleton` (scoped_ptr).
+State: `JobMap jobs` (`std::map<std::string, shared_ptr<JobItem>>`), `sync` mutex, `currentlyClosingMutex`, `dataModelCount`, settings caches, `isThumbnailer` flag, two settings-fetch threads + one perf-data thread, `ATL::CEvent doneEvent` (auto-reset, initially set — the constructor passes `doneEvent(TRUE, FALSE)`, so each waiting loop consumes the initial signal once), static `singleton` (scoped_ptr).
 
 `struct JobItem` (407–425): `{const std::string id; shared_ptr<DataModel> dataModel; RBX::Time expirationTime; int category; double cores; ATL::CEvent jobCheckLeaseEvent; connection notifyAliveConnection; JobItemRunStatus status; std::string errorMessage}` with statuses `RUNNING_JOB/JOB_DONE/JOB_ERROR`; `touch(double)` sets `expirationTime = now<Fast>() + Interval(seconds)`; `secondsToTimeout()` returns remaining seconds.
 
@@ -102,7 +102,7 @@ Bootstrap/teardown:
 
 ### SOAP entry points (1540–1820)
 
-All follow the same shape: `BEGIN_PRINT`/`END_PRINT` trace macros (no-op unless `DIAGNOSTICS` defined), Interlocked counter ±, most wrap `Impersonator(WebService)`, delegate to `CWebServive::singleton`, return 0 (gSOAP success). Signatures (gSOAP convention `int Op(_ns1__Op*, _ns1__OpResponse*)`):
+All follow the same shape: `BEGIN_PRINT`/`END_PRINT` trace macros (no-op unless `DIAGNOSTICS` defined), Interlocked counter ±, most wrap `Impersonator(WebService)`, delegate to `CWebService::singleton`, return 0 (gSOAP success). Signatures (gSOAP convention `int Op(_ns1__Op*, _ns1__OpResponse*)`):
 
 | Operation | Line | Notes |
 | --- | --- | --- |

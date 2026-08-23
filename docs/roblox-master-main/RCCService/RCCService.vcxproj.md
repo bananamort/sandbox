@@ -18,7 +18,7 @@ MSBuild project for the **RCCService.exe** Win32 console application. Defines fo
 - Optimization: Debug/NoOpt `Disabled`; Release/ReleaseTest `MaxSpeed` + intrinsics + `FloatingPointModel=Fast`; Release/ReleaseTest set `BufferSecurityCheck=false`; SSE2 instruction set everywhere.
 - Post-build: `"$(SolutionDir)buildshaders.bat"` on Debug/NoOpt/ReleaseTest (not plain Release).
 - **Compiled TUs span folders** (`ClCompile`): local `DummyWindow.cpp OperationalSecurity.cpp RCCService.cpp RCCServiceSoapServiceImpl.cpp stdafx.cpp ThumbnailGenerator.cpp` plus `..\App\script\LuaVMServer.cpp`, `..\ClientShared\DataModelSerialize.cpp`, `..\Win\{DumpErrorUploader,ErrorUploader,LogManager,Tracer,VersionInfo,VistaTools}.cpp`, `gSOAP\stdsoap2.cpp`, `gSOAP\generated\soapC.cpp`, `gSOAP\generated\soapRCCServiceSoapService.cpp`.
-- Headers enumerated include all 26 `gSOAP/import/*.h` (compile-time visibility only — import headers are used by wsdl2h, not by C++ compiles).
+- Headers enumerated include all 27 `gSOAP/import/*.h` (compile-time visibility only — import headers are used by wsdl2h, not by C++ compiles).
 - Custom builds: `RCCService.wsdl` (CustomBuild item → binding generation), `AppSettings.xml` (copied to `$(TargetDir)` every config).
 - `PublishDLLDependency` payload: `gameserver.txt`, `..\fmod\win32\fmod.dll`, `VMProtectSDK32.dll`, Mesa `GLU32/OPENGL32/OSMESA32 .dll+.lib+.pdb` (Debug variants only in Debug config; Release variants elsewhere), `RbxDebug.dll/.pdb` (debug-only).
 - Project references (build-order graph): App.BulletPhysics, App, Base, boost.static, Log, Network, AppDraw, graphics3D, GfxBase, GfxCore, GfxRender, RbxG3D — most with `ReferenceOutputAssembly=false` (ordering only); BulletPhysics/GfxCore/GfxRender link their outputs.

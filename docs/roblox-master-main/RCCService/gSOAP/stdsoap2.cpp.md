@@ -20,7 +20,7 @@ The **gSOAP 2.7.10 runtime engine implementation** — the vendored third-party 
 
 - `soap_bind(host, port, backlog)` (4135): getaddrinfo → socket → setsockopt chain (`SO_KEEPALIVE`, `SO_SNDBUF/RCVBUF`, `TCP_NODELAY`) → bind → listen; every failure funnels into `soap_set_receiver_error(..., "… failed in soap_bind()", SOAP_TCP_ERROR)` — the error whose fault string `startupRCC()` rethrows as `std::runtime_error`.
 - `soap_poll` (~4270): non-blocking `select` probe used to detect closed peer connections.
-- `tcp_accept` (4357): raw `accept` + optional FD_CLOEXEC.
+- `tcp_accept` (4358): raw `accept` + optional FD_CLOEXEC.
 - `soap_accept` (4381): the loop `stepRCC()` polls every second — honors `accept_timeout` (>0 sec / <0 µsec; **default select timeout 60 s when timeout fields are zero**), flips master socket non-blocking during waits, then on success records `soap->ip`/`soap->port` from the peer, applies `accept_flags`/`SO_LINGER`, sets buffer sizes and `TCP_NODELAY`, and derives `keep_alive` from `SOAP_IO_KEEPALIVE`. Returns `SOAP_INVALID_SOCKET` on timeout/error.
 
 ### HTTP layer

@@ -25,7 +25,7 @@ The **service contract** for RCC Service ("RCCService"): a document/literal SOAP
 | `BatchJobEx` | same inputs → single `ArrayOfLuaValue BatchJobExResult` |
 | `GetExpiration` | (`jobID: string`) → `double GetExpirationResult` |
 | `GetAllJobs` | () → unbounded nillable `Job GetAllJobsResult` |
-| `getAllJobsEx` (`GetAllJobsEx`) | () → single `ArrayOfJob GetAllJobsExResult` |
+| `GetAllJobsEx` | () → single `ArrayOfJob GetAllJobsExResult` |
 | `CloseExpiredJobs` | () → `int CloseExpiredJobsResult` |
 | `CloseAllJobs` | () → `int CloseAllJobsResult` |
 | `Diag` | (`type: int`, optional `jobID: string?`) → unbounded nillable `LuaValue DiagResult` |
@@ -46,7 +46,7 @@ The `Ex` suffixed operations are wire-compatible re-encodings of their plain cou
 - **No `<wsdl:service>` section**: the file defines port types and bindings but no endpoint/address — clients must know host:port out of band (default RCC listen port 64989, see `RCCService.cpp`).
 - There is no authentication anywhere in the contract — access control is done by the engine-side access key inside job scripts, not at the SOAP layer.
 - `OpenJobResponse`'s result is *not* marked nillable, but `Execute`/`BatchJob`/`Diag` results are — nil values serialize differently per operation.
-- The operation order here (HelloWorld … DiagEx) matches the extern op counters listed in `RCCService.cpp`'s backpressure error message.
+- The operations declared here correspond one-to-one to the thirteen extern op counters defined in `RCCServiceSoapServiceImpl.cpp` (each `Ex` variant shares its plain counterpart's counter); the *order* differs from both the counter declaration order and the backpressure message's listing order.
 - `cores` and `expirationInSeconds` are XML `double`s even though they are conceptually integral counts/durations.
 
 UNKNOWN: which client versions used plain vs `Ex` operations; whether `Diag`'s `type` int maps to documented diagnostic constants (mapping lives server-side in `RCCServiceSoapServiceImpl.cpp`).

@@ -61,7 +61,7 @@ Included by `soapStub.h` (line 11) and thus transitively by everything; compiled
 ## Gotchas
 
 - Version is pinned at **2.7.10** (2000–2008 era): known-era limitations apply (no IPv6 unless `WITH_IPV6`, FD_SETSIZE 1024 default — the header itself suggests raising it if `SOAP_FD_EXCEEDED` appears).
-- `struct soap` embeds fixed arrays (~68KB of `buf` alone at default `SOAP_BUFLEN`) — copying contexts must go through `soap_copy_context`, never struct assignment.
+- `struct soap` embeds fixed arrays (~64KB of `buf` alone at default `SOAP_BUFLEN` 65536) — copying contexts must go through `soap_copy_context`, never struct assignment.
 - The WIN32 branch hard-codes `WITH_NOEMPTYSTRUCT`, which is why `SOAP_ENV__Header` gets its dummy member in soapStub.h.
 - Callback fields are the extension points gSOAP plugins use; leaving them NULL selects defaults set in `soap_init`.
 

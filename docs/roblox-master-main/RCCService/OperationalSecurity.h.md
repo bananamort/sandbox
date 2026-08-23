@@ -28,4 +28,4 @@ Included by engine code that sequences the schemes at startup and by `RCCService
 
 - All four functions are no-ops unless their FastFlag gates are enabled (see `OperationalSecurity.cpp.md`).
 - `initLuaReadOnly`/`clearLuaReadOnly` are stateful (cached `.lua` range in file-statics); calling `clear` without a prior successful `init` is safe (checks `luaBase && luaSize`).
-- UNKNOWN: whether `initAntiMemDump`/`initHwbpVeh` are invoked anywhere in the current tree (no caller inside RCCService/).
+- Called from the `CWebService` constructor (`RCCServiceSoapServiceImpl.cpp:1348–1353`): `initAntiMemDump()` behind `DFFlag::US30476`, then `initLuaReadOnly()` and `initHwbpVeh()` unconditionally.

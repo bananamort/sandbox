@@ -4,7 +4,7 @@ Source: `roblox-sandbox/RCCService/gSOAP/generated/soapRCCServiceSoapService.cpp
 
 ## Purpose
 
-Generated implementation of the **SOAP 1.1 server object** declared in `soapRCCServiceSoapService.h`: constructors/copy logic, the namespace-table install, the `run/bind/accept/serve/dispatch` engine glue, and the 18 static per-operation `serve___ns2__<Op>` functions that deserialize a request envelope, invoke the virtual operation method, and serialize the response. This is the code path every RCCService request flows through between `process_request()` in `RCCService.cpp` and `RCCServiceSoapServiceImpl`'s overrides.
+Generated implementation of the **SOAP 1.1 server object** declared in `soapRCCServiceSoapService.h`: constructors/copy logic, the namespace-table install, the `run/bind/accept/serve/dispatch` engine glue, and the 18 static per-operation `serve___ns2__<Op>` functions that deserialize a request envelope, invoke the virtual operation method, and serialize the response. This is the code path every RCCService request flows through between `process_request()` in `RCCService.cpp` and the operation implementations in `RCCServiceSoapServiceImpl.cpp`.
 
 ## API
 
@@ -56,7 +56,7 @@ Each follows one template (shown for HelloWorld, lines 234–273):
 
 ## Usage
 
-Compiled into the RCCService binary as-is; never edited by hand. The virtual operations are overridden in `RCCServiceSoapServiceImpl.cpp` (`RCCServiceSoapServiceImpl : public RCCServiceSoapService`).
+Compiled into the RCCService binary as-is; never edited by hand. The 18 virtual operations are implemented in `RCCServiceSoapServiceImpl.cpp` by out-of-class definitions of the `RCCServiceSoapService::Op` members themselves (no subclass exists); the running instance is `ExceptionAwareSoap<RCCServiceSoapService>` from `RCCService.cpp`.
 
 ## Gotchas
 

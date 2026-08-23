@@ -50,7 +50,7 @@ service.accept_timeout = 1;
 service.bind(NULL, port, 100); ... accept() ... serve();
 ```
 
-RCCService.cpp instantiates only `ExceptionAwareSoap<RCCServiceSoapService>` (the 1.1 class), so in this tree the 1.2 skeleton is compiled but unused at runtime.
+RCCService.cpp instantiates only `ExceptionAwareSoap<RCCServiceSoapService>` (the 1.1 class), so in this tree the 1.2 skeleton is entirely unused — neither `soapRCCServiceSoap12Service.h` nor its `.cpp` appears in `RCCService.vcxproj`.
 
 ## Gotchas
 
