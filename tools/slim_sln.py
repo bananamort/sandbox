@@ -33,7 +33,7 @@ DELETE_PREFIXES = [
     "windowsclient.prepforupload\\", "xboxclient\\", "app.unittest\\",
     "app.unittest.lib\\", "app.unittest.run\\", "base.unittest\\",
     "base.unittest.lib\\", "base.unittest.run\\",
-    "robloxtest.", "robloxtest\\",
+    "robloxtest.", "robloxtest\\", "log\\",
     "refreshpolicies\\", "cmake\\", "rendering\\shadercompiler\\",
     "boostlibs\\boost.test.vcxproj",
 ]

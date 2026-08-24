@@ -23,7 +23,7 @@ ABSENT = [
     "XboxClient", "App.UnitTest", "App.UnitTest.Lib", "App.UnitTest.Run",
     "Base.UnitTest", "Base.UnitTest.Lib", "Base.UnitTest.Run", "RobloxTest",
     "RobloxTest.MultiPlayerTest.Run", "RobloxTest.PhysicsPerfTest.Run",
-    "RobloxTest.PhysicsTests.Run", "RobloxTest.Run", "RefreshPolicies",
+    "RobloxTest.PhysicsTests.Run", "RobloxTest.Run", "RefreshPolicies", "Log",
     "cmake",
     # Root files
     "CMakeLists.txt", "buildshaders.bat", "buildshaders.sh",
