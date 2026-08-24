@@ -23,7 +23,7 @@ Implements Seated.h in the HumanoidState machine. Transition triggers:
 
 - **→ SEATED**: SIT_CMD from every ordinary state — the master table routes SIT_CMD to SEATED from FALLING_DWN, GETTING_UP, JUMPING, SWIMMING, FREE_FALL, FLYING, LANDED, RUNNING, RUNNING_SLAVE, RUNNING_NO_PHYS, STRAFING_NO_PHYS, CLIMBING, and PLATFORM_STANDING (RAGDOLL's SIT column stays xx).
 - **SEATED exits**: NO_SIT_CMD → RUNNING, JUMP_CMD → JUMPING, PLATFORM_STAND_CMD → PLATFORM_STANDING, DEAD.
-- **→ PLATFORM_STANDING**: PLATFORM_STAND_CMD from any non-DEAD/PHYSICS state.
+- **→ PLATFORM_STANDING**: PLATFORM_STAND_CMD from every ordinary state except RAGDOLL (its column is xx) and DEAD/PHYSICS; PLATFORM_STANDING's own row is xx (no self-transition needed).
 - **PLATFORM_STANDING exits**: NO_PLATFORM_STAND_CMD → RUNNING, JUMP_CMD → JUMPING, SIT_CMD → SEATED, DEAD.
 - Both are also the only states for which `updateHumanoidFloorStatus` deliberately retains lastFloor when the floor changes ("If we Sit, we still want to remember last floor", HumanoidState.cpp).
 

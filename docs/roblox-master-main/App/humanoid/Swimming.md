@@ -19,14 +19,14 @@ Real definitions:
 
 Implements Swimming.h in the HumanoidState machine; created by the HumanoidState factory for SWIMMING. Transition triggers:
 
-- **→ SWIMMING**: HAS_BUOYANCY from every ordinary state except RAGDOLL/DEAD/PHYSICS/SEATED/PLATFORM_STANDING rows (torso buoyancy flag flips true when torso enters water).
+- **→ SWIMMING**: HAS_BUOYANCY from every ordinary state except JUMPING/RAGDOLL/DEAD/PHYSICS/SEATED/PLATFORM_STANDING rows (torso buoyancy flag flips true when torso enters water; the JUMPING row's HAS_BUOYANCY cell is xx).
 - **SWIMMING exits**: JUMP_CMD → JUMPING (with setOutOfWater carried into Jumping), TOUCHED_HARD → RAGDOLL, NO_BUOYANCY → GETTING_UP, SIT_CMD → SEATED, PLATFORM_STAND_CMD → PLATFORM_STANDING, NO_HEALTH/NO_NECK → DEAD.
 
 Humanoid-side coupling: `allow3dWalkDirection()` and camera-relative `move()` both special-case SWIMMING for full-3D input, and first-person direct torso rotation skips SWIMMING.
 
 ## Gotchas
 
-- **Derivation check (task-flagged): CONFIRMED** — `Named<HumanoidState, sSwimming>` derives straight from HumanoidState, not Balancing. The header doc is accurate. Consequence: none of Balancing's tick-throttled torque or maxTorqueComponent clamps apply; Swimming rolls its own per-call PD with different gain structure (pPitch varies 500–7500 by context).
+- **Derivation check (task-flagged): CONFIRMED** — `Named<HumanoidState, sSwimming>` derives straight from HumanoidState, not Balancing. The header doc is accurate. Consequence: none of Balancing's tick-throttled torque or maxTorqueComponent clamps apply; Swimming rolls its own per-call PD with a different gain structure (effective pPitch is only ever 500 or 2000 — the 7500 initializer is overwritten by both branches of the facing-torque block before use).
 - kTurnSpeed()=6.0 (vs Humanoid autoTurnSpeed 8.0) is real in the header but currently dead code: the only consumer is inside the `#if 0` block. Turning while swimming happens through other paths (e.g., first-person rotation excluded, autorotate via calcDesiredWalkVelocity's rotational component still flows through desiredVelocity).
 - pRoll=1000 is declared but every roll-axis line is commented out — roll control is unimplemented; only pitch is balanced.
 - Thrust has a dead zone: below desired-magnitude 10 no linear force is applied at all (only balance torque), so slow drift relies on momentum decay rather than active damping.

@@ -34,4 +34,4 @@ Controller flow per call:
 - Default gains are kP=2250, kD=50 — numerically identical to GettingUp's PGS override pair (see [GettingUp.md](GettingUp.md)); Freefall and Flying raise kP to 5000 but leave kD at this default 50.
 - The tick-throttle means balance torque is stale for up to `balanceRate` iterations on the legacy solver; instrumentation sampling torques once per frame will see repeated values by design.
 - The clamp/override skips index 1 (Y) entirely — pitch-axis balance torque is unclamped by the `maxTorqueComponent` comparison path (it is still bounded indirectly because the P input tilt is horizontal).
-- `balanceRate` can return negative values for extreme torque magnitudes (>400k); `tick > 0` guards make that benign (immediate recompute), but it is not clamped.
+- `balanceRate` returns negative values for torque magnitudes above the same ~240k point where it hits zero (20 − t/12000 < 0 ⟺ t > 240000); the `tick > 0` guard makes that benign (immediate recompute every call), but the value itself is not clamped.

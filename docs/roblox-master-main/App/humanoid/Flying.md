@@ -25,4 +25,4 @@ Implements Flying.h within the HumanoidState machine. State-table transitions in
 
 - Header-side expectation "air control logic lives in the .cpp" is **wrong for this source**: both overrides are explicit no-op stubs. The `setBalanceP(5000)` call is therefore dead tuning in this snapshot — nothing consumes kP because the balance controller body is bypassed by the empty virtual override.
 - Auto-jump off (`enableAutoJump() → false` in the header) matches the stub implementation: there is no ladder/auto-jump support mid-flight here.
-- Jumping inherits from Flying but re-overrides `onComputeForceImpl` with a real body, so the dead-tuning caveat applies to Flying only.
+- Jumping inherits from Flying and re-overrides `onComputeForceImpl` with a real body — but that override's `Super::onComputeForceImpl()` resolves to **Flying's empty stub** (`Super` = `Named<Flying, sJumping>`, which does NOT chain to Balancing), so Balancing's PD never runs during JUMPING either. The kP=5000 dead-tuning caveat therefore covers both Flying and Jumping.
