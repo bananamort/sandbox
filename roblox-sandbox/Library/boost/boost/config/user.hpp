@@ -132,3 +132,7 @@
 // #define BOOST_LIB_BUILDID amd64
 
 #define ROBLOX_BOOST_CONFIGS
+
+// Sandbox build compiles needed boost sources into boost.static.lib;
+// disable pragma-based auto-linking so link.exe never seeks b2-named libs.
+#define BOOST_ALL_NO_LIB
