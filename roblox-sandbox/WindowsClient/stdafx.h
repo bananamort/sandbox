@@ -4,6 +4,12 @@
 
 #pragma once
 
+// CI shim (see ../ci_atl_loader_shim.h): declares the Win8+ loader API that
+// the only installed ATLMFC (14.51, atlcore.h:663) calls unconditionally.
+// Included here directly so PCH consumers get it even if the Directory.Build.targets
+// /FI wiring misses a TU shape; guarded header, double inclusion is free.
+#include "../ci_atl_loader_shim.h"
+
 // Exclude rarely-used stuff from Windows headers
 #define WIN32_LEAN_AND_MEAN 
 #define _CRT_SECURE_NO_WARNINGS 1 // Microsoft's standard function deprecation crap: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead.

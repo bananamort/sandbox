@@ -5,6 +5,12 @@
 
 #pragma once
 
+// CI shim (see ../ci_atl_loader_shim.h): declares the Win8+ loader API that
+// the only installed ATLMFC (14.51, atlcore.h:663) calls unconditionally.
+// Included here directly so PCH consumers get it even if the Directory.Build.targets
+// /FI wiring misses a TU shape; guarded header, double inclusion is free.
+#include "../ci_atl_loader_shim.h"
+
 #ifndef STRICT
 #define STRICT
 #endif

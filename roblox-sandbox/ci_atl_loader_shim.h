@@ -1,6 +1,10 @@
 // =============================================================================
-// ci_atl_loader_shim.h - CI-only forced include (wired in Directory.Build.targets
-// alongside the ATLMFC injection; local builds without ATLMFC_ROOT never see it).
+// ci_atl_loader_shim.h - CI loader-API shim, wired two ways:
+//   1. forced include (/FI) into every TU by Directory.Build.targets when the
+//      ATLMFC injection is active (ATLMFC_ROOT set);
+//   2. direct #include from RCCService/stdafx.h and WindowsClient/stdafx.h so
+//      PCH consumers are covered regardless of /FI wiring shape.
+// Local Windows builds without ATLMFC only get path 2 - harmless either way.
 //
 // WHY: windows-latest ships VS "18" whose ONLY installed ATLMFC component lives
 // under MSVC 14.51.36231 while our v143 projects compile with CL 14.44

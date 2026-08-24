@@ -25,4 +25,20 @@
          CI runs 32704355280/32743525757/32746195933. -->
     <ForcedIncludeFiles>$(MSBuildThisFileDirectory)ci_atl_loader_shim.h</ForcedIncludeFiles>
   </PropertyGroup>
+
+  <!--
+    The PropertyGroup above alone is NOT sufficient: /FI is driven by ClCompile
+    ITEM METADATA (ForcedIncludeFiles), which a bare property never populates -
+    run 32749616940 still failed with the identical atlcore.h(663) class under
+    the property-only wiring. Inject the metadata directly before compilation.
+  -->
+  <Target Name="ForceATLLoaderShimInclude"
+          BeforeTargets="ClCompile"
+          Condition="'$(ATLMFC_ROOT)' != ''">
+    <ItemGroup>
+      <ClCompile>
+        <ForcedIncludeFiles>$(MSBuildThisFileDirectory)ci_atl_loader_shim.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      </ClCompile>
+    </ItemGroup>
+  </Target>
 </Project>
