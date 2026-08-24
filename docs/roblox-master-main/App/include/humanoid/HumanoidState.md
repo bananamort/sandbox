@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Declares the humanoid finite-state-machine core: the `HUMAN::StateType` enum (17 states incl. sentinel), the `HUMAN::EventType` enum (28 simulation events: commands, tilt, ladder, floor, touch, buoyancy, timers), and `HumanoidState` — the abstract base class for every state. It owns per-state bookkeeping (timers, floor raycast results, ladder detection, collision policy), computes events from simulation data, drives the state table transitions (`simulate`/`noSimulate`/`changeState`/factory `create`), and carries anti-exploit machinery (`kCorrectCheckValue`, `getComputeEventBaseAddress`, `checkComputeEvent`).
+Declares the humanoid finite-state-machine core: the `HUMAN::StateType` enum (17 states + `NUM_STATE_TYPES` sentinel + trailing `xx` "NO change"), the `HUMAN::EventType` enum (26 simulation events: commands, tilt, ladder, floor, touch, buoyancy, timers, plus `NUM_EVENT_TYPES` sentinel), and `HumanoidState` — the abstract base class for every state. It owns per-state bookkeeping (timers, floor raycast results, ladder detection, collision policy), computes events from simulation data, drives the state table transitions (`simulate`/`noSimulate`/`changeState`/factory `create`), and carries anti-exploit machinery (`kCorrectCheckValue`, `getComputeEventBaseAddress`, `checkComputeEvent`).
 
 ## Declared API
 

@@ -15,7 +15,7 @@ The in-memory DOM for Roblox XML: `XmlNameValuePair` (tagged variant value: NONE
   - Ctors per type (heap-allocates string/ContentId/handle); dtor clears.
   - Queries: getTag; isValueEmpty; isValueEqual(...) ×8 typed overloads + client-implementable template; toString(XmlWriter*) ; isValueType<T>() template; getValueType.
   - Converting getters getValue(T&) ×9 + template ("If possible, these functions will convert valueType to the desired type"; TODO rename toValue).
-  - setValue overloads ×9 + template (clear then set).
+  - setValue overloads ×10 (std::string, ContentId, const char*, int, unsigned int, bool, float, double, const Name*, InstanceHandle — FIXED from 9: the `const char*` overload was missed) + template (clear then set).
 - `namespace RBX`: `template<class ChildClass> class Parent` — first/last pointers; pushBackChild/pushFrontChild/addChild/removeChild (linear unlink), firstChild/nextChild const+non-const. `template<class SiblingClass> class Sibling` — next pointer; setNextSibling is PRIVATE, friended to Parent only.
 - `class XmlAttribute : RBX::Sibling<XmlAttribute>, XmlNameValuePair, RBX::Allocator<XmlAttribute>` — tag ctor + templated value ctor.
 - `class XmlElement : RBX::Sibling<XmlElement>, RBX::Parent<XmlElement>, XmlNameValuePair, RBX::Allocator<XmlElement>`

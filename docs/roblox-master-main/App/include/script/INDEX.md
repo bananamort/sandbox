@@ -10,7 +10,7 @@ Header declarations for the scripting subsystem: the Lua VM lifecycle (`ScriptCo
 - [IScriptFilter.md](IScriptFilter.md) — interface deciding whether scripts run + RuntimeScriptService buffering Run-gated scripts.
 - [LuaArguments.md](LuaArguments.md) — Lua-stack↔Variant marshaling for reflected calls plus the withVariantValue type-switch.
 - [LuaAtomicClasses.md](LuaAtomicClasses.md) — Lua bridges for all atomic value types (CFrame, Vector3, UDim2, BrickColor, sequences, ...).
-- [LuaCoreFunctions.md](LuaOsExtension/LuaMathExtension/LuaDebugExtension registries) — extra C functions grafted onto standard libraries.
+- [LuaCoreFunctions.md](LuaCoreFunctions.md) — extra C functions grafted onto standard libraries (`LuaOsExtension`/`LuaMathExtension`/`LuaDebugExtension` registries).
 - [LuaEnum.md](LuaEnum.md) — Enums/Enum/EnumItem singleton bridges over reflection enum descriptors.
 - [LuaInstanceBridge.md](LuaInstanceBridge.md) — ObjectBridge exposing Instances to Lua (global Instance table, member dispatch).
 - [LuaLibrary.md](LuaLibrary.md) — named-library value + LibraryBridge.
@@ -29,4 +29,4 @@ Header declarations for the scripting subsystem: the Lua VM lifecycle (`ScriptCo
 
 ## Subdirectory
 
-- [lua/](lua/INDEX.md) — LuaBridge template machinery and lua.hpp/stub shims. *(pending)*
+- [lua/](lua/INDEX.md) — LuaBridge template machinery and lua.hpp/stub shims.

@@ -2,11 +2,11 @@
 
 ## Purpose
 
-Second decoy-stub unit: 99 global `RBX::Lua::LuaStubGen<N> stubN;` definitions (stub339, stub510, ... stub463) with template IDs disjoint from the other luaStubs files. Same anti-tamper filler role — inflating the population of Lua-callable stub functions.
+Second decoy-stub unit: 100 global `RBX::Lua::LuaStubGen<N> stubN;` definitions (stub339, stub510, ... stub463) with template IDs disjoint from the other luaStubs files. Same anti-tamper filler role — inflating the population of Lua-callable stub functions.
 
 ## Declared API
 
-- 99 `LuaStubGen<N>` file-scope globals; nothing else.
+- 100 `LuaStubGen<N>` file-scope globals; nothing else. (FIXED: doc previously claimed 99 — grep-verified 100 definition lines.)
 
 ## Usage notes
 

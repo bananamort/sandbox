@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Declares `HUMAN::Balancing`, the intermediate humanoid-state base for all upright/balance-controlled states (running, jumping, swimming, flying, ...). Implements a PD balance controller: proportional gain kP (units 1/sec²) and derivative gain kD (1/sec) applied as torque = gain × momentOfInertia × (rotation | rotVelocity), clamped by a max torque component.
+Declares `HUMAN::Balancing`, the intermediate humanoid-state base for balance-controlled states (derived: `RunningBase` [→ Running/RunningSlave/Landed/Climbing], `Flying` [→ Jumping], `Freefall`, `GettingUp`; NOTE `Swimming` and all other states derive straight from `HumanoidState`). Implements a PD balance controller: proportional gain kP (units 1/sec²) and derivative gain kD (1/sec) applied as torque = gain × momentOfInertia × (rotation | rotVelocity), clamped by a max torque component.
 
 ## Declared API
 
@@ -17,7 +17,7 @@ Declares `HUMAN::Balancing`, the intermediate humanoid-state base for all uprigh
 
 ## Usage notes
 
-- Subclasses tune gains via protected setters (e.g. GettingUp, Flying, Jumping, Swimming).
+- Subclasses tune gains via protected setters — grep-verified callers: `Freefall` (kP=5000), `Flying` (kP=5000, inherited by Jumping), `GettingUp` (kP=2250, kD=50).
 - See [HumanoidState.md](HumanoidState.md) for the base contract.
 
 ## Gotchas

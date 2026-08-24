@@ -28,4 +28,4 @@ Consumed by [Animation](Animation.md)::getKeyframeSequence and [Animator](Animat
 
 - getKeyframeSequence Lua variants return CLONES but the engine path returns the CACHED instance shared across tracks — editing one mutates all users of that id.
 - The placeholder-in-cache-on-miss design means a FAILED load leaves an empty KeyframeSequence cached forever (no eviction on failure).
-- GetKeyframeSequenceById's useCache parameter is accepted and IGNORED — always uses cache.
+- GetKeyframeSequenceById's useCache parameter is accepted and IGNORED — the call site hardcodes useCache=FALSE, so this path always SKIPS the cache read (though it still inserts its fresh sequence into the cache).

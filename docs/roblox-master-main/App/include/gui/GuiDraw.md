@@ -12,7 +12,7 @@ Declares `RBX::GuiDrawImage`, the low-level immediate-mode image renderer used b
   - Render overloads: `render2d(adorn, enabled, rect, WidgetState, isSelected)`; plus texul/texbr UV variants taking either `Rotation2D` or clip `Rect` + color.
   - `setImageSize(Vector2)` / `Vector2 getImageSize() const`.
   - `bool setImage(Adorn*, const TextureId&, unsigned imageStates, Vector2* outSize = NULL, Instance* contextInstance = NULL, const char* context = "")`; `bool setImageFromName(...same but name...)` — return whether the texture is ready (async load may still be waiting).
-  - `static`-style helper `computeUV(uvtl, uvbr, imageRectOffset, imageRectSize, imageSize)` — computes atlas sub-UVs.
+  - Member helper `computeUV(uvtl, uvbr, imageRectOffset, imageRectSize, imageSize)` — computes atlas sub-UVs (instance method, not static).
   - Private: per-state `TextureProxyBaseRef`s, `currentTexture/loadingTexture` ids, `OnUnbindResourceSignalHint()` on a scoped connection, private `draw(...)` ×2 and template `render2dImpl<Modifier>`, `tryCreateTextureProxy(adorn, contentString, context, ref, isWaiting&)`.
 
 ## Usage notes

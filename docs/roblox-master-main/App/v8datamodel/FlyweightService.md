@@ -8,7 +8,7 @@ Implements `FlyweightService` ("FlyweightService") — the base content-deduplic
 
 Descriptors: none. Constants: internal `localKeyTag("CSGK")`, `minKeySize(4)`; `sFlyweightService`. Flags: consumed StudioCSGAssets; `DYNAMIC_FASTFLAGVARIABLE(DoNotCleanCSGDictionaryOnPublishInCloudEdit, true)`.
 
-State: `instanceMap: MD5hash → InstanceStringData{weak_ptr<BinaryStringValue> ref, int count}`; lazy childAddedSignal hookup in onServiceProvider (first child also fires GA "UsingCS" once per process).
+State: `instanceMap: MD5hash → InstanceStringData{weak_ptr<BinaryStringValue> ref, int count}`; lazy childAddedSignal hookup in onServiceProvider (first child also fires GA "UsingCSG" once per process).
 
 Core operations:
 - `storeStringData(BinaryString&, forceIncrement, name)` — non-hash data → createHashKey(MD5); reuse existing live child (count++) or create named BinaryStringValue child under this service; rewrite str to "CSGK"+hash. Already-hashed + forceIncrement → count++ (possibly creating count-only map entry).

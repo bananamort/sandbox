@@ -31,4 +31,4 @@ Base of ScreenGui-family collectors (see [ScreenGui](ScreenGui.md), [PlayerGui](
 - Rebuild is lazy — mutations between frames are invisible until next render/process call; propertyConnections keyed by raw Instance*, disconnected in onDescendantRemoving.
 - processDescendants returns on FIRST sink even if a higher-z element would later claim it (order is authoritative).
 - The stuck-button release only handles BUTTON1/BUTTON2 and only when the down-object is still a descendant at release time.
-- getGuiObjectsForSelection legacy path (flag off) treats ANY visible ancestor ScrollingFrame as sufficient, including ones unrelated to the candidate's own chain — fixed by DFFlag::FixClippedScrollingFrameNavigation (default true here).
+- getGuiObjectsForSelection legacy path (flag off) treats the CANDIDATE'S OWN nearest visible ancestor ScrollingFrame as sufficient — i.e., any candidate whose personal ScrollingFrame chain is visible qualifies, even when that frame is unrelated to the selected object's frame — fixed by DFFlag::FixClippedScrollingFrameNavigation (default true here), which ties eligibility to the SELECTED object's visible ScrollingFrame instead.

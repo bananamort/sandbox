@@ -21,7 +21,7 @@ Templates/classes (namespace RBX::Reflection):
 - `template<class Class, typename V> class PropDescriptor : public TypedPropertyDescriptor<V>`
   - Nested GetSetImpl (get+set member-pointer functors; isReadOnly/isWriteOnly false; polymorphic_downcast dispatch), GetImpl (read-only; setValue throws `"can't set value"`), SetImpl (write-only; getValue throws `"can't get value"`).
   - Ctor `(name, category, Get, Set, flags = Attributes(), security = None)`; static `getset(Get, Set)` with two NULL_FUNCTION_PTR overloads selecting GetImpl/SetImpl.
-- `template<class Class, typename V> class EnumPropDescriptor : public EnumPropertyDescriptor` ("TODO: Refactor: This duplicates code in TypedPropertyDescriptor")
+- `template<class Class, typename V> class EnumPropDescriptor : public EnumPropertyDescriptor` ("TODO: Refactor: This duplicates code it [sic] TypedPropertyDescriptor")
   - Holds auto_ptr GetSet (from PropDescriptor::getset) + `const EnumDesc<V>& enumDesc`.
   - Implements isReadOnly/isWriteOnly, getVariant/setVariant (int-based), copyValue, getValue/setValue<V>, equalValues, getEnumItem/getEnumValue/setEnumValue (validates via enumDesc.isValue)/getIndexValue/setIndexValue/setIntValue (legacy int mapping); hasStringValue→true, string get/set incl. Name overload ("An alternate, more efficient version"); XML readValue accepts int, legacy pre-10/29/05 STRING form ("TODO: Opt: Remove this legacy code sometime? It slows text XML down a bit"), empty-string → index 0; writeValue writes int.
 - `template<typename T> class RefType : public Type` — static singleton named "Object" tagged "Ref" (this is the type RefPropertyDescriptor detection greps by name).
@@ -34,13 +34,13 @@ Templates/classes (namespace RBX::Reflection):
 - CallNHelper (N=0..7) templates: static call(o, functionPtr, returnValue&, args...) writing result into Variant; void-return specializations skip assignment. (Comment drift: several say "take N arguments" with wrong N.)
 - `template <class Class, typename Signature, int arity = function_traits<Signature>::arity> class BoundFuncDesc;` — specializations 0..7:
   - Members: member FunctionPtr + scoped_ptr<ArgN> defaultN chain; declareSignature sets resultType + addArgument(name, Type, default).
-  - Ctor cascade per arity: full-defaults, then progressively fewer leading defaults (e.g. arity2 has 3 ctors: both defaults / only arg1 missing-with-arg2-default / none), arity7 has 9 ctors (one has misordered init list: default7..default1 then function last).
-  - execute(): CallNHelper::call on polymorphic_downcast<Class*>; BOOST_STATIC_ASSERT forbids shared_ptr<const Tuple> params except the dedicated Tuple-taking case (arity≥1 first-arg-Tuple allowed via getArg's Tuple path? No — static asserts forbid Tuple params entirely for BoundFuncDesc; Tuple capture happens only through ArgHelper's Tuple specialization when T IS shared_ptr<const Tuple>, which these asserts exclude).
+  - Ctor cascade per arity: full-defaults, then progressively fewer leading defaults (e.g. arity2 has 3 ctors: both defaults / only arg1 missing-with-arg2-default / none); arity7 has 8 ctors (FIXED: doc previously claimed 9).
+  - execute(): CallNHelper::call on polymorphic_downcast<Class*>; BOOST_STATIC_ASSERTs inside declareSignature forbid `shared_ptr<const Tuple>` params for arities 2–7 — but only for Arg1..Arg(N-1), never the last argument, and arity 0/1 have no asserts at all (scope verified in-source). Tuple capture happens through ArgHelper's enable_if<Tuple> specialization, which these asserts do exclude.
 - `template <class Class> class YieldFuncDesc : public YieldFunctionDescriptor` — protected ctor passthrough.
 - `template<typename ReturnType> static void resume_adapter(boost::function<void(Variant)> resumeFunction, ReturnType returnValue)` — wraps resume value into Variant.
 - `template <class Class, typename Signature, typename ReturnType = ..., int arity = ...> class BoundYieldFuncDesc;` — specializations:
   - ReturnType/void × arity 0..5: YieldFunctionPtr appends `(resumeFunction, errorFunction)` continuations after real args; declareSignature mirrors BoundFuncDesc; execute passes ArgHelper-extracted args then bound resume_adapter (or bound resumeFunction(Variant()) for void).
-  - Note arity-5 ReturnType/void variants have copy-paste parameter-type bugs in later ctors: trailing default parameters declared as `Arg4 default5` instead of `Arg5 default5`.
+  - Note the arity-5 variants (ReturnType AND void) carry copy-paste parameter-type bugs: 8 of their 12 ctors mis-type the trailing default as `Arg4 default5` instead of `Arg5 default5` — including each variant's full-defaults ctor; only the "defaults-from-arg3" and no-defaults ctors are clean.
 - `template <class Class, typename Signature, int arity = ...> class CustomBoundFuncDesc;` — specializations 0..4 extending the matching BoundFuncDesc: hold `int (Class::*customFunction)(lua_State*)`, construct base with NULL function pointer, set `this->kind = Kind_Custom`, override executeCustom to invoke it.
 
 ## Usage notes
@@ -50,6 +50,6 @@ Templates/classes (namespace RBX::Reflection):
 
 ## Gotchas
 
-- Copy-paste defects visible in-source (safe to document, NOT safe to "fix" without review): arity-5 BoundYieldFuncDesc ctors use `Arg4 default5` types; several "take N arguments" comments are off by one; arity-7 no-defaults ctor initializes default7..default1 before function.
+- Copy-paste defects visible in-source (safe to document, NOT safe to "fix" without review): 8 of 12 arity-5 BoundYieldFuncDesc ctors use `Arg4 default5` types; several "take N arguments" comments are off by one (e.g. "3" above arity-2, "5" above arities 6 and 7); the arity-7 ctor taking only `Arg7 default7` initializes default7..default1 before function (FIXED: doc previously attributed this to the no-defaults ctor, whose init list is in normal order).
 - getset(NULL, set)/getset(get, NULL) rely on NULL_FUNCTION_PTR being `int` (non-iOS) for overload resolution — passing literal NULL selects the right overload only because of this typedef trick.
 - All casts are boost::polymorphic_downcast — checked only in debug; descriptor/class mismatches silently corrupt in release.

@@ -18,4 +18,4 @@ Legacy (2003–2008) in-engine 2D GUI layer: the `GuiItem`/`Adorn` rendering bas
 ## Related
 
 - `../script/` — Lua-facing GUI APIs live with the scripting subsystem.
-- `../../v8datamodel/` — replicated GuiObject/ScreenGui instance classes *(docs pending)*.
+- `../../v8datamodel/` — replicated GuiObject/ScreenGui instance classes.

@@ -14,7 +14,7 @@ The reflection type system underlying every Instance property, function, event, 
 - [Property.md](Property.md) — PropertyDescriptor functionality bitmasks, TypedPropertyDescriptor<V>, ConstProperty/Property handles, BoundProp.
 - [reflection.md](reflection.md) — mega-header: Described CRTP base, PropDescriptor/EnumPropDescriptor/RefPropDescriptor, ArgHelper, BoundFuncDesc 0–7, BoundYieldFuncDesc, CustomBoundFuncDesc.
 - [Type.md](Type.md) — Type singletons/registry, TypeRegistrar, Variant (96-byte in-place storage), ValueArray/Table/Map, Tuple, SignatureDescriptor.
-- [YieldFunction.md](YieldFunction.md) — YieldingFunctionDescriptor/YieldFunction async flavor.
+- [YieldFunction.md](YieldFunction.md) — YieldFunctionDescriptor/YieldFunction async flavor.
 
 ## Related
 

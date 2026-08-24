@@ -2,11 +2,11 @@
 
 ## Purpose
 
-Defines 99 global objects `RBX::Lua::LuaStubGen<N> stubN;` with fixed template IDs (stub609, stub288, stub646, ... stub620 — IDs in the 0–999 decoy space). These are anti-tamper filler: `LuaStubGen` (defined in the LuaBridge implementation layer) instantiates inert callable objects so the binary carries a large field of near-identical Lua-callable stubs, obscuring real function locations.
+Defines 100 global objects `RBX::Lua::LuaStubGen<N> stubN;` with fixed template IDs (stub609, stub288, stub646, ... stub620 — IDs in the 0–999 decoy space). These are anti-tamper filler: `LuaStubGen` (defined in the LuaBridge implementation layer) instantiates inert callable objects so the binary carries a large field of near-identical Lua-callable stubs, obscuring real function locations.
 
 ## Declared API
 
-- 99 instantiations of `template<int N> LuaStubGen<N>` as file-scope globals; no other declarations.
+- 100 instantiations of `template<int N> LuaStubGen<N>` as file-scope globals; no other declarations. (FIXED: doc previously claimed 99 — grep-verified 100 definition lines.)
 
 ## Usage notes
 

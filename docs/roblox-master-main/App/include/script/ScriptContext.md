@@ -44,7 +44,7 @@ Declares `RBX::ScriptContext`, the creatable internal Service that owns every Lu
 
 ## Gotchas
 
-- One VM per security identity: cross-identity calls go through separate globalStates; `getContext(thread)` walks up from coroutine to its root state.
+- One VM per security identity: cross-identity calls go through separate globalStates; `getContext(thread)` reads the stored `ScriptContext*` from the thread's `RobloxExtraSpace` (`luaconf.h`) — every coroutine of a state shares one context pointer via its refcounted `Shared` block (no walk-up search; FIXED after .cpp verification: original text claimed a coroutine→root walk-up, which is not what the code does).
 - `SecurityAnchor` only enforces on _WIN32 — other platforms return true unconditionally.
 - Typos are API-stable: `timoutSpan`/`timoutTime`/`endTimoutThread`, "reponsible", `RBXASSERT_BALLANCED_LUA_STACK` — do not "fix".
 - `getScriptStats()` is marked deprecated in-comment; use `getScriptStatsNew()` or `getScriptStatsTyped`.

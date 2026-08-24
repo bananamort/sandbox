@@ -37,6 +37,6 @@ Declares the reflection type core: `Type` (runtime type descriptor with singleto
 ## Gotchas
 
 - Variant is identity-typed: int(1) != double(1.0) — isType checks are pointer comparisons against singletons.
-- `genericConvert` through std::string MUTATES the source variant on success (documented behavior relied on by get()).
+- `genericConvert` through std::string MUTATES the source variant on success (re-stores converted value + retypes) — which is exactly why `get()` first clones the Variant ("Create a non-const copy") so the original stays untouched; only direct `convert()` calls mutate in place.
 - 96-byte Storage: larger payloads (e.g. big structs) fall back to placement_any's internal handling; oversized copies are expensive.
 - Registration order matters process-wide: registrar statics must init on main thread before first Instance.

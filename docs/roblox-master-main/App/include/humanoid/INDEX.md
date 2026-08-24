@@ -23,4 +23,4 @@ The humanoid character-control subsystem: `Humanoid` (the character Instance) an
 
 ## Related
 
-- Implementations pair with `App/v8datamodel/Humanoid*.cpp` *(docs pending in v8datamodel campaign)*.
+- Implementations live in `App/humanoid/*.cpp` (Humanoid.cpp, HumanoidState.cpp, and one file per state) — that directory has no .cpp-level docs yet.

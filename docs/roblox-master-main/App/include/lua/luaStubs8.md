@@ -2,11 +2,11 @@
 
 ## Purpose
 
-Ninth decoy-stub unit: 99 global `RBX::Lua::LuaStubGen<N> stubN;` definitions (stub355, stub411, ... stub141); same anti-tamper filler pattern as the other luaStubs files.
+Ninth decoy-stub unit: 100 global `RBX::Lua::LuaStubGen<N> stubN;` definitions (stub355, stub411, ... stub141); same anti-tamper filler pattern as the other luaStubs files.
 
 ## Declared API
 
-- 99 `LuaStubGen<N>` file-scope globals; nothing else.
+- 100 `LuaStubGen<N>` file-scope globals; nothing else. (FIXED: doc previously claimed 99 — grep-verified 100 definition lines.)
 
 ## Usage notes
 

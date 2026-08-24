@@ -19,9 +19,9 @@ Enums registered: ControlMode {MouseLockSwitch(+legacy spaced), Classic — CamL
 
 Behavior:
 - getCameraModeWithDefault — DEFAULT resolves to FOLLOW on iOS/Android else CLASSIC.
-- Every mode setter: permission check → GA label track → raise → mark *Modified(true). reset() restores classic/auto defaults.
+- Mode setters vary: Touch/Computer Camera+Movement setters do permission check → GA label track → raise → mark *Modified(true); ControlMode checks permission + raises only (no GA/Modified); CameraMode is descriptor-gated (no in-setter check), tracks GA + raises (no Modified). reset() restores classic/auto defaults.
 - verifySetParent — non-Anonymous identities need RobloxScript to re-parent ("set GameSettings parent").
-- recordSettingsInGA(touchEnabled) fires 4-6 GA events at startup from [Game](Game.md)::setupDataModel.
+- recordSettingsInGA(touchEnabled) fires 4 base + up to 4 conditional "*Modified" GA events at startup from [Game](Game.md)::setupDataModel.
 
 ## Usage / reflection touchpoints
 

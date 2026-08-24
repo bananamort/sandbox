@@ -14,4 +14,4 @@ Empty declaration unit: the header exists only to aggregate includes (`Gui.h`, `
 
 ## Gotchas
 
-- UNKNOWN: whether any ScoreHud implementation .cpp survived the prune; grep App sources before assuming behavior.
+- The sole consumer `App/gui/ScoreHud.cpp` DID survive the prune and is itself empty (single `#include "Gui/ScoreHud.h"`, no code) — resolved by grep during review; previously marked UNKNOWN.

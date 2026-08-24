@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Declares `HUMAN::RunningBase`, the shared base for grounded walking states (Running). Extends `Balancing` with floor-relative desired velocity, altitude targeting ("hover"), ground-rotation coupling, and arm/leg collision suppression; exposes three distinct turn-gain constants for the different solver paths.
+Declares `HUMAN::RunningBase`, the shared base for grounded walking states (derived: Running, Landed, Climbing). Extends `Balancing` with floor-relative desired velocity, altitude targeting ("hover"), ground-rotation coupling, and arm/leg collision suppression; exposes three distinct turn-gain constants for the different solver paths.
 
 ## Declared API
 

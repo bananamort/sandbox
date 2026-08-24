@@ -19,6 +19,7 @@ Declares `RBX::WordList` (an encrypted blacklist of profane words, decrypted at 
 
 ## Gotchas
 
-- `ContainsProfanity(const std::string&)` forwards to workers taking by-value strings that get decrypted in place — obfuscation is per-string at runtime, not stored plaintext.
+- Obfuscation direction: the blacklist file entries are XOR-0x55 encrypted on disk and `decrypt`ed once during `WordList` construction; query strings are never decrypted — they are lowercased and split into words, each checked against the deobfuscated set (FIXED after .cpp verification: original text claimed the by-value parameter copies "get decrypted in place", which does not happen).
+- Lazy init race handled by double-checked locking on a function-local mutex (`ContainsProfanityWorker`); bigram blacklist entries are effectively ignored (TODO in source).
 - Raw owning pointer `wordlist` with destructor cleanup; copying the filter would double-free.
 - UNKNOWN: exact decryption scheme and blacklist contents live in the .cpp/data (not in this header).

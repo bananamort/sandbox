@@ -76,7 +76,7 @@ Boundary note: `factoryregistration.cpp` and `legacy.cpp` sort under A–L (f/l)
 ## F
 
 - FaceInstance.md → [FaceInstance](FaceInstance.md) — base for part-face-attached instances: NormalId Face property, Part-only parenting, face-highlight adorn.
-- factoryregistration.md → [factoryregistration](factoryregistration.md) — type-registry bootstrap TU: ~40 RBX_REGISTER_TYPE + ~330 RBX_REGISTER_CLASS + ~130 RBX_REGISTER_ENUM entries and FactoryRegistrator one-time setup.
+- factoryregistration.md → [factoryregistration](factoryregistration.md) — type-registry bootstrap TU: 47 RBX_REGISTER_TYPE + 289 RBX_REGISTER_CLASS + 122 RBX_REGISTER_ENUM entries and FactoryRegistrator one-time setup.
 - FastLogSettings.md → [FastLogSettings](FastLogSettings.md) — client FastLog/FastFlag variable definitions (~90 LOGVARIABLEs) + ClientAppSettings web-config singleton + JSON prefix dispatcher.
 - Feature.md → [Feature](Feature.md) — hole/axle feature markers (Hole/MotorFeature) + VelocityMotor joining axle to hole primitives.
 - FileMesh.md → [FileMesh](FileMesh.md) — DataModelMesh subclass adding MeshId/TextureId; two compare-then-raise setters.

@@ -26,4 +26,4 @@ Ancestor of [GuiObject](GuiObject.md)/[ScreenGui](ScreenGui.md)/[SurfaceGui](Sur
 
 - Absolute props are computed during resize passes — reading them before first handleResize yields stale/identity values.
 - Subpixel float values exist internally but scripts only ever see the ROUNDED ints via descriptors.
-- A Folder between GUI nodes participates in resize but NOT in recursiveRender2d (only GuiBase2d children render) — GUI under a Folder inside a ScreenGui still renders because ResizeChildren recurses folders but RecursiveRenderChildren doesn't... actually rendering visits ALL children; the asymmetry is subtle and worth testing per-case.
+- ASYMMETRY: resize RECURSES through Folders (`ResizeChildren` re-visits a Folder's children) but rendering does NOT (`RecursiveRenderChildren` only descends when the child dynamic_casts to GuiBase2d) — GUI placed under a Folder gets laid out yet never rendered.

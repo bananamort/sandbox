@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The type-registry bootstrap TU: ~40 RBX_REGISTER_TYPE entries (every reflected value type), ~330 RBX_REGISTER_CLASS entries (every Instance class across v8datamodel, Script, Network, Humanoid, soundscape), ~130 RBX_REGISTER_ENUM entries, and the `FactoryRegistrator` ctor that runs one-time global setup (descriptor registration groups, signal exception handler, RNG seed, ModelInstance character hack). No behavior beyond registration.
+The type-registry bootstrap TU: 47 RBX_REGISTER_TYPE entries (every reflected value type), 289 RBX_REGISTER_CLASS entries (every Instance class across v8datamodel, Script, Network, Humanoid, soundscape), 122 RBX_REGISTER_ENUM entries, and the `FactoryRegistrator` ctor that runs one-time global setup (descriptor registration groups, signal exception handler, RNG seed, ModelInstance character hack). No behavior beyond registration.
 
 ## Key types and API
 

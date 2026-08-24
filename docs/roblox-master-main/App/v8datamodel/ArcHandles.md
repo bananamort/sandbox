@@ -28,6 +28,6 @@ Studio/script rotate affordance alongside [Handles](Handles.md) (HANDLE_TRANSLAT
 
 ## Gotchas
 
-- MouseLeave on hover-loss fires with the NEW hitNormalId variable (which is NORM_UNDEFINED after failed findTargetHandle) converted to an axis — a garbage axis value can reach scripts.
+- MouseLeave on hover-loss fires with the NEW hitNormalId variable rather than mouseOver — after a failed findTargetHandle that variable was NEVER WRITTEN (HandlesBase::findTargetHandle returns false without touching it, and HandleHitTest::hitTestHandleLocal assigns it only on success), so scripts can receive an INDETERMINATE axis value.
 - Drag events only flow while mouseDownCaptureInfo exists; there is no up-outside-cleanup beyond button-up path.
 - Listener mode is evaluated ONLY in setServerGuiObject — connecting a script after that moment may not flip replication until something refreshes it.

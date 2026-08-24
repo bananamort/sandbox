@@ -19,6 +19,6 @@ Consulted by [Explosion](Explosion.md)::doBlast/doKill and joint destruction ([F
 
 ## Gotchas
 
+- Cyclic-mode bug: the wall-clock `cycle`/`invertCycle` are BLOCK-LOCAL variables that die before the render call — line 124 passes the stale MEMBER values instead, so in cyclic-executive mode the legacy bubble gets constant phase and never animates (non-cyclic branch does mutate the members).
 - The torso lookup runs once and CACHES — swapping the character's Torso leaves the bubble rendering nothing until the ForceField is recreated.
-- In cyclic mode the computed cycle/invertCycle are LOCAL variables — the render call uses them correctly but state isn't persisted (harmless, but the non-cyclic branch mutates members instead).
 - Protection semantics live at CALL SITES (explosion, joints), not here — this TU only answers the boolean.

@@ -6,7 +6,7 @@ Implements `CSGDictionaryService` ("CSGDictionaryService") — the REPLICATED fl
 
 ## Key types and API
 
-Descriptors: none. Constants: `sCSGDictionaryService`; internal `localKeyTag = "CSGK"`, `minKeySize = 4`. Flags consumed: `StudioCSGAssets`, `CSGLoadFromCDN`, `IgnoreBlankDataOnStore`.
+Descriptors: none. Constants: `sCSGDictionaryService`; internal `localKeyTag = "CSGK"`, `minKeySize = 4`. Flags: `StudioCSGAssets` declared here but UNUSED in this TU; genuinely consumed: `CSGLoadFromCDN`, `IgnoreBlankDataOnStore`.
 
 Behavior:
 - `storeData(PartOperation&, forceIncrement)` — takes mesh/physics BinaryStrings; with IgnoreBlankDataOnStore only non-empty strings are interned via `storeStringData(tmp, forceIncrement, "MeshData"/"PhysicsData")` then written back.
