@@ -14,7 +14,7 @@ Each target has Debug/Release/NoOpt configurations (three configuration lists; t
 N/A (project file). Key facts:
 
 - **Sources** (both targets): `RbxCamera.cpp`, `RbxRay.cpp`, `Frustum.cpp`. **Headers**: all four including `RbxTime.h`.
-- **HEADER_SEARCH_PATHS** (shared shape): `include`, `../../App/include`, `../../Base/include`, `../AppDraw/include`, `../GfxBase/include`, `../GfxBase/include/GfxBase` (both nested and doubled), `../G3D/include`, `"$(CONTRIB_PATH)/boost_1_55_0/include"`, `"$(CONTRIB_PATH)/GeekInfo/geekinfo-2.1.4/include"`, `../../log/include`, and the odd trailing entry `../../App.BulletPhysics`.
+- **HEADER_SEARCH_PATHS** (shared shape): `include`, `../../App/include`, `../../Base/include`, `../AppDraw/include`, `../GfxBase/include`, `../GfxBase/include/GfxBase` (both nested and doubled), `../G3D/include`, `"$(CONTRIB_PATH)/boost_1_55_0/include"`, `"$(CONTRIB_PATH)/GeekInfo/geekinfo-2.1.4/include"`, `../../log/include`, and the odd trailing entry `../../App.BulletPhysics`. (`../../log/include` appears in the three *project-level* configs and all three iOS-target configs but is absent from the macOS **target-level** Debug/Release/NoOpt overrides.)
 - Mac target: `_DEBUG=1` / `NDEBUG=1` / NoOpt `NDEBUG=1 + _NOOPT=1`; `GCC_SYMBOLS_PRIVATE_EXTERN = NO`, `STRIP_INSTALLED_PRODUCT = NO`, `DEAD_CODE_STRIPPING = YES` (Release/NoOpt), leftover `OTHER_CPLUSPLUSFLAGS = "-v"` on Debug.
 - iOS target: hidden-symbols defaults flipped (`GCC_SYMBOLS_PRIVATE_EXTERN = YES`), per-arch override `"GCC_WARN_64_TO_32_BIT_CONVERSION[arch=*64]" = NO`, `SKIP_INSTALL = YES`.
 - Empty Frameworks phases; empty `Documentation` group.

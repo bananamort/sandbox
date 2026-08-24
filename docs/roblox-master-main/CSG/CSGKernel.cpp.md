@@ -2,14 +2,14 @@
 
 ## Purpose
 
-The sgCore-backed implementation of Roblox's Constructive Solid Geometry kernel: it turns solid-geometry operations on `Part`s (Union/Subtract/Negate, driven by `V8DataModel::CSGService`) into renderable triangle meshes. `CSGMeshSgCore` derives from the abstract `CSGMesh` interface (declared in `V8DataModel/CSGMesh.h`) and wraps an `sgCObject*` shape tree owned by the vendored **sgCore** geometry SDK (`sgCore/` subdirectory — third-party kernel, not documented here; see INDEX). The file also contains a pure-C++ vertex-clustering pass (`CSGClustering`) and half-edge mesh machinery used by the newer triangulation path.
+The sgCore-backed implementation of Roblox's Constructive Solid Geometry kernel: it turns solid-geometry operations on `Part`s (Union/Subtract/Negate) into renderable triangle meshes. `CSGMeshSgCore` derives from the abstract `CSGMesh` interface (declared in `V8DataModel/CSGMesh.h`) and wraps an `sgCObject*` shape tree owned by the vendored **sgCore** geometry SDK (`sgCore/` subdirectory — third-party kernel, not documented here; see INDEX). The file also contains a pure-C++ vertex-clustering pass (`CSGClustering`) and half-edge mesh machinery used by the newer triangulation path. NOTE: in this source drop the boolean API is dead-in-tree — no caller of `unionMesh`/`subractMesh`/`intersectMesh` and no installer of the sgCore factory exists (see Factory below); Studio-side CSG tooling is not part of this drop.
 
 ## API
 
 All in namespace `RBX`.
 
 **Factory**
-- `CSGMeshFactorySgCore::createMesh()` — returns `new CSGMeshSgCore`; this is the concrete factory plugged into the engine's `CSGMeshFactory` so all union/subtract requests allocate the sgCore-backed implementation.
+- `CSGMeshFactorySgCore::createMesh()` — returns `new CSGMeshSgCore`; designed to be installed via `CSGMeshFactory::set()`, but a tree-wide grep finds **no caller of `set()`**, so `CSGMeshFactory::singleton()->createMesh()` (the creation point used by SolidModelContentProvider.cpp:36 and CSGDictionaryService.cpp:122) falls back to the default factory, which returns plain base `CSGMesh` (App/v8datamodel/CSGMesh.cpp:40-46). The sgCore-backed implementation is compiled and linked but never instantiated in-tree.
 
 **CSGMeshSgCore (public overrides of CSGMesh)**
 - `clone()`, `operator=`, `isValid()` — copy semantics carry both the raw vertex/index buffers and the opaque BRep; validity means "a shape object exists".
@@ -20,7 +20,7 @@ All in namespace `RBX`.
 - `weldMesh(positionOnly=false)` — exact-position (<0.001f) welding; without `positionOnly` also requires equal normal/color/uv.
 - `unionMesh(a,b)` / `subractMesh(a,b)` — dynamic_cast to `CSGMeshSgCore` then delegate to `sgCoreUnion`/`sgCoreSubtract`; `intersectMesh` is **not implemented** (returns false).
 - `buildBRep()` — rebuild an sgCore solid from raw triangles via `sgFileManager::ObjectFromTriangles` with 45° feature angle.
-- `getBRepBinaryString()` / `setBRepBinaryString(str)` / `brepFromBinaryString(str)` — serialize the sgCore shape as `[int version][ulong size][bytes]`; this is what gets embedded in `UnionOperation`/`NegateOperation` MeshData assets and round-tripped through the CDN. Note the reader ignores `brepVersion`.
+- `getBRepBinaryString()` / `setBRepBinaryString(str)` / `brepFromBinaryString(str)` — serialize the sgCore shape as `[int version][ulong size][bytes]`. These have **no external callers** (only internal use by `EditData::clone`); UnionOperation/NegateOperation MeshData assets actually round-trip through the *base* `CSGMesh::toBinaryString`/`fromBinaryString` vertex/index serialization (see SolidModelContentProvider.cpp:35-37), not this BRep form. Note the reader ignores `brepVersion`.
 - `clusterVertices(resolution)` / `makeHalfEdges(vertexEdges)` / `extentsCenter()` / `extentsSize()`.
 
 **File-local helpers** (namespace-level): `initKernel()/initKernelOnce()` (one-time `sgInitKernel` + disable auto-triangulation via boost::call_once), `gather3DObjects`/`applyMatrixTo*`/`applyColorTo*`/`applyScaleTo*`/`applyTranslationTo*` recursive group walkers, `triangulateObject/triangulateGroup/triangulate3D`, normal/tangent calculators, and DXF crash-dump helpers `logError`/`removePreviousErrorFiles`/`removeAllDXFFiles`.
@@ -29,11 +29,12 @@ All in namespace `RBX`.
 
 ## Usage
 
-Linked into the engine as static library project `CSG.vcxproj` (see CSG.vcxproj.md). The V8DataModel layer instantiates meshes through `CSGMeshFactorySgCore` whenever a user runs Union/Negate in Studio; serialized BRep strings travel inside `PhysicalConfig`/mesh data of union parts. Includes pull from `.\sgCore` (the vendored SDK headers live there), plus Base, g3d, RbxG3D, App includes.
+Linked into the engine as static library project `CSG.vcxproj` (see CSG.vcxproj.md). The V8DataModel layer instantiates meshes via `CSGMeshFactory::singleton()->createMesh()` (SolidModelContentProvider.cpp, CSGDictionaryService.cpp) — which resolves to the plain base `CSGMesh` because nothing in-tree installs `CSGMeshFactorySgCore` (see Factory). Includes pull from `.\sgCore` (the vendored SDK headers live there), plus Base, g3d, RbxG3D, App includes.
 
 ## Gotchas
 
-- `intersectMesh` silently returns false — intersection is emulated upstream as `a - (a - b)` style sequences (UNKNOWN: exact upstream emulation site).
+- `intersectMesh` silently returns false — and no in-tree code calls any of the three boolean ops, so any upstream intersection emulation is outside this drop (UNVERIFIABLE here).
+- The copy constructor copies `decalIndexRemap`/`decalVertexRemap` (CSGKernel.cpp:167-171) but `operator=` does **not** (lines 178-186) — assigning a mesh silently drops decal remapping state that cloning preserves.
 - sgCore error codes are checked numerically: union aborts on errcode==2; subtract treats errcode==4 as "nothing to subtract" but fails on errcode>1.
 - `EditData::clone()` does NOT use `sgCObject::Clone` (comment says it is not a true clone); it round-trips through the binary-string form instead.
 - `getBRepBinaryString` leaks the buffer returned by `ObjectToBitArray` (never freed) — UNKNOWN whether sgCore owns/freees it internally.

@@ -9,7 +9,7 @@ MSBuild project compiling the three RbxG3D translation units (`Frustum.cpp`, `Rb
 N/A (project file). Key facts:
 
 - **Sources** (ClCompile): `Frustum.cpp`, `RbxCamera.cpp`, `RbxRay.cpp`. **Headers** (ClInclude): `include\RbxG3D\{Frustum,RbxCamera,RbxRay}.h` — note **RbxTime.h is absent** from this project even though it sits in the same include dir.
-- **Includes**: `.\include;..\..\Base\include;..\RbxG3D\include;..\GfxBase;..\GfxBase\include;..\RenderLibNew\include;..\G3D\png;..\g3d\include;..\..\Library\zlib\include;..\..\Library\boost\include;..\..\TBB_4_1\include;..\..\app\include;..\..\Rendering\AppDraw;..\..\Rendering\AppDraw\include;..\..\log\include` plus `..\..\Library\SDK\include` on Win32 only.
+- **Includes**: `.\include;..\..\Base\include;..\RbxG3D\include;..\GfxBase;..\GfxBase\include;..\RenderLibNew\include;..\G3D\png;..\g3d\include;..\..\Library\zlib\include;..\..\Library\boost\include;..\..\TBB_4_1\include;..\..\app\include;..\..\Rendering\AppDraw;..\..\Rendering\AppDraw\include;..\..\log\include` plus `..\..\Library\SDK\include` on Win32 only — except Release|Durango, which also drops `..\..\TBB_4_1\include`.
 - **Defines**: `WIN32;_DEBUG|NDEBUG;_LIB` (+ `RBX_PLATFORM_DURANGO` on Durango); Release adds `/D "_SECURE_SCL=0"` via AdditionalOptions.
 - ISA: SSE2 on Win32, AVX on Durango; FloatingPointModel Fast everywhere; MultiThreaded{Debug}DLL runtime.
 - Durango configs carry the usual Xbox `Console_Sdk*` path overrides and output to `bin\$(Configuration)$(Platform)\` (Win32 uses `bin\$(Configuration)\`).

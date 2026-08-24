@@ -10,8 +10,8 @@ Configurations: Debug/Release × Win32/Durango, StaticLibrary, PlatformToolset v
 
 | File | Lines | Doc | One-line summary |
 |---|---|---|---|
-| boost.static.vcxproj | 199 | [boost.static.vcxproj.md](boost.static.vcxproj.md) | Builds 22 boost .cpp + 1 cpp-netlib .cpp into one static lib; includes `../Library/boost/include`, zlib, cpp-netlib. |
-| boost.static.vcxproj.filters | ~30 | [boost.static.vcxproj.filters.md](boost.static.vcxproj.filters.md) | Display-only filter metadata; stale `$(CONTRIB_PATH)/boost_1_56_0` paths. |
+| boost.static.vcxproj | 199 | [boost.static.vcxproj.md](boost.static.vcxproj.md) | Builds 21 boost .cpp + 1 cpp-netlib .cpp (22 total) into one static lib; includes `../Library/boost/include`, zlib, cpp-netlib. |
+| boost.static.vcxproj.filters | 99 | [boost.static.vcxproj.filters.md](boost.static.vcxproj.filters.md) | Display-only filter metadata; stale `$(CONTRIB_PATH)/boost_1_56_0` paths. |
 
 REMAINING: none — both files in the directory are documented.
 

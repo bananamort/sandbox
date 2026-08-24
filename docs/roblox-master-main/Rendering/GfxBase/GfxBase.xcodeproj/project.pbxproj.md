@@ -11,7 +11,7 @@ Xcode project (objectVersion 46, compatibility Xcode 3.2) building GfxBase as TW
 - Targets: `GfxBase` → libGfxBase.a; `GfxBase iOS` → libGfxBaseiOS.a (`RBX_PLATFORM_IOS` defined on iOS rows, IPHONEOS_DEPLOYMENT_TARGET 5.1.1, SKIP_INSTALL YES).
 - Sources phase (both targets): the same 14 .cpp — AdornBillboarder, AdornSurface, FrameRateManager, PartIdentifier, Adorn, ViewportBillboarder, GfxPart, IAdornableCollector, RenderCaps, AdornBillboarder2D, RenderSettings, RenderStats, ViewBase, FileMeshData.
 - Headers phases: ~20-21 headers each; the iOS list contains a corrupt entry `1F2845EA15E6FF2900120D64 /* (null) in Headers */` with NO fileRef — a broken PBXBuildFile.
-- Header search paths: include, ../../App/include, ../../Base/include, ../AppDraw/include, ../G3D/include, **../RBXG3D/include** (capital RBX — actual dir is RbxG3D), $(CONTRIB_PATH)/boost_1_55_0/include, ../../App.BulletPhysics; project-level rows add ../../Log/include and $(CONTRIB_PATH)/SDL2.0.4/include.
+- Header search paths: include, ../../App/include, ../../Base/include, ../AppDraw/include, ../G3D/include, **../RBXG3D/include** (capital RBX — actual dir is RbxG3D), $(CONTRIB_PATH)/boost_1_55_0/include, ../../App.BulletPhysics; `../../Log/include` and `$(CONTRIB_PATH)/SDL2.0.4/include` appear in the three project-level rows AND all three iOS-target rows but are absent from the macOS **target-level** Debug/Release/NoOpt overrides.
 - macOS target settings: ARCHS=i386, SDK macosx10.8, deployment 10.6, gnu99, warnings-as-errors ON, OTHER_CPLUSPLUSFLAGS "-v" (!), Debug defines _DEBUG=1/DEBUG=1, Release NDEBUG=1 + dead-code-strip, NoOpt NDEBUG=1+_NOOPT=1. ONLY_ACTIVE_ARCH=YES.
 - Groups: Source/Documentation(empty)/Products.
 

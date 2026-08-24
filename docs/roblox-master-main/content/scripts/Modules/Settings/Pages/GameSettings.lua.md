@@ -23,6 +23,6 @@ SettingsHub registers as the Settings tab; Page ZIndex raised to 5.
 
 ## Gotchas
 - `IsTouchClient` is an undefined GLOBAL in this file (engine-injected legacy?) — under strict Luau this errors on any LocalPlayer property change.
-- GraphicsQualityChangeRequest handler mutates slider even while Auto (guarded by early return).
+- GraphicsQualityChangeRequest handler early-returns while quality is Automatic, so it never mutates the slider in Auto mode.
 - Volume test sound parented to RobloxGui.Sounds folder (must exist).
-- SetGraphicsQuality's elseif chain means newValue<1 case unreachable after ==1 case... order-dependent clamping logic.
+- SetGraphicsQuality clamp chain quirk: the `newValue < 1` clamp requires `not automaticSettingAllowed`, so the Auto path (`SetGraphicsQuality(Automatic.Value=0, true)`) skips it entirely and deliberately lands on QualityLevel 0; the `>max` clamp subtracts 1 from MaxQualityLevel rather than clamping to it.

@@ -13,7 +13,7 @@ Implements `RBX::HitTest` — ray-vs-primitive intersection for the three legacy
 
 ## Usage
 
-Included by `DrawAdorn.cpp` and by `App/v8datamodel/PartInstance.cpp` — whose line 1286 (`bool answer = HitTest::hitTest(getPart(), rayInPartCoords, hitPointInPartCoords, 1.0);`) is the **sole call site** in the tree, passing `gridToReal = 1.0`. All math delegated to `G3D::CollisionDetection`. Do not confuse with the separate handle-picker `HandleHitTest` in `App/util/HitTest.{h,cpp}`, which the Studio tools use.
+Included by `DrawAdorn.cpp`, `App/v8datamodel/PartInstance.cpp`, `App/tool/AdvRotateTool.cpp`, and `App/util/HitTest.cpp`. The sole actual call site in the tree is `PartInstance.cpp` line 1286 (`bool answer = HitTest::hitTest(getPart(), rayInPartCoords, hitPointInPartCoords, 1.0);`), passing `gridToReal = 1.0`. All math delegated to `G3D::CollisionDetection`. Do not confuse with the separate handle-picker `HandleHitTest` (class declared in `App/include/util/HitTest.h`, implemented in `App/util/HitTest.cpp`), which the Studio tools use.
 
 ## Gotchas
 

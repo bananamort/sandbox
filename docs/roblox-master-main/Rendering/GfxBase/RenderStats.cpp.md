@@ -8,13 +8,13 @@ Constructs and destroys `RBX::RenderStats`, the per-frame bundle of `RBX::Profil
 
 ## API
 
-- `RBX::RenderStats::RenderStats()` — news up 15 CodeProfilers with these exact profiler names:
+- `RBX::RenderStats::RenderStats()` — news up 16 CodeProfilers with these exact profiler names:
   - `cpuRenderTotal` → "3D CPU Total"
   - `culling` → "Culling"
   - `flip` → "Flipping Backbuffer"
   - `renderObjects` → "Render Objects"
   - `updateLighting` → "Update Lighting"
-  - `adorn2d` → "Adorn 2D"
+  - `adorn2D` → "Adorn 2D"
   - `adorn3D` → "Adorn 3D"
   - `visualEngineSceneUpdater` → "Visual Engine Scene Updater"
   - `finishRendering` → "Finish Rendering"
@@ -33,5 +33,5 @@ Depends on `Util/Profiling.h` (`RBX::Profiling::CodeProfiler`). The profiler nam
 
 ## Gotchas
 
-- All 15 profilers are heap-allocated in the ctor and never deleted (empty destructor) — intentional process-lifetime singletons, but it is a leak by construction.
+- All 16 profilers are heap-allocated in the ctor and never deleted (empty destructor) — intentional process-lifetime singletons, but it is a leak by construction.
 - Profiler names are inconsistent in casing ("Update SceneGraph" vs lowercase "updateAllInvalidParts") — do not "fix" them; tooling may match exact strings.

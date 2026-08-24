@@ -4,7 +4,7 @@
 
 Builds the handful of Boost libraries that ship compiled sources as ONE static library, GUID `{5423BFB6-D3EB-4B00-A82B-38001EB8745F}` (RootNamespace misleadingly `boostfile_system`). This is how the engine avoids prebuilt boost .lib binaries: header-only boost parts are consumed straight from `Library/boost/include`, and only these translation units are ever compiled. Configurations: Debug/Release × Win32/Durango, StaticLibrary, v143, WinSDK 10.0.
 
-## What it compiles (Boost 1.56-era tree under `../Library/boost/libs`)
+## What it compiles (vendored Boost 1.74 tree under `../Library/boost/libs` — `BOOST_LIB_VERSION "1_74"` per Library/boost/include/boost/version.hpp:30; the `boost_1_56_0` strings in the .filters sibling are stale display noise, not the vendored version)
 
 - **chrono**: `chrono.cpp`, `process_cpu_clocks.cpp`, `thread_clock.cpp`
 - **filesystem** (v3): codecvt_error_category, operations, path, path_traits, portability, unique_path, utf8_codecvt_facet, windows_file_codecvt

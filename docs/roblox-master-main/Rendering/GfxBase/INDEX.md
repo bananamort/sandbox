@@ -34,13 +34,13 @@ Builds as static lib **RenderLibBase.lib** (vcxproj, Win32/Durango), OBJECT lib 
 | include/GfxBase/RenderCaps.h | 32 | [RenderCaps.h.md](include/GfxBase/RenderCaps.h.md) | GPU capability value class: vidMem, card name, NPOT-only, GBuffer, skinningBoneCount. |
 | RenderCaps.cpp | 15 | [RenderCaps.cpp.md](RenderCaps.cpp.md) | Ctor defaults: NPOT allowed(false flag), GBuffer off, bones 0 — backends must probe+set. |
 | include/GfxBase/RenderStats.h | 101 | [RenderStats.h.md](include/GfxBase/RenderStats.h.md) | RenderPassStats/ClusterStats aggregates + 16 scoped_ptr CodeProfiler slots per pipeline stage. |
-| RenderStats.cpp | 34 | [RenderStats.cpp.md](RenderStats.cpp.md) | News 15 named profilers ("3D CPU Total" etc.), never frees them (process-lifetime by design). |
-| include/GfxBase/FileMeshData.h | 24 | pre-existing | FileMeshData struct + ReadFileMesh/WriteFileMesh/computeAABB/optimizeMesh decls. |
+| RenderStats.cpp | 34 | [RenderStats.cpp.md](RenderStats.cpp.md) | News 16 named profilers ("3D CPU Total" etc.), never frees them (process-lifetime by design). |
+| include/GfxBase/FileMeshData.h | 24 | [FileMeshData.h.md](include/GfxBase/FileMeshData.h.md) | FileMeshData struct + ReadFileMesh/WriteFileMesh/computeAABB/optimizeMesh decls. |
 | FileMeshData.cpp | 333 | [FileMeshData.cpp.md](FileMeshData.cpp.md) | Mesh parser v1.00(×0.5 scale!)/1.01/v2.00 binary, hand-rolled atofFast/atouFast, vertex dedup hash-on-position, index validation. |
 | include/GfxBase/MeshFileStructs.h | 36 | [MeshFileStructs.h.md](include/GfxBase/MeshFileStructs.h.md) | pack(1) on-disk structs FileMeshHeader/FileMeshVertexNormalTexture3d/FileMeshFace; append-only compat contract. |
-| include/GfxBase/MeshGen.h | 18 | pre-existing | Mesh generation entry decl. |
-| include/GfxBase/Image.h | 20 | pre-existing | Image helper decl. |
-| include/GfxBase/Type.h | 13 | pre-existing | Text::Font/XAlign/YAlign enums used across adorn text APIs. |
+| include/GfxBase/MeshGen.h | 18 | [MeshGen.h.md](include/GfxBase/MeshGen.h.md) | I3DLinearFunc parametric-curve interface for Adorn::extrusion sweeps. |
+| include/GfxBase/Image.h | 20 | [Image.h.md](include/GfxBase/Image.h.md) | Abstract decoded-image seam: byte size + original dimensions. |
+| include/GfxBase/Type.h | 13 | [Type.h.md](include/GfxBase/Type.h.md) | Text::Font/XAlign/YAlign enums used across adorn text APIs. |
 | include/GfxBase/Typesetter.h | 85 | [Typesetter.h.md](include/GfxBase/Typesetter.h.md) | Abstract text layout: draw/measure/getCursorPositionInText + glyph-atlas resource lifecycle; ASCII-only charset helpers. |
 | include/GfxBase/TextureProxyBase.h | 28 | [TextureProxyBase.h.md](include/GfxBase/TextureProxyBase.h.md) | Minimal texture-proxy base: getOriginalSize() pure virtual, numStrips=32 slicing constants. |
 | include/GfxBase/AsyncResult.h | 45 | [AsyncResult.h.md](include/GfxBase/AsyncResult.h.md) | Monotonic Succeeded<Waiting<Failed fold + waitingFor content-id list (header-only, sticky Failed). |

@@ -6,7 +6,7 @@ Adds a size-enforced LRU content cache on top of `AsyncHttpQueue`: fetched URLs 
 ## Declared API
 ```cpp
 template<typename CachedContent, bool Log = false>
-class AsyncHttpCache : public AsyncHttpCacheBase /* actually: public AsyncHttpQueue */ {
+class AsyncHttpCache : public AsyncHttpQueue {
 public:
     AsyncHttpCache(Instance* owner,
         boost::function<bool(const std::string&, std::string*)> getLocalFile,
@@ -36,7 +36,7 @@ Note: `CachedContent` must be constructible as `CachedContent(response, filename
 
 ## Gotchas
 - Two independent locks: `contentCacheMutex` (plain mutex) for the cache and inherited `requestSync` (recursive) for `failedUrls`; `invalidateCacheItemOrFailure`/`clearCache`/`getRequestedUrls` take them **sequentially**, never nested — do not add nested locking here.
-- `renameCacheItem` is fetch→remove→insert; not atomic against concurrent inserts of `newId`.
+- `renameCacheItem` is fetch→remove→insert under a single `contentCacheMutex` hold — atomic w.r.t. all other cache mutators (which take the same mutex).
 - `getRequestedUrls` returns only ids where `ContentId(...).isHttp()` plus every currently-failed URL (failed URLs expire over time per base class).
 - Cache hit via `findCacheItem` refreshes LRU recency (typical for this cache family; exact behavior in LRUCache.h).
 

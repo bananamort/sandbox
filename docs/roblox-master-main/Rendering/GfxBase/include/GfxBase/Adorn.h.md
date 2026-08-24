@@ -45,7 +45,7 @@ public:
 
     virtual void line2d(p0, p1, color) = 0;
     void outlineRect2d(rect, thick, color [,Rotation2D|clipRect]);      // in .cpp
-    void rect2d(...) — 9 overloads (color / +texul,texbr × Rotation2D|clipRect) // in .cpp
+    void rect2d(...) — 6 overloads (color / +texul,texbr × plain|Rotation2D|clipRect) // in .cpp
     virtual void rect2dImpl(x0y0,x1y0,x0y1,x1y1,tex0,tex1,color) = 0;
 
     virtual Vector2 get2DStringBounds(s, size, font=FONT_LEGACY,

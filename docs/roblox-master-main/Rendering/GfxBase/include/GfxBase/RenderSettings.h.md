@@ -63,4 +63,4 @@ Included by ViewBase.h, RenderCaps.h and backend settings code. Subclasses (app-
 - `getAASamplesSafe` is just an unsynchronized static read; "thread-safe" only in the trivial sense.
 - Frame-rate bounds are HARDCODED (300 max / 30 min) despite the FRM machinery.
 - Cache-size comment says KB but ctor stores 32 MB values — units are whatever ctor says.
-- `setGraphicsMode` has no inline body → defined in another TU (not RenderSettings.cpp!) — UNKNOWN location.
+- `setGraphicsMode` is declared but **never defined on the base class** (not in RenderSettings.cpp nor anywhere else) — the only implementation is the subclass override `CRenderSettingsItem::setGraphicsMode` (ClientBase/RenderSettingsItem.cpp:222; CRenderSettingsItem : public RBX::CRenderSettings). Calling it through a plain `CRenderSettings` fails at link time.

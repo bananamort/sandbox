@@ -10,4 +10,4 @@ One-line enum for Studio drag-handle kinds, shared by DrawAdorn and the draggers
 
 ## Usage / Gotchas
 
-Included as `appDraw/HandleType.h` or `appdraw/HandleType.h` (case varies by includer). Ordinal values are persisted nowhere — purely in-memory UI tagging.
+Included under three casings tree-wide: `"AppDraw/HandleType.h"` (the majority — tool headers, Handles/ArcHandles), `"appDraw/HandleType.h"` (DrawAdorn.h), and `"appdraw/HandleType.h"` (util/HitTest.h) — works only on case-insensitive filesystems. Ordinal values are persisted nowhere — purely in-memory UI tagging.

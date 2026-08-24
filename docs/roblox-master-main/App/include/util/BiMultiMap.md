@@ -9,6 +9,7 @@ template <typename Left, typename Right>
 class BiMultiMap {
 public:
     typedef std::multimap<Left, Right> InternalMap;
+    typedef typename InternalMap::iterator InternalMapIt;
     InternalMap internalMap;                       // public member
 
     bool pairInMap(const Left& left, const Right& right);   // linear scan of left's range

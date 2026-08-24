@@ -48,4 +48,4 @@ Implemented in `AdornSurface.cpp` (same dir). Includes `GfxBase/Adorn.h`, `V8Dat
 
 - `getCamera()` hardcodes `return 0` — any callee dereferencing it through this decorator will null-deref.
 - `useFontSmoothScalling` misspelling is part of the virtual contract (matches base `Adorn`).
-- The ctor's `transform` CoordinateFrame is stored by the implementation (header shows only members above) and drives how 2D coords map onto the 3D surface.
+- The ctor's `transform` CoordinateFrame is NOT stored on this object — it is pushed onto the *parent* adorn once (`parent->setObjectToWorldMatrix(transform)` in AdornSurface.cpp's ctor) and this decorator keeps no copy; subsequent 2D→3D mapping relies entirely on that one-shot parent state.

@@ -21,7 +21,8 @@ private:
     Type val;
     bool dirty;
     O* object;
-    typedef Type (O::*GetFunc)() GetFunc_t /*declared as GetFunc*/;
+    typedef Type (O::*GetFunc)();
+    GetFunc getFunc;
 };
 ```
 

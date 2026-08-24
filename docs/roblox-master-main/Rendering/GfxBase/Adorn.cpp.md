@@ -23,6 +23,6 @@ Non-inline conveniences of the abstract `RBX::Adorn` interface: outlined-rectang
 The only .cpp backing Adorn; everything else in Adorn.h is pure virtual implemented by backends/decorators.
 
 ## Gotchas
-- Outline rects are asymmetric: left/top edges inset by thick, right/bottom outset — outline is NOT centered on the border.
+- Outline bands all lie fully OUTSIDE the rect's border lines (uniform `thick` width), but corner coverage is pinwheel-asymmetric: top-left corner comes only from the left band, top-right only from the top band, bottom-right only from the right band, bottom-left only from the bottom band — the outline is never centered on the border.
 - Clipping path adjusts upperUV by `(intersect.x1 − rect.x1)` which can push upperUV BELOW lowerUV when clipped on the right — matches inverted-V semantics of rect2dImpl's tex args (verify per-backend).
 - `rect2d(...,Rotation2D)` ignores clipRect entirely; combined rotate+clip requires manual composition.

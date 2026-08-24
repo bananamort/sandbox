@@ -13,7 +13,7 @@ AppDraw is the renderer-independent "application drawing" layer: all Studio 3D-v
 | HitTest.cpp | 75 | [HitTest.cpp.md](HitTest.cpp.md) | RBX::HitTest — G3D ray-vs-box/ball/capsule picks in part space. |
 | include/appdraw/Draw.h | 76 | [Draw.h.md](include/appdraw/Draw.h.md) | Draw class decl + select/hover color state. |
 | include/appdraw/DrawAdorn.h | 293 | [DrawAdorn.h.md](include/appdraw/DrawAdorn.h.md) | DrawAdorn decl incl. handle/grid/text APIs and named color palette. |
-| include/appdraw/DrawPrimitives.h | 48 | [DrawPrimitives.h.md](include/appdraw/DrawPrimitives.h.md) | Raw RenderDevice geometry helpers (impl lives outside this dir). |
+| include/appdraw/DrawPrimitives.h | 48 | [DrawPrimitives.h.md](include/appdraw/DrawPrimitives.h.md) | Raw RenderDevice geometry helpers — declarations only; no implementation exists anywhere in-tree (dead code). |
 | include/appdraw/HandleType.h | 10 | [HandleType.h.md](include/appdraw/HandleType.h.md) | enum HandleType {RESIZE, MOVE, ROTATE, VELOCITY}. |
 | include/appdraw/HitTest.h | 27 | [HitTest.h.md](include/appdraw/HitTest.h.md) | HitTest class decl. |
 | ReadMe.txt | 21 | [ReadMe.txt.md](ReadMe.txt.md) | AppWizard boilerplate stub. |

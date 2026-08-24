@@ -14,7 +14,7 @@ MSBuild project building GfxBase as a **static library** named `RenderLibBase.li
 - Defines: Debug `WIN32;_DEBUG;_LIB`; Release/ReleaseTest add `NDEBUG;RBX_TEST_BUILD`; NoOpt adds `_CRASH_RBXASSERT;__NEW_GRAPHICS__;NDEBUG;_NOOPT`; Durango adds `RBX_PLATFORM_DURANGO` everywhere.
 - ISA: Win32 SSE2; Durango AVX. `/D "_SECURE_SCL=0"` on every config. Release: /AnySuitable inline, Fast FP, BufferSecurityCheck off. Warnings: Level3, not-as-error; Durango disables 4267.
 - ClCompile list = the 14 .cpp (Adorn, AdornBillboarder, AdornBillboarder2D, AdornSurface, FileMeshData, FrameRateManager, GfxPart, IAdornableCollector, PartIdentifier, RenderCaps, RenderSettings, RenderStats, ViewBase, ViewportBillboarder).
-- ClInclude list = **21 headers** — note it does NOT include AsyncResult.h or PartIdentifier.h... wait, PartIdentifier.cpp is compiled but PartIdentifier.h is absent from ClInclude; also missing vs CMakeLists: AsyncResult.h, PartIdentifier.h.
+- ClInclude list = **21 headers** — omits `AsyncResult.h` and `PartIdentifier.h` relative to CMakeLists.txt (23 there). `PartIdentifier.cpp` is still compiled; only the header is unlisted (headers don't build anyway).
 
 ## Usage
 

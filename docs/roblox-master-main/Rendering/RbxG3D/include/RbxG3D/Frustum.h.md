@@ -32,7 +32,7 @@ None — internal culling primitive; not surfaced to Lua.
 
 ## Usage (who loads it)
 
-- `App/v8datamodel/Camera.cpp:1511` constructs the engine camera's culling frustum each frame: `Frustum(cframe.translation, -cframe.rotation.column(2), cframe.rotation.column(1), -nearPlaneZ(), farPlaneZ, fovx, fieldOfView)`.
+- `App/v8datamodel/Camera.cpp:1511` constructs the engine camera's culling frustum each frame: `Frustum(cframe.translation, -cframe.rotation.column(2), cframe.rotation.column(1), -nearPlaneZ(), -farPlaneZ, fovx, fieldOfView)` (both near and far z are negated).
 - `PartInstance::containedByFrustum / intersectFrustum` (PartInstance.cpp:3110–3115) and `ModelInstance::containedByFrustum` (ModelInstance.cpp:454) drive `Camera::isPartInFrustum` → `RootInstance` auto-camera adjustment.
 - `Rendering/GfxRender/LightGrid.cpp:718` calls `intersectsSphere` for light culling; `GfxRender/VisualEngine.h` keeps its own `updateFrustum` consumed by scene update.
 
