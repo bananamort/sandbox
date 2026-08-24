@@ -21,11 +21,18 @@
   -->
   
   <ItemDefinitionGroup>
+    <!-- Existence-guarded: this rule publishes OPTIONAL runtime binaries
+         alongside the exe (fmod.dll, VMProtectSDK32.dll, RbxDebug.dll;
+         several are deliberately absent from this source drop; CI run
+         32701964878 died on "copy ..\fmod\win32\fmod.dll"). When the file
+         exists the command behaves exactly as before; when it does not,
+         skipping the copy beats failing the whole pre-link pipeline over
+         an artifact that was never in the tree. -->
     <PublishDLLDependency>
-      <CommandLineTemplate>copy "%(FullPath)" "$(TargetDir)"</CommandLineTemplate>
+      <CommandLineTemplate>if exist "%(FullPath)" copy "%(FullPath)" "$(TargetDir)"</CommandLineTemplate>
       <Outputs>$(TargetDir)%(Filename)%(Extension)</Outputs>
       <ExecutionDescription>Copying %(FullPath)</ExecutionDescription>
     </PublishDLLDependency>
-  </ItemDefinitionGroup>  
+  </ItemDefinitionGroup>
   
 </Project>
