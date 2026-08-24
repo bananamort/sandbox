@@ -11,7 +11,7 @@ The Instance-side joint family bridging to V8World joints: abstract `JointInstan
 - Comment: "Part* is master, Primitive*'s in the Joint are slaves."
 - Props: `prop_Part0/prop_Part1` (RefProps); accessors getPart0/getPart1 (+Dangerous twins "only for reflection"), setPart0/setPart1; offsets `getC0/getC1/setC0/setC1` (CoordinateFrame).
 - Engine link: `Joint* getJoint(); Joint::JointType getJointType() const; bool inEngine(); bool isAligned() const; void onCoParentChanged();`
-- Overrides: askSetParent, onAncestorChanged, shouldRender3dAdorn/render3dAdorn, setName (comment implies name drives joint type rebuild), writeXml custom serializer, getPersistentDataCost +4.
+- Overrides: askSetParent, onAncestorChanged, shouldRender3dAdorn/render3dAdorn, setName override, writeXml custom serializer, getPersistentDataCost +4.
 - Ctors: protected default ("if you want to build one, you need a Joint") and `(Joint*)` "Created from Within World - by autojoiner"; private part[2] weak storage + setPart/setPartNull/setPrimitiveFromPart/computeWorld/handleWorldChanged; friend JointsService.
 
 Creatables:
@@ -22,7 +22,7 @@ Creatables:
 - `Glue` (sGlue): rig id vectors F0..F3 get/set (Vector3).
 - `Rotate` (sRotate); `DynamicRotate` (non-creatable) with `getBaseAngle/setBaseAngle(float)`; `RotateP`/`RotateV` creatables.
 - `Motor` (sMotor, also IAnimatableJoint): `getMaxVelocity/setMaxVelocity`, `getDesiredAngle/setDesiredAngle` + non-replicating setDesiredAngleUi, `getCurrentAngle` + setCurrentAngleUi ("current angle doesn't replicate - it is a command. Physics for the joint angle replicates"); IAnimatableJoint implements getParentName/getPartName/applyPose(CachedPose)/setIsAnimatedJoint; special protected ctor `(Joint*, int)` for Motor6D; renders joint cylinders.
-- `Motor6D` (sMotor6D, derives Motor — comment: "so that any script doing a ::IsA(Motor) should still work"): overrides the full angle/velocity surface + applyPose.
+- `Motor6D` (sMotor6D, derives Motor — comment: "derive from Motor, so that and script doing a ::IsA(Motor) should still work" [sic]): overrides the full angle/velocity surface + applyPose.
 
 ## Gotchas
 

@@ -15,7 +15,7 @@
 
 ## Gotchas
 
-- Header-only class (22 lines): all override bodies are inlined here except `setAnimating`/`applyPose`/name getters, which resolve in the .cpp.
+- Header-only class (22 lines): only `getPart()` has an inline body here; the four overrides (`setAnimating`/`applyPose`/name getters) resolve in the .cpp.
 - `lastCFrame` is bookkeeping for pose application; stale if the part moves through other systems while animating.
 
 ## UNKNOWN

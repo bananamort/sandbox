@@ -14,7 +14,7 @@
 - Mesh access: `void insertMesh(PartOperation&); shared_ptr<CSGMesh> getMesh(PartOperation&); shared_ptr<CSGMesh> getCachedMesh(PartOperation&); void retrieveMeshData(PartOperation&);`
 - Physics: `void storePhysicsData(PartOperation&, bool forceIncrement = false); retrievePhysicsData(PartOperation&);`
 - Lifecycle: `CSGDictionaryService(); virtual onServiceProvider(old,new) override; void onWorkspaceLoaded();`
-- Protected internals: `reparentChildData(shared_ptr<Instance>)`, `virtual refreshRefCountUnderInstance(Instance*)`, `insertMesh(const std::string key, const RBX::BinaryString& meshData)` and `insertCachedMesh(...)` (overloads of public insertMesh).
+- Protected internals: `reparentChildData(shared_ptr<Instance>)`, `virtual refreshRefCountUnderInstance(Instance*)`, `insertMesh(const std::string key, const RBX::BinaryString& meshData)` (an overload of the public `insertMesh`) and the separate `insertCachedMesh(...)`.
 
 ## Gotchas
 

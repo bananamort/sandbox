@@ -27,4 +27,4 @@
 ## Cross-links
 
 - Implementation: [App/v8datamodel/ChatService.md](../../v8datamodel/ChatService.md).
-- Related services: [TextService.md](TextService.md) (modern filtering), [Players-side Network docs](../../Network/INDEX-Network.md).
+- Related services: [TextService.md](TextService.md) (modern filtering); players-side networking lives in the top-level Network/ doc tree (outside this docs slice).

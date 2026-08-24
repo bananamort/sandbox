@@ -14,13 +14,13 @@
 
 `class DecalTexture : public DescribedCreatable<DecalTexture, Decal, sDecalTexture>`
 
-- Tiling: `const G3D::Vector2& getStudsPerTile()` (non-const ref return), per-component props `prop_StudsPerTileU/V` with getters/setters over `studsPerTile.x/.y`.
+- Tiling: `const G3D::Vector2& getStudsPerTile()` (const-ref return from a non-const method), per-component props `prop_StudsPerTileU/V` with getters/setters over `studsPerTile.x/.y`.
 - `DecalTexture(void);`
 
 ## Gotchas
 
 - Two transparency reads: raw value vs `getTransparencyUi()` (UI view combines localTransparencyModifier presumably — .cpp).
-- DecalTexture's non-const getStudsPerTile returns a mutable reference to internal state.
+- DecalTexture's `getStudsPerTile()` is non-const (uncallable on const objects) even though it returns a const reference — odd asymmetry.
 - LocalTransparencyModifier is the per-client fade channel (used by proximity fades).
 
 ## UNKNOWN

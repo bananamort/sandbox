@@ -25,7 +25,7 @@ Character-appearance family: abstract `CharacterAppearance` (an `IModelModifier`
 
 - Public fields `TextureId outfit1; TextureId outfit2;` + BoundProps `prop_outfit1/prop_outfit2`.
 - `virtual TextureId getTemplate() const { RBXASSERT(false); return NULL; }`
-- Protected `applyByMyself(Humanoid*)`; private `dataChanged` → apply.
+- Protected `applyByMyself(Humanoid*)`; protected `dataChanged` → apply.
 
 `class Pants : public DescribedCreatable<Pants, Clothing, sPants>` — `prop_PantsTemplate`; `getTemplate() { return outfit1; } setTemplate(TextureId)`.
 `class Shirt : public DescribedCreatable<Shirt, Clothing, sShirt>` — `prop_ShirtTemplate`; `getTemplate() { return outfit2; } setTemplate(TextureId)`.

@@ -8,7 +8,7 @@
 
 `class FriendService : public DescribedCreatable<FriendService, Instance, sFriendService, ClassDescriptor::INTERNAL>, public Service`
 
-- Enums: `FriendEventType { ISSUE_REQUEST, REVOKE_REQUEST, ACCEPT_REQUEST, DENY_REQUEST }`; `FriendStatus { UNKNOWN=0, NOT_FRIEND=1, FRIEND=2, FRIEND_REQUEST_SENT=3, FRIEND_REQUEST_RECEIVED=4 };`
+- Enums: `FriendEventType { ISSUE_REQUEST, REVOKE_REQUEST, ACCEPT_REQUEST, DENY_REQUEST }`; `FriendStatus { FRIEND_STATUS_UNKNOWN=0, FRIEND_STATUS_NOT_FRIEND=1, FRIEND_STATUS_FRIEND=2, FRIEND_STATUS_FRIEND_REQUEST_SENT=3, FRIEND_STATUS_FRIEND_REQUEST_RECEIVED=4 };`
 - URL config: setters for create/delete friend-request, make-friend, break-friend, get-friends, friends-online; private members incl. `std::string getBulkFriendsUrl;` (member named like a getter — verbatim).
 - Status query: `FriendStatus getFriendStatus(int playerId, int otherPlayerId) const;`
 - Enable flag: `setEnable(bool)/getEnable()`.

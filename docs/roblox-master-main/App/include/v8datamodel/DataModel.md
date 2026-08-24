@@ -27,7 +27,7 @@
 ## Gotchas
 
 - The class is simultaneously ServiceProvider, arbiter, verb container, metric source, and lock owner — nearly every engine path touches it.
-- Anti-tamper surface lives here: hackFlag APIs are deliberately inlined + VMProtect-noted; decoy flags feed perfStats/sendStats (see certified M–Z findings on deceptive stats).
+- Anti-tamper surface lives here: hackFlag APIs are deliberately inlined + VMProtect-noted; `addHackFlag`/`removeHackFlag`/`isHackFlagSet` also mutate/test the static `sendStats` bitmask (see certified M–Z findings on deceptive stats).
 - `isShuttingDown`/`dirty` are plain volatile, not atomics.
 - `placeID`/`creatorID` use HeapValue<int> sentinel semantics (unset vs 0).
 - Static mutable globals: hash, loaderFunc, throttleAt30Fps, BlockingDataModelShutdown.

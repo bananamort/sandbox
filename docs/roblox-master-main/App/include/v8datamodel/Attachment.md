@@ -20,7 +20,7 @@
 - Ray hit: `virtual float intersectAdornWithRay(const RbxRay& r);`
 - Rendering: `enum SelectState { SelectState_None=0, SelectState_Normal=1, SelectState_Hovered=2, SelectState_Paired=4, SelectState_Hidden=8 };` `void render3dToolAdorn(Adorn*, SelectState);` `void render3dAdorn(Adorn*) override;` `shouldRender3dAdorn()` override returns true.
 - Tree guards: `verifySetParent(const Instance*) const override; verifyAddChild(const Instance*) const override;`
-- Private internals: `setAxisInPartInternal(const Vector3&)` ("might change the secondary axis to keep it orthogonal"), `setSecondaryAxisInPartInternal(const Vector3&)` ("project the secondary axis onto the orthonormal circle to the axis"), `setOrientationInPartInternal(const Matrix3&)`, `Matrix3 getOrientationInPart()/getOrientationInWorld() const`. State: `bool visible; bool locked; Vector3 pivotPositionInPart, axisDirectionInPart, secondaryAxisDirectionInPart;`
+- Private internals: `setAxisInPartInternal(const Vector3&)` ("might change the secondary axis to keep it orthogonal"), `setSecondaryAxisInPartInternal(const Vector3&)` ("project the secondary axis onto the orthogonormal circle to the axis"), `setOrientationInPartInternal(const Matrix3&)`, `Matrix3 getOrientationInPart()/getOrientationInWorld() const`. State: `bool visible; bool locked; Vector3 pivotPositionInPart, axisDirectionInPart, secondaryAxisDirectionInPart;`
 - Disabled feature: `#ifdef RBX_ATTACHMENT_LOCKING static const PropDescriptor<Attachment,bool> prop_Locked;` — commented "not streaming/replication safe".
 
 ## Gotchas
