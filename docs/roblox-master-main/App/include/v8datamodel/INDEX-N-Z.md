@@ -17,6 +17,7 @@ Legend: ⚠ = notable gotcha worth knowing before touching the class; 🔒 = no 
 - [ParametricPartInstance](ParametricPartInstance.md) — RBX::PART namespace base + creatable Wedge
 - [PartCookie](PartCookie.md) — cached decoration bit-flags per part + inline mesh/humanoid helpers ("LAST child" rule)
 - [PartDragger](PartDragger.md) 🔒 — Tool-derived dragger that is a hollow shell: everything commented out
+- [PyramidInstance](PyramidInstance.md) — experimental PYRAMID_PART wedge family: configurable 3–20 side count + slice count behind _PRISM_PYRAMID_ gate; shape data lives in V8World Poly
 - [PartInstance](PartInstance.md) ⚠ — THE core part class: Primitive-backed physics state, surfaces, network ownership, interpolation, touch signals, resize/grid logic
 - [PartOperation](PartOperation.md) ⚠ — CSG result part (Union/Negate subclasses); BinaryString blobs + Bullet leakage (`static` file-scope helper)
 - [PartOperationAsset](PartOperationAsset.md) — Instance container for saved CSG payloads + Studio publish helpers

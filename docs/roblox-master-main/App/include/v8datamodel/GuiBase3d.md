@@ -9,7 +9,7 @@ Base for 3D adornment GUI ("adornment instances (3D objects that adorn Instances
 `class GuiBase3d : public DescribedNonCreatable<GuiBase3d, GuiBase, sGuiBase3d>`
 
 - `GuiBase3d(const char* name);`
-- Appearance: `void setBrickColor(BrickColor)` / `BrickColor getBrickColor() const` (returns `BrickNumber::closest(color)` — nearest palette match of the stored Color3); `setColor(Color3)/getColor()`; `setTransparency(float)/getTransparency()`; `setVisible(bool)/getVisible()`.
+- Appearance: `void setBrickColor(BrickColor)` / `BrickColor getBrickColor() const` (returning `BrickColor::closest(color)` — nearest palette match of the stored Color3); `setColor(Color3)/getColor()`; `setTransparency(float)/getTransparency()`; `setVisible(bool)/getVisible()`.
 - IAdornable: `shouldRender3dAdorn() const { return getVisible(); }`
 - GuiBase defaults: `canProcessMeAndDescendants() → false`, `getZIndex() → -1`, `getGuiQueue() → GUIQUEUE_GENERAL`.
 - Protected state: `Color3 color; float transparency; bool visible;`
