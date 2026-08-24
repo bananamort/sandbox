@@ -442,10 +442,6 @@
       <Project>{5423bfb6-d3eb-4b00-a82b-38001eb8745f}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\Log\Log.vcxproj">
-      <Project>{9980f6c3-b64d-4775-8793-bb6dde31ce82}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
     <ProjectReference Include="..\Network\Network.vcxproj">
       <Project>{9b9eb5c6-15d1-4765-bcc7-8a42f2c9f6cc}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
