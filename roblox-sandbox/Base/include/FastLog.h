@@ -38,10 +38,19 @@ inline void emit(char const* fmt, ...)
 } // namespace RBX
 
 namespace FLog {
+    // Channel is a TYPE (log channel handle), distinct from the group
+    // enum below -- signal.h stores scoped connections tagged by channel.
+    class Channel {
+    public:
+        int id;
+        constexpr Channel(int i = 0) : id(i) {}
+        operator int() const { return id; }
+    };
+
     enum {
         Zero = 0,
         AdornableLifetime, AdornRenderStats, Always, AnalyticsLog, Asserts,
-        ChangeHistoryService, Channel, ClientSettings, CloseDataModel,
+        ChangeHistoryService, ClientSettings, CloseDataModel,
         ContentProviderRequests, CoreScripts, Crash, CrashReporterInit,
         CyclicExecutiveThrottling, CyclicExecutiveTiming,
         CyclicExecutiveWorldSteps, DataModelJobs, DataStore, DataStoreBudget,
