@@ -44,6 +44,14 @@
 #define LOAD_LIBRARY_SEARCH_DEFAULT_DIRS 0x00001000
 #endif
 
+// Same shadowing class, one layer deeper (run 32755324622): 14.51 ATL's
+// atlsimpcoll.h (242/451) throws this Win8-era HRESULT on out-of-bounds,
+// but the vendored 7.1-era winerror.h predates it. Value verbatim from the
+// modern SDK's winerror.h (_HRESULT_TYPEDEF_(0x80071045L)).
+#ifndef E_BOUNDS
+#define E_BOUNDS ((long)0x80071045L)
+#endif
+
 // Declared under extern "C": run 32752917820 (380x C2732) proved the real
 // libloaderapi.h declaration IS reached later in these TUs and carries C
 // linkage - a bare global-scope declaration here contradicts it.
