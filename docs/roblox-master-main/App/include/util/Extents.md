@@ -67,7 +67,7 @@ private:
 ## Gotchas
 - Default ctor produces an *empty/inverted* box (for accumulation via `expandToContain`), NOT a zero box — `isNull()` tests for that inverted state.
 - `overlapsOrTouches` treats exactly-touching boxes as overlapping.
-- `clampToOverlap` **mutates** this box to the intersection and returns false (leaving it in a partially-clamped state? no — returns false before mutating when disjoint).
+- `clampToOverlap` **mutates** this box to the intersection and returns true; when the boxes are disjoint it returns false *before* mutating anything.
 - Face order convention: NormalIds ordered x, y, z, -x, -y, -z (see NormalId.md).
 - `scale(float)` scales corner positions about the origin, not the center — scaling a non-centered box also moves it.
 

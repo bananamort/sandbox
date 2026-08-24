@@ -151,13 +151,13 @@ Vector3 vectorToObjectSpace(const Vector3& _vec, const Matrix3& _mat);
 
 ## Gotchas
 - `polarity(0)` returns **+1** while `sign(0)` returns 0 — pick deliberately.
-- `fastFloorInt` uses the `-0.999f` trick — exact only for values not extremely close to an integer from below within float precision (e.g., -1.0000001 floors to -2? no: -1.0000001-0.999 → truncates to -2? verify: it becomes -1.9999991 → truncates to -1... edge cases exist near integers).
+- `fastFloorInt` uses the `-0.999f` trick — exact for normal floats but edge cases exist for values extremely close to an integer from below (within float precision).
 - `fuzzyEq` is RELATIVE epsilon scaled by |a|+1 — absolute comparisons near zero use ~epsilon itself.
 - `atan2Fast` is an approximation (quadrant-correct, ~max 0.01 rad error per vlfeat reference) — do not use where precision matters.
 - `zAxisAngle` deliberately uses std `atan2`, with `atan2Fast` commented out.
 - Orientation ids are 0..35 (`minOrientationId`/`maxOrientationId`) covering all 90° axis-aligned rotations of a part.
-- `getHeading`: north is −Z at angle 0, west (+X?) at π/2 per comment — read carefully before using for compass logic.
-- Math.inl defines a NON-inline-marked function in a header included by many TUs — it's `inline`-eligible only via being in an .inl included once per TU; ODR relies on it being implicitly inline? It is NOT declared inline — potential multiple-definition hazard unless compilers treat it as inline due to being defined in every TU... actually each TU gets its own definition → link errors unless something makes it inline. In practice it compiles because it's defined identically per TU without inline — this would violate ODR; presumably benign historically.
+- `getHeading`: north is −Z at angle 0, west at π/2 per comment — read carefully before using for compass logic.
+- **Math.inl ODR hazard**: `Math.inl` defines `RBX::Math::vectorToObjectSpace` at namespace scope *without* the `inline` keyword, and `Math.h` includes `Math.inl` at the bottom — so every TU including `Math.h` sees a full definition. It currently links because `Math.h` line ~367 already declares the function `inline` before the `.inl` definition (once declared inline, a later definition is inline too → weak/COMDAT symbol). Remove or reorder that forward declaration and every TU emits an external definition → multiple-definition link errors. Keep the `inline` on the declaration, or add `inline` to the `.inl` body.
 
 ## UNKNOWN
 - Exact launch-angle/tolerance formulas in .cpp-side functions (calcTrajectory, computeLaunchAngle).

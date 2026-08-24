@@ -43,7 +43,7 @@ private:
 ## Gotchas
 - `isEmpty()` is defined by owner radius <= 0 — an owner with zero radius is "no region".
 - `contains` = in-range of owner AND not closer to any other (slop widens both checks).
-- Default-constructed Region2 has an uninitialized-ish owner? No — `WeightedPoint()` default ctor zeroes it, so it starts empty.
+- Default-constructed `Region2` starts empty: `WeightedPoint()`'s default ctor zeroes the point and radius.
 - Others list grows via G3D::Array; no dedup.
 
 ## UNKNOWN

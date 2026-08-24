@@ -44,6 +44,7 @@ private:
     void attachChildren(IndexedMesh* lowerChild);
     void lowersChanged();            // cascades up: onLowersChanged + parents + upper
     static IndexedMesh* computeUpper(IndexedMesh* lower);
+    static const IndexedMesh* computeConstUpper(const IndexedMesh* lower);
     void onLowerChildRemoved(IndexedMesh*);   void onLowerChildAdded(IndexedMesh*);
     /*override*/ void onParentChanged(IndexedTree* oldParent);
 };

@@ -6,7 +6,7 @@ Bit-level reader over a base64-encoded character stream: decodes standard base64
 ## Declared API
 ```cpp
 struct Base64BinaryInputStream {
-    explicit Base64BinaryInputStream(const char* source);   // NUL-terminated? see Gotchas
+    Base64BinaryInputStream(const char* source);   // NOT explicit in source; see Gotchas
 
     // numBitsToRead must satisfy: 1 <= numBitsToRead <= 8
     void ReadBits(unsigned char* out, size_t numBitsToRead);
@@ -20,6 +20,7 @@ private:
 
 ## Gotchas
 - `ReadBits` is contract-limited to 1–8 bits per call; larger requests are UB/precondition violation.
+- The ctor is NOT declared `explicit` — a bare `const char*` can implicitly become a `Base64BinaryInputStream`.
 - Takes a bare `const char*` — lifetime of the underlying string must outlive the stream object; whether the ctor requires NUL termination is an implementation detail (UNKNOWN).
 - No EOF signaling in the declared interface: reading past the encoded data's end behavior is unspecified here (UNKNOWN).
 

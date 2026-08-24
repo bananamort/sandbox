@@ -39,7 +39,7 @@ public:
     bool isConvertedNamedAsset() const;
 
     friend bool operator<(const ContentId&, const ContentId&);
-    friend bool operator==(const ContentId&, const ContentId*);
+    friend bool operator==(const ContentId&, const ContentId&);
     friend bool operator!=(const ContentId&, const ContentId&);
 private:
     static void CorrectBackslash(std::string& id);  // normalizes '\' -> '/' on construct

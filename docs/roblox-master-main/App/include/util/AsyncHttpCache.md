@@ -38,7 +38,7 @@ Note: `CachedContent` must be constructible as `CachedContent(response, filename
 - Two independent locks: `contentCacheMutex` (plain mutex) for the cache and inherited `requestSync` (recursive) for `failedUrls`; `invalidateCacheItemOrFailure`/`clearCache`/`getRequestedUrls` take them **sequentially**, never nested — do not add nested locking here.
 - `renameCacheItem` is fetch→remove→insert under a single `contentCacheMutex` hold — atomic w.r.t. all other cache mutators (which take the same mutex).
 - `getRequestedUrls` returns only ids where `ContentId(...).isHttp()` plus every currently-failed URL (failed URLs expire over time per base class).
-- Cache hit via `findCacheItem` refreshes LRU recency (typical for this cache family; exact behavior in LRUCache.h).
+- Cache hit via `findCacheItem` refreshes LRU recency (`SizeEnforcedLRUCache::fetch` defaults `touch=true`, splicing the entry to the MRU front).
 
 ## UNKNOWN
 - Concrete `CachedContent` types instantiated in the tree and their headers.

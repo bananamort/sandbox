@@ -28,7 +28,7 @@ private:
 ```
 
 ## Gotchas
-- From-min/max construction produces an axis-aligned region (identity rotation); rotated regions must have their cframe set via getCFrame-ref... actually `getCFrame()` is const — mutation path unclear from header (UNKNOWN how callers rotate a Region3).
+- From-min/max construction produces an axis-aligned region (identity rotation); the header exposes **no mutator** for `cframe` (`getCFrame()` returns a const reference), so how callers obtain rotated regions is not visible from this header (UNKNOWN).
 - `minPos`/`maxPos` of a ROTATED region are the world AABB bounds of the oriented box (computed in .cpp).
 - Equality includes full CFrame comparison — float-exact.
 

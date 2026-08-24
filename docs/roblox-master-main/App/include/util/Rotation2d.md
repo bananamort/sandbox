@@ -27,7 +27,7 @@ private:
 
 class Rotation2D {
 public:
-    Rotation2D();                          // default angle + uninitialized? center (Vector2 default)
+    Rotation2D();                          // default: empty angle + default-constructed center
     Rotation2D(const RotationAngle& angle, const Vector2& center);
 
     const RotationAngle& getAngle() const;
@@ -48,7 +48,7 @@ private:
 ## Gotchas
 - Angles are **degrees** in the API (`getValue`), converted to radians internally for sin/cos.
 - `empty()` is exact `== 0.f` — a rotation of 1e-9 degrees is not "empty" and takes the full trig path.
-- Equality compares only the stored angle value, not the cached sin/cos — two objects with same value always equal even if one was default-constructed (cos=1) vs computed.
+- Equality on `RotationAngle` compares only the stored angle value, not the cached sin/cos; `Rotation2D` equality additionally compares centers.
 - `combine` accumulates angle without normalization to [-180,180].
 
 ## UNKNOWN

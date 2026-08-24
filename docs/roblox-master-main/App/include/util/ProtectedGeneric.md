@@ -8,7 +8,7 @@ Tamper-evidence wrapper: stores a value alongside a `boost::hash` of it; `getVal
 template<class Type>
 class ProtectedGeneric {
 public:
-    explicit ProtectedGeneric(Type _value);
+    ProtectedGeneric(Type _value);          // NOT declared explicit (implicit from Type)
 
     const Type& peekValue() const;          // no verification!
     bool getValue(Type& _value) const;      // copies value; returns hash==rehash (integrity OK)
