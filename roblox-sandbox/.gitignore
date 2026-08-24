@@ -26,6 +26,14 @@ x86/
 [Ww][Ii][Nn]32/
 !fmod/win32/
 !fmod/win32/**
+!Rendering/LibOVR/Lib/
+!Rendering/LibOVR/Lib/Windows/
+!Rendering/LibOVR/Lib/Windows/Win32/
+!Rendering/LibOVR/Lib/Windows/Win32/Release/
+!Rendering/LibOVR/Lib/Windows/Win32/Release/VS2012/
+!Rendering/LibOVR/Lib/Windows/Win32/Release/VS2012/**
+!fmod/win32/
+!fmod/win32/**
 [Aa][Rr][Mm]/
 [Aa][Rr][Mm]64/
 bld/
