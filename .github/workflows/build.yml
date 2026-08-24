@@ -85,19 +85,16 @@ jobs:
         shell: cmd
         working-directory: roblox-sandbox
         run: |
-          rem MSBuild derives INCLUDE/LIB for cl from toolset props, not the
-          rem environment -- force ATLMFC dirs in via global properties.
-          set "ATLINCPROP=-p:IncludePath=%ATLMFC_ROOT%\atlmfc\include;$(IncludePath)"
-          set "ATLLIBPROP=-p:LibraryPath=%ATLMFC_ROOT%\atlmfc\lib\x86;$(LibraryPath)"
-          msbuild Roblox.sln -m -p:Configuration=ReleaseRcc -p:Platform=Win32 "%ATLINCPROP%" "%ATLLIBPROP%" -flp:logfile=build-rcc.log;verbosity=normal
+          rem ATLMFC dirs are injected by roblox-sandbox\Directory.Build.targets
+          rem from the ATLMFC_ROOT environment property (MSBuild derives
+          rem INCLUDE/LIB for cl from properties, not the process env).
+          msbuild Roblox.sln -m -p:Configuration=ReleaseRcc -p:Platform=Win32 -flp:logfile=build-rcc.log;verbosity=normal
 
       - name: Build WindowsClient (Release)
         shell: cmd
         working-directory: roblox-sandbox
         run: |
-          set "ATLINCPROP=-p:IncludePath=%ATLMFC_ROOT%\atlmfc\include;$(IncludePath)"
-          set "ATLLIBPROP=-p:LibraryPath=%ATLMFC_ROOT%\atlmfc\lib\x86;$(LibraryPath)"
-          msbuild Roblox.sln -m -p:Configuration=Release -p:Platform=Win32 "%ATLINCPROP%" "%ATLLIBPROP%" -flp:logfile=build-client.log;verbosity=normal
+          msbuild Roblox.sln -m -p:Configuration=Release -p:Platform=Win32 -flp:logfile=build-client.log;verbosity=normal
 
       - name: Collect binaries
         shell: pwsh

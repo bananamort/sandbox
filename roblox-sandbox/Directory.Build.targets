@@ -1,0 +1,21 @@
+<Project>
+  <!--
+    Directory.Build.targets (auto-imported by every project AFTER the C++
+    props have composed IncludePath/LibraryPath).
+
+    Purpose: guarantee the VC ATLMFC headers/libs are reachable. The CI
+    runner image ships multiple MSVC toolsets and the ATLMFC component can
+    land under a version directory other than the one the v143 toolset
+    resolves; MSBuild also derives INCLUDE/LIB for cl.exe from these
+    properties rather than the process environment, so exporting INCLUDE
+    in the workflow cannot fix it.
+
+    ATLMFC_ROOT is exported by the build workflow's detection step (points
+    at the MSVC toolset dir that actually contains atlmfc\). Guarded on
+    non-empty so local builds are untouched.
+  -->
+  <PropertyGroup Condition="'$(ATLMFC_ROOT)' != ''">
+    <IncludePath>$(ATLMFC_ROOT)\atlmfc\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ATLMFC_ROOT)\atlmfc\lib\x86;$(ATLMFC_ROOT)\atlmfc\lib;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+</Project>
