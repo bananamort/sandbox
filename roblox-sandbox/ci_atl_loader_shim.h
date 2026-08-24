@@ -44,7 +44,18 @@
 #define LOAD_LIBRARY_SEARCH_DEFAULT_DIRS 0x00001000
 #endif
 
+// Declared under extern "C": run 32752917820 (380x C2732) proved the real
+// libloaderapi.h declaration IS reached later in these TUs and carries C
+// linkage - a bare global-scope declaration here contradicts it.
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 __declspec(dllimport) int __stdcall SetDefaultDllDirectories(unsigned long DirectoryFlags);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // RBX_CI_ATL_LOADER_SHIM_H
 #endif // _WIN32
