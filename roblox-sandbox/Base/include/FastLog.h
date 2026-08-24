@@ -55,8 +55,10 @@ enum FastVarType {
 };
 
 namespace FLog {
-    // Channel is a TYPE (log channel handle), distinct from the group
-    // enum below -- signal.h stores scoped connections tagged by channel.
+    // Channel is a TYPE (log channel handle) -- signal.h stores scoped
+    // connections tagged by channel, and Test.cpp snapshots group levels
+    // through it. The group CATALOG follows further down as mutable
+    // FastVars::GroupVar objects (runtime log levels).
     class Channel {
     public:
         int id;
@@ -99,6 +101,12 @@ inline void emitG(int group, char const* fmt, ...)
     vemit(group, fmt, ap);
     va_end(ap);
 }
+
+// Numeric id of a log group: GroupVar objects carry their level; plain
+// integers (raw constants at a few call sites) pass through.
+template <typename T>
+inline int groupId(T group) { return (int)group; }
+inline int groupId(const ::RBX::FastVars::GroupVar& g) { return g.v; }
 
 } // namespace FastLogImpl
 
@@ -207,6 +215,10 @@ inline std::ostream& operator<<(std::ostream& os, const FastStringVar& s) { retu
 
 } // namespace RBX
 
+// Log-group variables: mutable runtime levels (see FastVars::GroupVar).
+#define RBX_LOGGROUP_VAR(name, init) \
+    __declspec(selectany) ::RBX::FastVars::GroupVar name(init)
+
 namespace FLog {
     typedef void (*ExternalLogFunc)(Channel id, const char* message);
     typedef double (*NowSecondsFn)();
@@ -234,10 +246,22 @@ namespace FLog {
         RBX::FastLogImpl::emitG(channel, "%s", msg ? msg : "");
     }
 
+    // GroupVar overloads: pass groups without forcing an extra conversion
+    // step (GroupVar has no operator int -- see FastVars::GroupVar).
+    inline void FastLog(const RBX::FastVars::GroupVar& channel, const char* msg, int level)
+    {
+        FastLog(channel.v, msg, level);
+    }
+
     inline void FastLogS(int channel, const char* msg, const char* detail)
     {
         (void)detail;
         RBX::FastLogImpl::emitG(channel, "%s", msg ? msg : "");
+    }
+
+    inline void FastLogS(const RBX::FastVars::GroupVar& channel, const char* msg, const char* detail)
+    {
+        FastLogS(channel.v, msg, detail);
     }
 
     inline void WriteFastLogDump(const char* filepath, int maxLines)
@@ -345,68 +369,186 @@ namespace FLog {
                 it->second->fromString(it->second->defaultValue);
     }
 
-    enum {
-        Zero = 0, AdornableLifetime, AdornRenderStats, Always, AnalyticsLog, Asserts,
-        ChangeHistoryService, ClientSettings, CloseDataModel, ContentProviderRequests, CoreScripts, Crash,
-        CrashReporterInit, CyclicExecutiveThrottling, CyclicExecutiveTiming, CyclicExecutiveWorldSteps, DataModelJobs, DataStore,
-        DataStoreBudget, DeferredVoxelUpdates, DeviceLost, DragProfile, DXVideoMemory, Error,
-        FMOD, FRM, GfxClusters, GfxClustersFull, GoldenHashes, GoogleAnalyticsTracking,
-        Graphics, GuiTargetLifetime, HangDetection, HeartBeatFailure, Http, HttpQueue,
-        HttpRbxApiBudget, HttpTrace, HumanoidFloorProcess, InstanceTreeManipulation, ISteppedLifetime, JoinSendExtraItemCount,
-        JointInstanceLifetime, JointLifetime, LegacyLock, LuaBridge, LuaMemoryPool, LuaProfiler,
-        LuaScriptTimeoutSeconds, MachineIdUploader, MaxJoinDataSizeKB, MaxNetworkReadTimeInCS, MegaClusterDecodeStream, MegaClusterDirty,
-        MegaClusterInit, MegaClusterNetwork, MegaClusterNetworkInit, MouseCommand, MouseCommandLifetime, MutexLifetime,
-        NamedMutex, Network, NetworkCache, NetworkInstances, NetworkJoin, NetworkPacketsReceive,
-        NetworkReadItem, NetworkStatsReport, NetworkStepsMultipliers, NetworkStreaming, PartInstanceLifetime, PartStreamingRequests,
-        PathfindingDetail, PathfindingPerf, Physics, PhysicsSenderSleepingLog, PhysicsStepsPerSecond, PlayerChatInfoExponentialBackoffLimitMultiplier,
-        PlayerShutdownLuaTimeoutSeconds, Plugins, PreloadLinkedScriptsTiming, PrimitiveLifetime, R15Character, RakNetDisconnect,
-        RCCDataModelInit, RCCServiceInit, RCCServiceJobs, ReflectionMetadata, RenderFastCluster, RenderLightGrid,
-        RenderLightGridAgeProportion, RenderLightGridBorderGlobalCutoff, RenderLightGridBorderSkylightCutoff, RenderTextureCompositor, RenderTextureCompositorBudget, ReplicationDataLifetime,
-        RobloxWndInit, ScriptContext, ScriptContextAdd, ScriptContextClose, ScriptContextRemove, Serializer,
-        SlowHttpRequest, Sound, SoundTiming, SoundTrace, StepAnimatedJoints, TaskSchedulerFindJob,
-        TaskSchedulerInit, TaskSchedulerRun, TaskSchedulerTiming, TerrainCellListener, TextureContentProvider, ThreadRefCounts,
-        ThumbnailRender, TouchedSignal, ttMetricP1, US14116, UseLuaMemoryPool, UserInputProfile,
-        Verbs, VideoCapture, ViewRbxBase, ViewRbxInit, Voxelizer, VR,
-        Warning, WeakThreadRef, WebChatFiltering, WorldStepsBehind, WorldStepsBehindG
-    };
+    RBX_LOGGROUP_VAR(Zero, 0);
+    RBX_LOGGROUP_VAR(AdornableLifetime, 0);
+    RBX_LOGGROUP_VAR(AdornRenderStats, 0);
+    RBX_LOGGROUP_VAR(Always, 0);
+    RBX_LOGGROUP_VAR(AnalyticsLog, 0);
+    RBX_LOGGROUP_VAR(Asserts, 0);
+    RBX_LOGGROUP_VAR(ChangeHistoryService, 0);
+    RBX_LOGGROUP_VAR(ClientSettings, 0);
+    RBX_LOGGROUP_VAR(CloseDataModel, 0);
+    RBX_LOGGROUP_VAR(ContentProviderRequests, 0);
+    RBX_LOGGROUP_VAR(CoreScripts, 0);
+    RBX_LOGGROUP_VAR(Crash, 0);
+    RBX_LOGGROUP_VAR(CrashReporterInit, 0);
+    RBX_LOGGROUP_VAR(CyclicExecutiveThrottling, 0);
+    RBX_LOGGROUP_VAR(CyclicExecutiveTiming, 0);
+    RBX_LOGGROUP_VAR(CyclicExecutiveWorldSteps, 0);
+    RBX_LOGGROUP_VAR(DataModelJobs, 0);
+    RBX_LOGGROUP_VAR(DataStore, 0);
+    RBX_LOGGROUP_VAR(DataStoreBudget, 0);
+    RBX_LOGGROUP_VAR(DeferredVoxelUpdates, 0);
+    RBX_LOGGROUP_VAR(DeviceLost, 0);
+    RBX_LOGGROUP_VAR(DragProfile, 0);
+    RBX_LOGGROUP_VAR(DXVideoMemory, 0);
+    RBX_LOGGROUP_VAR(Error, 0);
+    RBX_LOGGROUP_VAR(FMOD, 0);
+    RBX_LOGGROUP_VAR(FRM, 0);
+    RBX_LOGGROUP_VAR(GfxClusters, 0);
+    RBX_LOGGROUP_VAR(GfxClustersFull, 0);
+    RBX_LOGGROUP_VAR(GoldenHashes, 0);
+    RBX_LOGGROUP_VAR(GoogleAnalyticsTracking, 0);
+    RBX_LOGGROUP_VAR(Graphics, 0);
+    RBX_LOGGROUP_VAR(GuiTargetLifetime, 0);
+    RBX_LOGGROUP_VAR(HangDetection, 0);
+    RBX_LOGGROUP_VAR(HeartBeatFailure, 0);
+    RBX_LOGGROUP_VAR(Http, 0);
+    RBX_LOGGROUP_VAR(HttpQueue, 0);
+    RBX_LOGGROUP_VAR(HttpRbxApiBudget, 0);
+    RBX_LOGGROUP_VAR(HttpTrace, 0);
+    RBX_LOGGROUP_VAR(HumanoidFloorProcess, 0);
+    RBX_LOGGROUP_VAR(InstanceTreeManipulation, 0);
+    RBX_LOGGROUP_VAR(ISteppedLifetime, 0);
+    RBX_LOGGROUP_VAR(JoinSendExtraItemCount, 0);
+    RBX_LOGGROUP_VAR(JointInstanceLifetime, 0);
+    RBX_LOGGROUP_VAR(JointLifetime, 0);
+    RBX_LOGGROUP_VAR(LegacyLock, 0);
+    RBX_LOGGROUP_VAR(LuaBridge, 0);
+    RBX_LOGGROUP_VAR(LuaMemoryPool, 0);
+    RBX_LOGGROUP_VAR(LuaProfiler, 0);
+    RBX_LOGGROUP_VAR(LuaScriptTimeoutSeconds, 0);
+    RBX_LOGGROUP_VAR(MachineIdUploader, 0);
+    RBX_LOGGROUP_VAR(MaxJoinDataSizeKB, 0);
+    RBX_LOGGROUP_VAR(MaxNetworkReadTimeInCS, 0);
+    RBX_LOGGROUP_VAR(MegaClusterDecodeStream, 0);
+    RBX_LOGGROUP_VAR(MegaClusterDirty, 0);
+    RBX_LOGGROUP_VAR(MegaClusterInit, 0);
+    RBX_LOGGROUP_VAR(MegaClusterNetwork, 0);
+    RBX_LOGGROUP_VAR(MegaClusterNetworkInit, 0);
+    RBX_LOGGROUP_VAR(MouseCommand, 0);
+    RBX_LOGGROUP_VAR(MouseCommandLifetime, 0);
+    RBX_LOGGROUP_VAR(MutexLifetime, 0);
+    RBX_LOGGROUP_VAR(NamedMutex, 0);
+    RBX_LOGGROUP_VAR(Network, 0);
+    RBX_LOGGROUP_VAR(NetworkCache, 0);
+    RBX_LOGGROUP_VAR(NetworkInstances, 0);
+    RBX_LOGGROUP_VAR(NetworkJoin, 0);
+    RBX_LOGGROUP_VAR(NetworkPacketsReceive, 0);
+    RBX_LOGGROUP_VAR(NetworkReadItem, 0);
+    RBX_LOGGROUP_VAR(NetworkStatsReport, 0);
+    RBX_LOGGROUP_VAR(NetworkStepsMultipliers, 0);
+    RBX_LOGGROUP_VAR(NetworkStreaming, 0);
+    RBX_LOGGROUP_VAR(PartInstanceLifetime, 0);
+    RBX_LOGGROUP_VAR(PartStreamingRequests, 0);
+    RBX_LOGGROUP_VAR(PathfindingDetail, 0);
+    RBX_LOGGROUP_VAR(PathfindingPerf, 0);
+    RBX_LOGGROUP_VAR(Physics, 0);
+    RBX_LOGGROUP_VAR(PhysicsSenderSleepingLog, 0);
+    RBX_LOGGROUP_VAR(PhysicsStepsPerSecond, 0);
+    RBX_LOGGROUP_VAR(PlayerChatInfoExponentialBackoffLimitMultiplier, 0);
+    RBX_LOGGROUP_VAR(PlayerShutdownLuaTimeoutSeconds, 0);
+    RBX_LOGGROUP_VAR(Plugins, 0);
+    RBX_LOGGROUP_VAR(PreloadLinkedScriptsTiming, 0);
+    RBX_LOGGROUP_VAR(PrimitiveLifetime, 0);
+    RBX_LOGGROUP_VAR(R15Character, 0);
+    RBX_LOGGROUP_VAR(RakNetDisconnect, 0);
+    RBX_LOGGROUP_VAR(RCCDataModelInit, 0);
+    RBX_LOGGROUP_VAR(RCCServiceInit, 0);
+    RBX_LOGGROUP_VAR(RCCServiceJobs, 0);
+    RBX_LOGGROUP_VAR(ReflectionMetadata, 0);
+    RBX_LOGGROUP_VAR(RenderFastCluster, 0);
+    RBX_LOGGROUP_VAR(RenderLightGrid, 0);
+    RBX_LOGGROUP_VAR(RenderLightGridAgeProportion, 0);
+    RBX_LOGGROUP_VAR(RenderLightGridBorderGlobalCutoff, 0);
+    RBX_LOGGROUP_VAR(RenderLightGridBorderSkylightCutoff, 0);
+    RBX_LOGGROUP_VAR(RenderTextureCompositor, 0);
+    RBX_LOGGROUP_VAR(RenderTextureCompositorBudget, 0);
+    RBX_LOGGROUP_VAR(ReplicationDataLifetime, 0);
+    RBX_LOGGROUP_VAR(RobloxWndInit, 0);
+    RBX_LOGGROUP_VAR(ScriptContext, 0);
+    RBX_LOGGROUP_VAR(ScriptContextAdd, 0);
+    RBX_LOGGROUP_VAR(ScriptContextClose, 0);
+    RBX_LOGGROUP_VAR(ScriptContextRemove, 0);
+    RBX_LOGGROUP_VAR(Serializer, 0);
+    RBX_LOGGROUP_VAR(SlowHttpRequest, 0);
+    RBX_LOGGROUP_VAR(Sound, 0);
+    RBX_LOGGROUP_VAR(SoundTiming, 0);
+    RBX_LOGGROUP_VAR(SoundTrace, 0);
+    RBX_LOGGROUP_VAR(StepAnimatedJoints, 0);
+    RBX_LOGGROUP_VAR(TaskSchedulerFindJob, 0);
+    RBX_LOGGROUP_VAR(TaskSchedulerInit, 0);
+    RBX_LOGGROUP_VAR(TaskSchedulerRun, 0);
+    RBX_LOGGROUP_VAR(TaskSchedulerTiming, 0);
+    RBX_LOGGROUP_VAR(TerrainCellListener, 0);
+    RBX_LOGGROUP_VAR(TextureContentProvider, 0);
+    RBX_LOGGROUP_VAR(ThreadRefCounts, 0);
+    RBX_LOGGROUP_VAR(ThumbnailRender, 0);
+    RBX_LOGGROUP_VAR(TouchedSignal, 0);
+    RBX_LOGGROUP_VAR(ttMetricP1, 0);
+    RBX_LOGGROUP_VAR(US14116, 0);
+    RBX_LOGGROUP_VAR(UseLuaMemoryPool, 0);
+    RBX_LOGGROUP_VAR(UserInputProfile, 0);
+    RBX_LOGGROUP_VAR(Verbs, 0);
+    RBX_LOGGROUP_VAR(VideoCapture, 0);
+    RBX_LOGGROUP_VAR(ViewRbxBase, 0);
+    RBX_LOGGROUP_VAR(ViewRbxInit, 0);
+    RBX_LOGGROUP_VAR(Voxelizer, 0);
+    RBX_LOGGROUP_VAR(VR, 0);
+    RBX_LOGGROUP_VAR(Warning, 0);
+    RBX_LOGGROUP_VAR(WeakThreadRef, 0);
+    RBX_LOGGROUP_VAR(WebChatFiltering, 0);
+    RBX_LOGGROUP_VAR(WorldStepsBehind, 0);
+    RBX_LOGGROUP_VAR(WorldStepsBehindG, 0);
 }
 
 namespace DFLog {
-    enum {
-        Zero = 0, AnalyticsLog, DeferredVoxelUpdates, GoogleAnalyticsTracking, HttpTrace, MaxJoinDataSizeKB,
-        NamedMutex, NetworkJoin, NetworkPacketsReceive, PartStreamingRequests, PlayerChatInfoExponentialBackoffLimitMultiplier, PreloadLinkedScriptsTiming,
-        R15Character, SoundTiming, SoundTrace, WebChatFiltering
-    };
+    RBX_LOGGROUP_VAR(Zero, 0);
+    RBX_LOGGROUP_VAR(AnalyticsLog, 0);
+    RBX_LOGGROUP_VAR(DeferredVoxelUpdates, 0);
+    RBX_LOGGROUP_VAR(GoogleAnalyticsTracking, 0);
+    RBX_LOGGROUP_VAR(HttpTrace, 0);
+    RBX_LOGGROUP_VAR(MaxJoinDataSizeKB, 0);
+    RBX_LOGGROUP_VAR(NamedMutex, 0);
+    RBX_LOGGROUP_VAR(NetworkJoin, 0);
+    RBX_LOGGROUP_VAR(NetworkPacketsReceive, 0);
+    RBX_LOGGROUP_VAR(PartStreamingRequests, 0);
+    RBX_LOGGROUP_VAR(PlayerChatInfoExponentialBackoffLimitMultiplier, 0);
+    RBX_LOGGROUP_VAR(PreloadLinkedScriptsTiming, 0);
+    RBX_LOGGROUP_VAR(R15Character, 0);
+    RBX_LOGGROUP_VAR(SoundTiming, 0);
+    RBX_LOGGROUP_VAR(SoundTrace, 0);
+    RBX_LOGGROUP_VAR(WebChatFiltering, 0);
 }
 
 #define FASTLOG(group, msg) \
-    ::RBX::FastLogImpl::emitG((int)(group), msg)
+    ::RBX::FastLogImpl::emitG(groupId(group), msg)
 
 #define FASTLOG1(group, fmt, a) \
-    ::RBX::FastLogImpl::emitG((int)(group), fmt, a)
+    ::RBX::FastLogImpl::emitG(groupId(group), fmt, a)
 #define FASTLOG2(group, fmt, a, b) \
-    ::RBX::FastLogImpl::emitG((int)(group), fmt, a, b)
+    ::RBX::FastLogImpl::emitG(groupId(group), fmt, a, b)
 #define FASTLOG3(group, fmt, a, b, c) \
-    ::RBX::FastLogImpl::emitG((int)(group), fmt, a, b, c)
+    ::RBX::FastLogImpl::emitG(groupId(group), fmt, a, b, c)
 #define FASTLOG4(group, fmt, a, b, c, d) \
-    ::RBX::FastLogImpl::emitG((int)(group), fmt, a, b, c, d)
+    ::RBX::FastLogImpl::emitG(groupId(group), fmt, a, b, c, d)
 #define FASTLOG5(group, fmt, a, b, c, d, e) \
-    ::RBX::FastLogImpl::emitG((int)(group), fmt, a, b, c, d, e)
+    ::RBX::FastLogImpl::emitG(groupId(group), fmt, a, b, c, d, e)
 
 // F variants historically took float arguments; varargs promotion makes the
 // same emitter correct.
 #define FASTLOG1F(group, fmt, a) \
-    ::RBX::FastLogImpl::emitG((int)(group), fmt, a)
+    ::RBX::FastLogImpl::emitG(groupId(group), fmt, a)
 #define FASTLOG2F(group, fmt, a, b) \
-    ::RBX::FastLogImpl::emitG((int)(group), fmt, a, b)
+    ::RBX::FastLogImpl::emitG(groupId(group), fmt, a, b)
 #define FASTLOG3F(group, fmt, a, b, c) \
-    ::RBX::FastLogImpl::emitG((int)(group), fmt, a, b, c)
+    ::RBX::FastLogImpl::emitG(groupId(group), fmt, a, b, c)
 #define FASTLOG4F(group, fmt, a, b, c, d) \
-    ::RBX::FastLogImpl::emitG((int)(group), fmt, a, b, c, d)
+    ::RBX::FastLogImpl::emitG(groupId(group), fmt, a, b, c, d)
 
 // S variant takes exactly one string argument for a "%s" format.
 #define FASTLOGS(group, msg, s) \
-    ::RBX::FastLogImpl::emitG((int)(group), msg, s)
+    ::RBX::FastLogImpl::emitG(groupId(group), msg, s)
 
 // Group registration marker. In the original logger this registered the
 // group with the runtime dump machinery; here it is intentionally empty --
