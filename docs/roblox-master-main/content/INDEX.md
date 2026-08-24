@@ -6,7 +6,7 @@ Roblox client **CoreScripts**: the Lua half of the engine's built-in UI and serv
 
 ## Completion status
 
-**34 of 38 .lua documented.** REMAINING (large files, next resume): `scripts/Libraries/RbxStamper.lua`, `scripts/Modules/Chat.lua`, `scripts/Modules/DeveloperConsoleModule.lua`, `scripts/Libraries/RbxGui.lua`.
+**38 of 38 .lua documented — complete.**
 
 ## File roster
 
@@ -48,7 +48,7 @@ Roblox client **CoreScripts**: the Lua half of the engine's built-in UI and serv
 |---|---|---|---|
 | ServerSocialScript.lua | 216 | [ServerCoreScripts/ServerSocialScript.lua.md](ServerCoreScripts/ServerSocialScript.lua.md) | Server follow-graph service: multi-follow API sync on join, delta pushes, GetFollowRelationships RemoteFunction. |
 
-### scripts/Modules/ (7 of 10)
+### scripts/Modules/ (10 of 10)
 
 | File | Lines | Doc | One-line summary |
 |---|---|---|---|
@@ -59,8 +59,8 @@ Roblox client **CoreScripts**: the Lua half of the engine's built-in UI and serv
 | Settings/SettingsPageFactory.lua | 275 | [Modules/Settings/SettingsPageFactory.lua.md](Modules/Settings/SettingsPageFactory.lua.md) | Base settings page class: TabHeader/Page GUI, Displayed/Hidden events, slide animations, row registry. |
 | Settings/Utility.lua | 2023 | [Modules/Settings/Utility.lua.md](Modules/Settings/Utility.lua.md) | Settings toolkit: styled buttons, Slider/Selector/DropDown classes, row builders, alerts, tweens, input handling. |
 | Settings/SettingsHub.lua | 1110 | [Modules/Settings/SettingsHub.lua.md](Modules/Settings/SettingsHub.lua.md) | Escape-menu shell: shield+tab bar+page view, bottom hotkey bar, menu stack, Esc/F9 bindings, ReportPlayer deep link. |
-| Chat.lua | 2654 | REMAINING | Legacy chat window module (window/channels/history). |
-| DeveloperConsoleModule.lua | 2978 | REMAINING | New developer console implementation (tabs/stats/command bar) consumed via DeveloperConsole.lua shim. |
+| Chat.lua | 2654 | [Modules/Chat.lua.md](Modules/Chat.lua.md) | Lua chat window: history + mode chat bar (All/Team/Whisper), slash commands, block/mute, SetCore API (right-click popup has PopupFrame nil-index crash). |
+| DeveloperConsoleModule.lua | 2978 | [Modules/DeveloperConsoleModule.lua.md](Modules/DeveloperConsoleModule.lua.md) | New F9 dev console impl: log tabs w/ filters, creator-only server stats/scripts/jobs charts, command bar; consumed via DeveloperConsole.lua shim. |
 | Settings/Pages/* (8 pages) | see below | all done | Home, LeaveGame, ResetCharacter, Record, Help, GameSettings, Players, ReportAbuseMenu. |
 
 ### scripts/Modules/Settings/Pages/ (8 of 8)
@@ -76,16 +76,16 @@ Roblox client **CoreScripts**: the Lua half of the engine's built-in UI and serv
 | Players.lua | 307 | [Players.lua.md](Modules/Settings/Pages/Players.lua.md) — Sorted roster w/ friend buttons (has `table.remove(..., i)` typo bug). |
 | ReportAbuseMenu.lua | 284 | [ReportAbuseMenu.lua.md](Modules/Settings/Pages/ReportAbuseMenu.lua.md) — Abuse report form (has self-indexing GetPlayerFromIndex bug). |
 
-### scripts/Libraries/ (1 of 3)
+### scripts/Libraries/ (3 of 3)
 
 | File | Lines | Doc | One-line summary |
 |---|---|---|---|
 | RbxUtility.lua | 1117 | [Libraries/RbxUtility.lua.md](Libraries/RbxUtility.lua.md) | LoadLibrary impl: JSON encoder/decoder, terrain helpers, Signal class, Create{} builder, Help(). |
-| RbxGui.lua | 4266 | REMAINING | Giant GUI library (CreateTutorial, style sheets, scrolling frames) used by BuildToolsScript etc. |
-| RbxStamper.lua | 2207 | REMAINING | PBS stamping/placement tool library. |
+| RbxGui.lua | 4266 | [Libraries/RbxGui.lua.md](Libraries/RbxGui.lua.md) | GUI widget grab-bag: dialogs, dropdowns, sliders, scrolling frames, tutorial framework, stamper set panel, terrain material selector (has undefined `IsTouchClient` + cancelSlide global bugs). |
+| RbxStamper.lua | 2207 | [Libraries/RbxStamper.lua.md](Libraries/RbxStamper.lua.md) | PBS stamping tool: InsertService asset load, ghost dragger, 4-stud grid snap, terrain mega-cluster line stamping (no in-tree consumer). |
 
 ## Cross-references
 
 - Entry chain: engine → StarterScript/ServerStarterScript → (AddCoreScriptLocal paths relative to content/scripts/) → modules under RobloxGui.Modules.
 - Shared infra: TenFootInterface sizing flags consulted by ~every UI; Settings.Utility MakeStyledButton/Create used across settings + backpack hints + notifications alert; PlayerDropDown blockingUtility shared by Chat/BubbleChat/Playerlist.
-- Known cross-file bugs worth tracking: undefined `TWEEN_TIME` global in PlayerDropDown Hide(); `lastInputTypee` typo in Settings Utility MakeButton; ReportAbuse player-report no-op; Players.lua shrink-path crash.
+- Known cross-file bugs worth tracking: undefined `TWEEN_TIME` global in PlayerDropDown Hide(); `lastInputTypee` typo in Settings Utility MakeButton; ReportAbuse player-report no-op; Players.lua shrink-path crash; Chat.lua `PopupFrame` local/global scope crash on right-click popup; RbxGui.lua undefined `IsTouchClient` + cancelSlide's always-nil `areaSoakMouseMoveCon` global; RbxStamper.lua `not name == "MegaClusterCube"` precedence bug, undefined `Tool`/`createJoints`/`ghostRemovalScript` globals, arithmetic-on-boolean AutoAlignToFace; DeveloperConsoleModule nil `Style.ScriptBackgroundTransparency` assignment in chart-button creation.
