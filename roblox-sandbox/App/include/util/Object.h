@@ -223,7 +223,7 @@ namespace RBX
 			static int isConstructed;				// debugging - if constructed, == 666
 
 			const RBX::Name& getClassNameUnconstructed() const {
-				return RBX::Name::declare<sClassName>();
+				return RBX::Name::declareClassName(sClassName);
 			}
 
 		public:
@@ -236,7 +236,7 @@ namespace RBX
 
 			const RBX::Name& getClassName() const {
 				RBXASSERT(wasConstructed());
-				return RBX::Name::declare<sClassName>();
+				return RBX::Name::declareClassName(sClassName);
 			}
 
 			Creator()
@@ -360,7 +360,7 @@ namespace RBX
 
 		static const RBX::Name& className() 
 		{ 
-			return RBX::Name::declare<sClassName>();
+			return RBX::Name::declareClassName(sClassName);
 		};
 		
 		static bool isNullClassName() { 
