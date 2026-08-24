@@ -13,7 +13,7 @@ Header tree of the Roblox engine's shared libraries: reflection type system, Lua
 - [v8xml/](v8xml/INDEX.md) — COMPLETE (8/8).
 - stdafx.md — complete.
 - Root-level headers previously done: [util/Http.md](util/Http.md), [util/ProtectedString.md](util/ProtectedString.md), security/*.md ×4.
-- PENDING SUBDIRECTORIES (not yet documented): `solver/` (10 headers), `tool/` (29), `util/` (~138 incl. .inl), `v8datamodel/` (~290), `v8kernel/` (20), `v8world/` (~90), `voxel/` (17 incl. .inl), `voxel2/` (6).
+- PENDING SUBDIRECTORIES (not yet documented): `solver/` (1/10 done: [Constraint.md](solver/Constraint.md); remaining 9: ConstraintJacobian, DebugSerializer, Solver, SolverBody, SolverConfig, SolverContainers, SolverKernel, SolverProfiler, SolverSerializer), `tool/` (29), `util/` (~136 .h + Math.inl/Quaternion.inl; Http+ProtectedString already done above), `v8datamodel/` (~290), `v8kernel/` (20), `v8world/` (~89 + SpatialHashMultiRes.inl), `voxel/` (11 .h + 6 .inl), `voxel2/` (6).
 
 ## Notes
 
