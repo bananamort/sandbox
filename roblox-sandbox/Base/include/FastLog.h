@@ -102,12 +102,6 @@ inline void emitG(int group, char const* fmt, ...)
     va_end(ap);
 }
 
-// Numeric id of a log group: GroupVar objects carry their level; plain
-// integers (raw constants at a few call sites) pass through.
-template <typename T>
-inline int groupId(T group) { return (int)group; }
-inline int groupId(const ::RBX::FastVars::GroupVar& g) { return g.v; }
-
 } // namespace FastLogImpl
 
 // ==== SETTINGS-VARIABLE REGISTRY ====
@@ -168,6 +162,23 @@ struct IntVar : VarBase {
         return std::string(b);
     }
     void fromString(const std::string& s) { *p = atoi(s.c_str()); }
+};
+
+// Log-group variable. In the original logger each group declared through
+// LOGGROUP/DYNAMIC_LOGGROUP carried a mutable runtime level -- Test.cpp
+// assigns "FLog::Asserts = 0" and snapshots it into an FLog::Channel. The
+// group catalog therefore holds selectany GroupVar objects, NOT enum
+// constants. Conversion design (exactly one object conversion, so
+// 'channel = group' and 'group = 0 / group = channel' stay unambiguous):
+//   * implicit GroupVar -> FLog::Channel (single user conversion),
+//   * assignments from int and from Channel are member operators,
+//   * emitters obtain the numeric id through groupId().
+struct GroupVar {
+    int v;
+    constexpr GroupVar(int x = 0) : v(x) {}
+    GroupVar& operator=(int x) { v = x; return *this; }
+    GroupVar& operator=(const FLog::Channel& c) { v = c.id; return *this; }
+    operator const FLog::Channel() const { return FLog::Channel(v); }
 };
 
 } // namespace FastVars
@@ -520,6 +531,12 @@ namespace DFLog {
     RBX_LOGGROUP_VAR(SoundTrace, 0);
     RBX_LOGGROUP_VAR(WebChatFiltering, 0);
 }
+
+// Numeric id of a log group: GroupVar objects carry their level; plain
+// integers (raw constants at a few call sites) pass through.
+template <typename T>
+inline int groupId(T group) { return (int)group; }
+inline int groupId(const ::RBX::FastVars::GroupVar& g) { return g.v; }
 
 #define FASTLOG(group, msg) \
     ::RBX::FastLogImpl::emitG(groupId(group), msg)
