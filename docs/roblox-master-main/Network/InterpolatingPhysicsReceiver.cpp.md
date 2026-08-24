@@ -1,6 +1,6 @@
 # Network/InterpolatingPhysicsReceiver.cpp
 
-**Module**: Network (root) · **Type**: implementation (.cpp, 321 lines) · **Status**: `#if 1`-wrapped pending removal via `FFlag::RemoveInterpolationReciever`
+**Module**: Network (root) · **Type**: implementation (.cpp, 322 lines) · **Status**: `#if 1`-wrapped pending removal via `FFlag::RemoveInterpolationReciever`
 
 ## Purpose
 

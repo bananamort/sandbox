@@ -22,7 +22,7 @@ Implements the replication engine declared in `Replicator.h`: wire-format (de)se
 | `ID_CHAT_GAME/TEAM/ALL/PLAYER`, `ID_REPORT_ABUSE` | recv | delegated to `Players::OnReceiveChat` / `Players::OnReceiveReportAbuse` |
 | `ID_CONNECTION_LOST` / `ID_DISCONNECTION_NOTIFICATION` | recv | fire `disconnectionSignal(peer, lost)` then submit `scheduledRemove` task (teleport suppresses the signal) |
 
-Item wire format (`writeChangedProperty`): `[ItemTypeChangeProperty][instance GUID id][propDictionary id][value]`. New instances: `[id][classDictionary id][non-cacheable props][cacheable props][parentId][deleteOnDisconnect]`. JoinData: count + gzip stream of `readInstanceNew(..., isJoinData=true)` records without dictionary ids.
+Item wire format (`writeChangedProperty`): `[ItemTypeChangeProperty][instance GUID id][propDictionary id][value]`. New instances: `[id][classDictionary id][deleteOnDisconnect flag][non-cacheable props][cacheable props][parentId]` — the ownership flag is read immediately after the class id (services get a dummy read), *before* any properties. JoinData: count + gzip stream of `readInstanceNew(..., isJoinData=true)` records without dictionary ids.
 
 ### Key methods
 

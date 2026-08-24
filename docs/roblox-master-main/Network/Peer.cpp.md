@@ -20,7 +20,7 @@ Reflection: `SetOutgoingKBPSLimit(limit)` (Security::Plugin).
 
 Internal classes:
 - `ProfiledRakPeer : RakNet::RakPeer` — wraps `RunUpdateCycle` with a benchmark timer, sampling `peer.rakDutyCycle`.
-- `PacketReceiveJob : DataModelJob` ("Net PacketReceive", DataIn, cyclic executive at `CyclicExecutivePriority_Network_ReceiveIncoming`) — each step takes `DataModel::scoped_write_request`, then `while (packet = rawPeer()->Receive()) DeallocatePacket(packet)`. Note: it only **drains** packets; actual processing happens through the plugin callbacks during Receive.
+- `PacketReceiveJob : DataModelJob` ("Net PacketReceive", DataIn, cyclic executive at `CyclicExecutiveJobPriority_Network_ReceiveIncoming`) — each step takes `DataModel::scoped_write_request`, then `while (packet = rawPeer()->Receive()) DeallocatePacket(packet)`. Note: it only **drains** packets; actual processing happens through the plugin callbacks during Receive.
 - `PeerStatsItem` — StatsService children: `Network → Packets Thread → {Rate, Activity}` plus `Physics Senders`, `Send Buffer Health`.
 
 ## Usage

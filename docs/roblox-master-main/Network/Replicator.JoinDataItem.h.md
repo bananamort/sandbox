@@ -22,7 +22,7 @@ class Replicator::JoinDataItem : public Item {
     JoinDataItem(Replicator*);
     void setMaxInstancesToWrite(size_t);
     bool empty() const;  size_t size() const;
-    void setBytesPerStep(int numBytes);      // GameConfigurer sets DFLog::MaxJoinDataSizeKB*1000
+    void setBytesPerStep(int numBytes);      // Replicator::addTopReplicationContainers sets DFLog::MaxJoinDataSizeKB*1000
     void addInstance(shared_ptr<const Instance>);
     bool write(RakNet::BitStream&);          // false while instances remain
     static shared_ptr<DeserializedItem> read(Replicator&, RakNet::BitStream&);

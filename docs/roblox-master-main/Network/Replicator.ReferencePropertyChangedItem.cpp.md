@@ -19,4 +19,5 @@ See header; consumed by the generic ChangeProperty read path on the wire (same i
 
 ## Gotchas
 
-- Because the guid is captured eagerly, a reference that changes twice before flush sends two consistent snapshots — no coalescing with `pendingChangedPropertyItems` dedupe for ref props (they're inserted there too in `onPropertyChanged` but ref items bypass `ChangePropertyItem::write`'s erase).
+- Because the guid is captured eagerly, a reference that changes twice before flush sends two consistent snapshots.
+- Ref descriptors exit `onPropertyChanged` via an **early branch** — they are *not* inserted into `pendingChangedPropertyItems` at all (that dedupe set is only maintained for regular `ChangePropertyItem`s in the else-branch), so repeated ref changes queue one item each with no coalescing.

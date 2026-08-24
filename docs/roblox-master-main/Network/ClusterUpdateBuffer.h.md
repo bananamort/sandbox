@@ -28,7 +28,7 @@ struct ClusterUpdateBuffer {
 
 ## Usage
 
-Terrain replication (`ID_CLUSTER` packets) and streaming code; also referenced by `NetworkClusterPacketCache.cpp`.
+Terrain replication (`ID_CLUSTER` packets) in `Replicator.cpp`/`Replicator.h` — the only consumers of this type in the module (verified by grep).
 
 ## Gotchas
 

@@ -15,7 +15,7 @@ RakNet::BitStream& operator<<(RakNet::BitStream&, <each type above>);
 
 ## Usage
 
-Included by Replicator/physics code; implementations live in a corresponding .cpp outside this header (UNKNOWN location — likely Util or RakNet glue).
+Included by Replicator/physics code; implementations live in `Streaming.cpp` (that file defines the `operator<<` overloads declared here, e.g. `operator<<(BitStream&, const RBX::Guid::Scope&)`).
 
 ## Gotchas
 

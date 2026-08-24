@@ -45,8 +45,8 @@ static double Client::getNetworkBufferHealth(...);    // rakPeer->GetBufferHealt
 ## Gotchas
 
 - The join **ticket never touches HTTP here** — it travels only inside the encrypted `ID_SUBMIT_TICKET` RakNet payload; HTTP-side session identity was already resolved by the launcher/web layer.
-- `encryptDataPart`/`serializeStringCompressed` come from `Peer`/RakNet; the encryption covers the whole post-goldHash tail.
-- LAN check compares only the low byte of binary addresses (`& 0x00FF`), i.e. same /24-ish class-C heuristic, looped over all internal IDs but with a broken early-exit pattern (`!lansubnet && i++` re-evaluates even when found).
+- `encryptDataPart`/`serializeStringCompressed` come from `Peer`/RakNet (`DataBlockEncryptor`, rijndael-AES); the encryption covers the **entire** `ID_SUBMIT_TICKET` payload after the leading packet-id byte — userId, ticket, hash, protocolVersion, securityKey, platform/product, session id, and gold hash inclusive (server side undoes it with `Peer::decryptDataPart`).
+- LAN check compares **only the low 8 bits** of the binary addresses (`(localAddress.GetBinaryAddress() & 0x00FF) == (remoteAddress.GetBinaryAddress() & 0x00FF)`) — i.e. equal *last octet*, which is far weaker than a /24 or class-C check (e.g. `10.0.0.5` vs `192.168.44.5` would pass). The scan iterates all internal IDs and exits on the first match (`!lansubnet` loop condition).
 - Under `DFFlag::DebugDisableTimeoutDisconnect` the client raises its timeout to 10 minutes for all addresses.
 - `programMemoryPermissionsHackChecker` runs every 2 s forever (Windows non-studio builds), flagging `HATE_CATCH_EXECUTABLE_ACCESS_VIOLATION` if page permissions look hacked; guarded by VMProtect mutation regions ("24"/"25").
 - UNKNOWN: values of `protocolVersion`, `NetworkSettings::preferredClientPort`, `DataModel::hash`, `Security::rbxGoldHash` (defined elsewhere); exact cipher used by `Peer::encryptDataPart`.

@@ -37,7 +37,7 @@ void Server::registerPlaceAuthenticationResult(int, int);
 
 ## Usage
 
-- Join flow server side: `onServiceProvider` creates `Players` (`setConnection(rakPeer)`), physics/instance/cluster packet caches, and the `NetworkOwnerJob` when distributed physics is enabled; throws if a `Client` is present (server+client mutually exclusive unless `DFFlag::CloudEditCheckClientPresent` gates). On `ID_NEW_INCOMING_CONNECTION` it creates + parents the replicator and fires `incommingConnectionSignal`; the actual ticket validation then happens in `ServerReplicator::HandleNewConnection` (uses `usedTickets`/`preusedTickets`, `securityKeyMatches`, `protocolVersionMatches`).
+- Join flow server side: `onServiceProvider` creates `Players` (`setConnection(rakPeer)`), physics/instance/cluster packet caches, and the `NetworkOwnerJob` when distributed physics is enabled; throws if a `Client` is present (server+client mutually exclusive unless `DFFlag::CloudEditCheckClientPresent` gates). On `ID_NEW_INCOMING_CONNECTION` it creates + parents the replicator and fires `incommingConnectionSignal`; the actual ticket validation then happens in `CheatHandlingServerReplicator::processTicket` → `preauthenticatePlayer`/`installRemotePlayer` (uses `usedTickets`/`preusedTickets`, `securityKeyMatches`, `protocolVersionMatches`).
 - Script legality: every descendant Script/ModuleScript source is registered at workspace load and on `descendantAddedSignal`; `isLegalReceiveInstance` rejects any replicated script whose source isn't registered (client can't inject new script sources).
 - Cloud Edit: `configureAsCloudEditServer` re-inits security with the special versionB and swaps the incoming password.
 

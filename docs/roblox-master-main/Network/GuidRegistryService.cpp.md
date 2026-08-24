@@ -16,7 +16,7 @@ RBX::Network::GuidRegistryService::~GuidRegistryService(void);
 
 ## Usage
 
-Constructed by server bootstrapping code when a DataModel is configured for network play; destructor relies on `intrusive_ptr` refcount to release the registry.
+Created on demand via `ServiceProvider::create<GuidRegistryService>` in `Players::getGuidRegistry()` (both client and server paths — e.g. chat sender/receiver identifiers) and consumed by Replicator replication dictionaries; destructor relies on `intrusive_ptr` refcount to release the registry.
 
 ## Gotchas
 

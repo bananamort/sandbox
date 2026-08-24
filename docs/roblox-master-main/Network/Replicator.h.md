@@ -89,7 +89,7 @@ protected:
 
     // read/write plumbing
     void readProperties/writeProperties(...PropertyCacheType, useDictionary, preventBounceBack...);
-    unsigned int readJoinData(RakNet::BitStream&);            // returns protocol version
+    unsigned int readJoinData(RakNet::BitStream&);            // returns instance count read (not a protocol version)
     virtual void receiveCluster(BitStream&, Instance*, bool usingOneQuarterIterator);
     static void compressBitStream/decompressBitStream(...uint8_t compressRatio);
     virtual FilterResult filterReceivedChangedProperty/filterReceivedParent/filterPhysics/filterChangedProperty(...);

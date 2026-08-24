@@ -1,6 +1,6 @@
 # Network/ReplicatorStats.h
 
-**Module**: Network (root) · **Type**: header (.h, 153 lines)
+**Module**: Network (root) · **Type**: header (.h, 152 lines)
 
 ## Purpose
 

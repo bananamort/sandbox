@@ -4,7 +4,7 @@
 
 ## Purpose
 
-Implements the streaming job step loop: recenter on the player's torso CFrame (`resetCenter` with `kStreamCenterResetThreshold=32²` hysteresis), collect instances from the next uncollected spiral region within a per-step budget derived from the client quota, adapt `numPacketsPerStep` (halve/double) to RakNet buffer health sampled every second, then flush high-priority and regular `StreamDataItem`s via an `ItemSender`. Handles client GC notices (`readRegionRemoval`/`readInstanceRemoval`) — dropping replication data or re-sending instances whose region is still collected ("ships-in-the-night" resolution).
+Implements the streaming job step loop: recenter on the player's torso CFrame (`resetCenter` with `kStreamCenterResetThreshold=32²` hysteresis), collect instances from the next uncollected spiral region within a per-step budget derived from the client quota, adapt `numPacketsPerStep` (halved when RakNet buffer health <0.5, incremented by 1 when >0.9, capped at `MaxStreamPacketsPerStep`; sampled every second), then flush high-priority and regular `StreamDataItem`s via an `ItemSender`. Handles client GC notices (`readRegionRemoval`/`readInstanceRemoval`) — dropping replication data or re-sending instances whose region is still collected ("ships-in-the-night" resolution).
 
 ## API
 

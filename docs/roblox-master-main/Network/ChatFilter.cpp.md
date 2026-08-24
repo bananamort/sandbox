@@ -27,6 +27,6 @@ bool ChatFilter::filterMessageBase(
 
 ## Gotchas
 
-- The callback is invoked from a **detached boost::thread** (`boost::thread t(boost::bind(callback, result))`) — callbacks must be thread-safe and outlive this stack frame.
+- The callback is invoked on a freshly spawned `boost::thread` (`boost::thread t(boost::bind(callback, result))`) whose lifetime management depends on unvendored boost dtor semantics — callbacks must be thread-safe and outlive this stack frame. [UNSUPPORTED as stated: whether the thread is *detached* cannot be confirmed from this repo]
 - Includes `"Util/http.h"` but makes no HTTP call itself in this file — UNKNOWN why the include is present (possibly legacy).
 - Log group `WebChatFiltering` declared here, used by sibling `WebChatFilter.cpp`.

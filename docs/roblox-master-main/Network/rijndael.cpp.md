@@ -27,10 +27,10 @@ int cipherUpdateRounds(...);
 
 ## Usage
 
-Only consumer in this module is `DataBlockEncryptor` (SetKey→makeKey; Encrypt/Decrypt→blockEncrypt/blockDecrypt in CBC mode with PKCS-style length handling inside DataBlockEncryptor).
+Only consumer in this module is `DataBlockEncryptor` (SetKey→makeKey; Encrypt/Decrypt→blockEncrypt/blockDecrypt). Note: `DataBlockEncryptor` initializes `cipherInit(..., MODE_ECB, 0)` — the block chaining is its own hand-rolled XOR scheme on top of ECB, *not* rijndael's built-in CBC path.
 
 ## Gotchas
 
 - Global mutable `static int ROUNDS` set by `makeKey` — not thread-safe across keys.
 - Only x86 assumptions avoided, but STRICT_ALIGN paths exist; block ops reinterpret buffers as word32.
-- CFB1 path is bit-at-a-time and extremely slow — unused by Roblox networking (CBC only).
+- CFB1 path is bit-at-a-time and extremely slow — unused by Roblox networking (which drives ECB + manual chaining only).

@@ -37,7 +37,7 @@ Registrations performed: classes `Client`, `Server`, `Player`, `Players`, `Netwo
 
 ## Usage
 
-- Every process entry point calls one of the `initWith*Security` functions before touching networking; they must be called exactly once per DataModel lifetime because `versionB` accumulates characters (`"^" + 'O'(79) + "l" + 'E'` across initVersion1/initVersion2) unless overridden by `setVersion`.
+- Every process entry point calls one of the `initWith*Security` functions before touching networking; they must be called exactly once per DataModel lifetime because `versionB` accumulates characters (`initVersion1` appends `'7'` + `char(79)`='O', `initWithoutSecurity` appends `"^"` + `char(17)`, `initVersion2` appends `"l"` + `'E'`) unless overridden by `setVersion` or reset by `initWithCloudEditSecurity`.
 - The embedded keys are rot13-obfuscated SHA1 digests of `<version>+<platform>+<product>+<salt>` strings (e.g. Windows player key from `"0.235.0pcplayeraskljfLUZF"`); internal/debug/iOS/Android/Durango builds share one fixed test key.
 - `spawnDebugCheckThreads` polls `VMProtectIsDebuggerPresent(true)` every 1500 ms and ORs `HATE_DEBUGGER` into the DataModel hack flags when triggered.
 
@@ -46,4 +46,4 @@ Registrations performed: classes `Client`, `Server`, `Player`, `Players`, `Netwo
 - `isTrustedContent` is effectively dead code: a local constant `kSkipNetworkTrustedContentCheck = true` makes it return true for any URL that `ContentProvider::isUrl` accepts. The unreachable remainder would restrict hosts to `roblox.com/`/`.robloxlabs.com/` plus an extension allow-list (`asset`, `game`, `analytics`, `ide`, `images`, `thumbs`, `ui`, `persistence`, `rolesets`, `auth`, `currency`, `marketplace`, `ownership`, `placerolesets`).
 - Security keys are compiled in with only rot13 "obfuscation"; anyone can recover them statically.
 - `SafeInitFree` exists solely so `RakNet::StringCompressor`/`StringTable` refcounts increment before any peer constructs them (static init order safety).
-- The anti-debug loop never exits while the DataModel lives (infinite `while(true)` with 1.5 s sleeps) and leaks the boost thread intentionally.
+- The anti-debug loop runs unbounded `while(true)` (1.5 s sleeps) and only exits when the DataModel dies; the `boost::thread` is a stack local in `spawnDebugCheckThreads` that goes out of scope immediately after spawn — what happens then depends on the boost::thread destructor semantics of the (unvendored) boost build and cannot be confirmed from this repo. [UNSUPPORTED: "leaks the thread intentionally" could not be verified]

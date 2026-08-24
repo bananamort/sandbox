@@ -30,5 +30,5 @@ Queued by `Replicator::sendDataPing` (PingJob cadence) and by the Windows Filter
 
 ## Gotchas
 
-- The 32 hackFlag reads are deliberately unrolled ("values need to be spread out in memory") under VMProtect virtualization; a mismatch between the two computations flags `kPingItem` on the apiToken.
+- The 13 hackFlag reads (`hackFlag0`..`hackFlag12`) are deliberately unrolled ("values need to be spread out in memory") under VMProtect virtualization; a mismatch between the two computations flags `kPingItem` on the apiToken.
 - extraStats is conditionally bitwise-inverted based on `time & 0x20` (client non-RCC encodes, RCC server decodes) — a tiny moving-target obfuscation.
