@@ -36,6 +36,25 @@ jobs:
         with:
           arch: x86
 
+      - name: Locate ATLMFC headers across installed MSVC toolsets
+        shell: pwsh
+        run: |
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $vs = & $vswhere -latest -products * -property installationPath
+          Write-Host "VS install: $vs"
+          $found = $null
+          Get-ChildItem "$vs\VC\Tools\MSVC" -Directory | ForEach-Object {
+            $inc = Join-Path $_.FullName "atlmfc\include\atlbase.h"
+            if (Test-Path $inc) { Write-Host "ATLMFC present under $($_.Name)"; if (-not $found) { $found = $_.FullName } }
+            else { Write-Host "no atlmfc under $($_.Name)" }
+          }
+          if ($found) {
+            "ATLMFC_ROOT=$found" | Out-File -FilePath $env:GITHUB_ENV -Append
+          } else {
+            Write-Host "::error::No ATLMFC headers found under any MSVC toolset"
+            exit 1
+          }
+
       - name: Fill stripped Boost sources from official 1.74.0 release
         shell: cmd
         working-directory: ${{ github.workspace }}
@@ -61,19 +80,35 @@ jobs:
           findstr /L /C:"ROBLOX_BOOST_CONFIGS" roblox-sandbox\Library\boost\boost\config\user.hpp >nul && echo ROOT_HAS_MACRO || echo ROOT_MISSING_MACRO
           findstr /L /C:"ROBLOX_BOOST_CONFIGS" roblox-sandbox\Library\boost\include\boost\config\user.hpp >nul && echo INCLUDE_HAS_MACRO || echo INCLUDE_MISSING_MACRO
           exit /b 0
-          ) else (
-            echo Boost build system present, nothing to restore
-          )
 
       - name: Build RCCService (ReleaseRcc)
         shell: cmd
-        working-directory: roblox-sandbox
-        run: msbuild Roblox.sln -m -p:Configuration=ReleaseRcc -p:Platform=Win32 -flp:logfile=build-rcc.log;verbosity=normal
+        working-directory: ${{ github.workspace }}
+        run: |
+          call "%ProgramFiles(x86)%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x86 || goto :vcfail
+          rem If vcvars picked a toolset without atlmfc, prepend the one we found
+          echo %INCLUDE% | findstr /i atlmfc >nul || set "INCLUDE=%ATLMFC_ROOT%\atlmfc\include;%INCLUDE%"
+          echo %LIB% | findstr /i atlmfc >nul || set "LIB=%ATLMFC_ROOT%\atlmfc\lib\x86;%ATLMFC_ROOT%\atlmfc\lib;%LIB%"
+          cd /d roblox-sandbox
+          msbuild Roblox.sln -m -p:Configuration=ReleaseRcc -p:Platform=Win32 -flp:logfile=build-rcc.log;verbosity=normal
+          goto :eof
+          :vcfail
+          echo vcvarsall failed
+          exit /b 1
 
       - name: Build WindowsClient (Release)
         shell: cmd
-        working-directory: roblox-sandbox
-        run: msbuild Roblox.sln -m -p:Configuration=Release -p:Platform=Win32 -flp:logfile=build-client.log;verbosity=normal
+        working-directory: ${{ github.workspace }}
+        run: |
+          call "%ProgramFiles(x86)%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x86 || goto :vcfail
+          echo %INCLUDE% | findstr /i atlmfc >nul || set "INCLUDE=%ATLMFC_ROOT%\atlmfc\include;%INCLUDE%"
+          echo %LIB% | findstr /i atlmfc >nul || set "LIB=%ATLMFC_ROOT%\atlmfc\lib\x86;%ATLMFC_ROOT%\atlmfc\lib;%LIB%"
+          cd /d roblox-sandbox
+          msbuild Roblox.sln -m -p:Configuration=Release -p:Platform=Win32 -flp:logfile=build-client.log;verbosity=normal
+          goto :eof
+          :vcfail
+          echo vcvarsall failed
+          exit /b 1
 
       - name: Collect binaries
         shell: pwsh
