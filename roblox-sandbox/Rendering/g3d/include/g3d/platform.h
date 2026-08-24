@@ -233,7 +233,12 @@
 #    define NOMINMAX 1
 #endif
 #   ifndef _WIN32_WINNT
-#       define _WIN32_WINNT 0x0500
+        // Win7 floor (raised from 0x0500): this fallback fires whenever
+        // g3d/platform.h is the first header to touch Windows in a TU, and
+        // the value sticks, because sdkddkver.h respects pre-defined
+        // versions. An XP surface breaks modern ATLMFC (atlcore.h:663
+        // needs SetDefaultDllDirectories; CI run 32743525757).
+#       define _WIN32_WINNT 0x0601
 #   endif
 #   include <windows.h>
 #   undef WIN32_LEAN_AND_MEAN
