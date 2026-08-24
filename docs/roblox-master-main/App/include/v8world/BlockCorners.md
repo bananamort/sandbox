@@ -14,7 +14,7 @@ Pooled payload holding the 8 corner `Vector3`s of a block so all same-size block
 ## Gotchas
 
 - Input is expected as the corner offset (half-extents); negative inputs are normalized via `-std::abs`, so sign of input never changes output.
-- The inline loop comments ("positive for i = 0, negative for i = −1") are stale — actual behavior is a plain 8-way ± enumeration starting from the all-negative corner.
+- The inline loop comments ("positive for i = 0, negative for i = −1") are partly stale (there is no `i = −1`; the last case is `i = 1`) — actual behavior is a plain 8-way ± enumeration seeded from the all-negative corner, so the first stored vertex (`vertices[0]`, after one more flip of each axis) is the **all-positive** corner.
 
 ## Cross-links
 

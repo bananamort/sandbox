@@ -9,7 +9,7 @@ Part↔part contact that consumes Bullet persistent manifolds and maintains a ma
 - `class BulletShapeContact : public Contact`
   - `typedef RBX::FixedArray<BulletShapeConnector*, BULLET_CONTACT_ARRAY_SIZE> BulletConnectorArray;`
   - `BulletShapeContact(Primitive* p0, Primitive* p1, World* ourWorld); ~BulletShapeContact();`
-  - Members: `btPersistentManifold* bulletManifold; btCollisionAlgorithm* bulletNPAlgorithm;` *(member name; the type is `bulletNPAlgorithm`-class pointer per fwd decl)*, `BulletConnectorArray polyConnectors; World* world;`
+  - Members: `btPersistentManifold* bulletManifold; btCollisionAlgorithm* bulletNPAlgorithm;` `BulletConnectorArray polyConnectors; World* world;` *(an unrelated `class bulletNPAlgorithm;` fwd decl at top of file is unused by these members)*
   - Private machinery: `removeAllConnectorsFromKernel()/putAllConnectorsInKernel()`, `updateClosestFeatures()`, `float worstFeatureOverlap()`, `matchClosestFeatures(BulletConnectorArray&)`, `BulletShapeConnector* matchClosestFeature(BulletShapeConnector*)`, `deleteConnectors(...)`, `newBulletShapeConnector(btCollisionObject*, btCollisionObject*, btCollisionAlgorithm*, int manifoldIndex, int contactIndex, bool swapped)`, `updateContactPoints()`, `computeManifoldsWithBulletNarrowPhase(btManifoldArray&)`.
   - Contact overrides: `deleteAllConnectors()`, `int numConnectors() {return polyConnectors.size();}` (inline), `getConnector(int)`, `computeIsColliding(float)`, `stepContact()`, `invalidateContactCache()`.
   - `/*implement*/ void findClosestFeatures(BulletConnectorArray& newConnectors);`

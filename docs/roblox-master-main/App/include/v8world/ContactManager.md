@@ -23,7 +23,7 @@ Broadphase + hit-testing hub of the world: owns the `ContactManagerSpatialHash`,
 ## Gotchas
 
 - `getHit`'s defaulted out-params (`dummySurfaceNormal/Material`) mean callers who don't pass references silently share statics — never read them expecting per-call data.
-- The `CullableSceneNode*` overloads are deliberate dead ends (assert or return false) guarding against Graphics-side misuse.
+- The `CullableSceneNode*` overloads are deliberate dead ends (assert, no-op, or return false) guarding against Graphics-side misuse.
 - Terrain updates are deferred (`updatedTerrainRegions/Chunks` + `applyDeferredTerrainChanges`) — contact state can lag one step behind voxel edits.
 - `concurrencyValidator` implies all calls must come from one thread at a time; crossing threads is an asserted error.
 
