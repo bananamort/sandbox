@@ -33,6 +33,7 @@ Free enums (namespace RBX):
 
 ## Gotchas
 
+- `Super` typedef MISMATCH inside PlatformService: private `typedef DescribedNonCreatable<PlatformService, Instance, sPlatformService> Super;` even though the class actually derives from `DescribedCreatable<..., PERSISTENT_LOCAL>` — any code path going through `Super::` resolves against the wrong descriptor template.
 - IPlatformAPI calls are expected to BLOCK on other threads — the service's volatile-long reentrancy flags are hand-rolled guards, not atomics-with-fences (volatile long ≠ thread-safe flag on all memory models).
 - `platform` is an unowned raw pointer set via setPlatform — lifetime managed entirely by the embedder.
 - Enum quirks: misspelled `PurcahseResult_NoActionNeeded`; GameJoin__MaxCnt sentinel; GameStart_Weird=-1 with "talk to Max ASAP" comment.

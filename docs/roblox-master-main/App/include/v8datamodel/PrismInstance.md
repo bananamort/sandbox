@@ -15,7 +15,7 @@
 - `void SetNumSides(const NumSidesEnum num); NumSidesEnum GetNumSides() const;`
 - `void SetNumSlices(const int num); int GetNumSlices() const;`
 - Overrides: `virtual PartType getPartType() const { return PRISM_PART; }`, `virtual void setPartSizeXml(const Vector3& rbxSize)`.
-- Private comment block: "These are redundant with data in the Poly" — commented-out NumSides/NumSides members.
+- Private comment block: "These are redundant with data in the Poly" — commented-out NumSides/NumSlices members.
 
 ## Gotchas
 

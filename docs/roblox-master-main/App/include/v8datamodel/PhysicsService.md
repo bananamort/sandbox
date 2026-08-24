@@ -22,7 +22,7 @@
 - PartInstance inherits this service's intrusive-set hook — service lifetime and part registration are entangled at the instance level.
 - Send/receive touch lists are swapped, not copied — consumers must pair getTouches with onTouchesSent or starve/duplicate touch delivery.
 - ConcurrencyValidator present: physics-touch paths are concurrency-checked in dev builds; don't casually move calls across threads.
-- iAmServer is a plain bool set outside the ctor body path shown here.
+- iAmServer is a plain non-atomic bool, assigned only in the inline ctor body (`iAmServer = false`) — any later server/client transition happens out-of-line.
 
 ## UNKNOWN
 

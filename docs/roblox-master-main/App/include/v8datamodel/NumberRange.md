@@ -16,7 +16,7 @@
 ## Gotchas
 
 - Opens with `#undef min` / `#undef max` — including this header destroys the Windows `<min>`/`<max>` macros for the whole TU (classic Windows.h interaction).
-- Exact `==` on floats: bitwise-equal semantics, no epsilon.
+- Exact `==` on floats: strict value-equality semantics, no epsilon (and unlike a true bitwise compare, `+0.0 == -0.0` while NaN compares unequal).
 - No clamping/inversion check here — whether `min<=max` is enforced depends on the out-of-line ctor and reflection setters.
 
 ## UNKNOWN

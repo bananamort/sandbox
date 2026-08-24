@@ -48,7 +48,6 @@ Legend: ⚠ = notable gotcha worth knowing before touching the class; 🔒 = no 
 - [RightAngleRampInstance](RightAngleRampInstance.md) — ramp tag part; `_PRISM_PYRAMID_`-gated
 - [RobloxReplicatedStorage](RobloxReplicatedStorage.md) — RobloxScript-security replicated container
 - [RootInstance](RootInstance.md) ⚠ — game root owning V8World World; ALL insert-placement policy (RAW/TREE/3D_View modes)
-- [Remote](Remote.md) — see above (alphabetical anchor)
 
 ## S
 
