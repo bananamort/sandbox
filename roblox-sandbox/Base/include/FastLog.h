@@ -64,6 +64,10 @@ namespace FLog {
         int id;
         constexpr Channel(int i = 0) : id(i) {}
         operator int() const { return id; }
+        // Assign from a raw level so a Channel can snapshot a GroupVar in ONE
+        // user conversion (Test.cpp "oldSettings.wasLogAsserts = FLog::Asserts"
+        // would otherwise need GroupVar->int->Channel, two conversions).
+        Channel& operator=(int i) { id = i; return *this; }
     };
 }
 
@@ -165,20 +169,24 @@ struct IntVar : VarBase {
 };
 
 // Log-group variable. In the original logger each group declared through
-// LOGGROUP/DYNAMIC_LOGGROUP carried a mutable runtime level -- Test.cpp
-// assigns "FLog::Asserts = 0" and snapshots it into an FLog::Channel. The
-// group catalog therefore holds selectany GroupVar objects, NOT enum
-// constants. Conversion design (exactly one object conversion, so
-// 'channel = group' and 'group = 0 / group = channel' stay unambiguous):
-//   * implicit GroupVar -> FLog::Channel (single user conversion),
-//   * assignments from int and from Channel are member operators,
-//   * emitters obtain the numeric id through groupId().
+// LOGGROUP/DYNAMIC_LOGGROUP was an int ENUMERATOR, and call sites use it
+// everywhere an int would go: RBXASSERT expands to "FLog::Asserts && (expr)"
+// and "ReleaseAssert(FLog::Asserts, msg)" (rbx/Debug.h:111-113), DeviceCaps
+// passes groups as dumpToFLog(int), Test.cpp compares/ternaries them. The
+// group catalog therefore holds selectany GroupVar objects with ENUM-LIKE
+// semantics -- mutable runtime level plus implicit conversion to int:
+//   * implicit GroupVar -> int (the single object conversion; exactly what
+//     the original enumerator provided),
+//   * assignments from int and from FLog::Channel are member operators,
+//   * FLog::FastLog/FastLogS keep exact-match GroupVar overloads and the
+//     emitters read the id through groupId(), so no conversion is forced on
+//     hot paths.
 struct GroupVar {
     int v;
     constexpr GroupVar(int x = 0) : v(x) {}
     GroupVar& operator=(int x) { v = x; return *this; }
     GroupVar& operator=(const FLog::Channel& c) { v = c.id; return *this; }
-    operator const FLog::Channel() const { return FLog::Channel(v); }
+    operator int() const { return v; }
 };
 
 } // namespace FastVars
