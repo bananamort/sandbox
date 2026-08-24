@@ -1172,6 +1172,10 @@ namespace DFFlag {
     RBX_DFFLAG(BadTypeOnDelayErrorEnabled, false);
     RBX_DFFLAG(ScriptContextGuardAgainstCStackOverflow, false);
     RBX_DFFLAG(LogPrivateModuleRequires, true);
+    // Defined at App/Lua-5.1.4/src/lstrlib.c:366 -- the one settings variable
+    // whose DYNAMIC_FASTFLAGVARIABLE lives in a .c file (Roblox pattern-match
+    // depth guard); harvested here like every other instance.
+    RBX_DFFLAG(LuaStrlibLimitMatchDepth, true);
     RBX_DFFLAG(LockViolationScriptCrash, false);
     RBX_DFFLAG(RestoreTransparencyOnToolChange, false);
     RBX_DFFLAG(DraggerUsesNewPartOnDuplicate, false);
