@@ -1,23 +1,24 @@
-# App/v8datamodel/AnimatableRootJoint.cpp
+# AnimatableRootJoint.cpp
 
 ## Purpose
 
-Implements `AnimatableRootJoint`, the `IAnimatableJoint` adapter for a character's root part: it lets the animation system (Animator pose stepping) move the physics-owned root part by applying per-frame *deltas* rather than absolute poses, so physics keeps acting on the part.
+Implements `AnimatableRootJoint`, a non-Instance `IAnimatableJoint` adapter that lets the animation system pose a root part (typically HumanoidRootPart) as if it were joint-driven, while still letting physics act on it.
 
-## API
+## Key types and API
 
-- `AnimatableRootJoint(const shared_ptr<PartInstance>& part)` — ctor holds the target part; starts not animating.
-- `void setAnimating(bool value)` — on transition into animating resets `lastCFrame` to identity.
-- `const std::string& getParentName()` — returns `IAnimatableJoint::sROOT`.
-- `const std::string& getPartName()` — returns the wrapped part's name.
-- `void applyPose(const CachedPose& pose)` — the core: if `pose.weight > 0`, computes `delta = lastCFrame.toObjectSpace(pose.getCFrame())` and does `part->setCoordinateFrame(part->getCoordinateFrame() * delta)`; then records `lastCFrame = poseCFrame`.
+No descriptors, no class-name constant — plain C++ object holding `shared_ptr<PartInstance> part`.
 
-## Usage
+- ctor `AnimatableRootJoint(const shared_ptr<PartInstance>&)` — starts `isAnimating(false)`.
+- `setAnimating(bool)` — on transition to true resets `lastCFrame = CoordinateFrame()` (delta baseline).
+- `getParentName()` — returns `IAnimatableJoint::sROOT`; `getPartName()` — part's name.
+- `applyPose(const CachedPose& pose)` — delta-only application: `delta = lastCFrame.toObjectSpace(pose.getCFrame())`, then `part->setCoordinateFrame(part->getCoordinateFrame() * delta)`; stores `lastCFrame = poseCFrame`. Pose weight must be > 0 to apply; blend weights and maskWeight are deliberately ignored ("pretend it is 1").
 
-Registered with the Animator as one of its animatable joints (root-part slot, name "ROOT"); called each animation step from the pose-application loop in Animator::onStepped. Because only the delta is applied, an anchored or physics-moved part stays consistent: "if currentcframe == last ... then newcframe = pose" (source comment).
+## Usage / reflection touchpoints
+
+Consumed by the animation pipeline wherever joints implement IAnimatableJoint; kinematics math mirrors [Base](../../Base/) CoordinateFrame conventions. Siblings: [AnimationTrack](AnimationTrack.md), [AnimationTrackState](AnimationTrackState.md).
 
 ## Gotchas
 
-- Blend weights are deliberately ignored unless zero ("we completely ignore blend weights unless they are zero"), and maskWeight is treated as 1 — no partial blending for the root joint.
-- Poses with weight <= 0 still update `lastCFrame` without moving the part.
-- No Instance/reflection registration here — this is a plain helper object, not a Lua-visible class.
+- Because only the DELTA from last frame is applied, physics can keep moving the part between poses — an anchored part snaps exactly onto the pose (current == last ⇒ newcframe == pose).
+- Weight ≤ 0 skips application but STILL updates lastCFrame — a zero-weight frame re-baselines the delta chain.
+- maskWeight ignored entirely: root posing cannot be masked per-bone.

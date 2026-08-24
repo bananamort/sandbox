@@ -1,23 +1,27 @@
-# App/v8datamodel/Animation.cpp
+# Animation.cpp
 
 ## Purpose
 
-Implements `Animation` ("Animation") — the lightweight creatable Instance that just holds an asset reference (`AnimationId`) pointing at a KeyframeSequence. It is the argument you pass to `Animator:LoadAnimation` / `Humanoid:LoadAnimation`.
+Implements `Animation` ("Animation"), the thin asset-reference object pointing at a KeyframeSequence. The TU is nearly all accessor logic: resolve the referenced asset through the context's KeyframeSequenceProvider.
 
-## API
+## Key types and API
 
-- `const char* const sAnimation = "Animation"`.
-- Reflection: `prop_AnimationId` — `"AnimationId"` (category_Data), type AnimationId (Content), backed by `getAssetId`/`setAssetId`. The commented-out `Loop` and `Priority` property descriptors are disabled in this tree.
-- Constructors: `Animation()` via `DescribedCreatable<Animation, Instance, sAnimation>`.
-- `bool isEmbeddedAsset() const` — true when the assetId is neither http nor an asset reference.
-- `shared_ptr<const KeyframeSequence> getKeyframeSequence() const` and `getKeyframeSequence(const Instance* context) const` — resolves the asset through the `KeyframeSequenceProvider` service (`ServiceProvider::create<KeyframeSequenceProvider>(context)->getKeyframeSequence(assetId, this)`); returns null for null assetId or missing provider.
-- `void setAssetId(AnimationId value)` — sets and raises prop_AnimationId when changed.
+Descriptors:
+- `prop_AnimationId("AnimationId", category_Data)` — `AnimationId` typed asset id, get/set with change-tracked raise. No Security:: arguments. A commented-out `Loop` prop and `Priority` enum prop exist in source but are NOT registered.
 
-## Usage
+Constants: `sAnimation = "Animation"`.
 
-Created by scripts (`Instance.new("Animation")`) and by engine code (`Animator::passiveLoadAnimation` synthesizes one per replicated ContentId). The KeyframeSequence lookup is the bridge to the animation content cache in KeyframeSequenceProvider.
+Behavior:
+- ctor `DescribedCreatable<Animation, Instance, sAnimation>` — name shell only.
+- `isEmbeddedAsset()` — true when the id is neither http nor asset scheme (i.e. embedded/local content).
+- `getKeyframeSequence()` / `getKeyframeSequence(const Instance* context)` — null id → empty shared_ptr; otherwise `ServiceProvider::create<KeyframeSequenceProvider>(context)->getKeyframeSequence(assetId, this)` ([KeyframeSequenceProvider](KeyframeSequenceProvider.md)).
+- `setAssetId(AnimationId)` — change-tracked setter.
+
+## Usage / reflection touchpoints
+
+Referenced by AnimationTrack's track state machinery ([AnimationTrack](AnimationTrack.md), [AnimationTrackState](AnimationTrackState.md)); assets fetched via [AssetService](AssetService.md)-backed provider paths.
 
 ## Gotchas
 
-- `getKeyframeSequence(context)` uses the *parent* of the Animator as context in Animator::loadAnimation, so the Animation must be resolvable inside a Workspace-backed provider chain ("Object must be in Workspace before loading animation." warning comes from the caller).
-- No Loop/Priority properties exist on this class despite upstream Roblox API history — those live on KeyframeSequence/AnimationTrack here.
+- Loop/Priority live commented out in this TU — they were never descriptor-registered here despite being public Animation API elsewhere.
+- getKeyframeSequence returns const shared_ptr and caches nothing itself; repeated calls go back through the provider.

@@ -1,35 +1,33 @@
-# App/v8datamodel/AssetService.cpp
+# AssetService.cpp
 
 ## Purpose
 
-Implements `AssetService` ("AssetService") — the server-side web-API bridge for place lifecycle management: creating places (in game or in a player's inventory), saving the current place, querying version history and permissions, reverting assets, mapping creation→creator asset IDs, and listing a universe's places. All heavy operations are BoundYieldFuncs that round-trip HTTP.
+Implements `AssetService` ("AssetService") — server-side place/asset management web API surface: create places (optionally into a player's inventory with a consent dialog), save the current place, revert assets, query/set place permissions and versions, resolve creation→creator id, and list universe places via pagination.
 
-## API
+## Key types and API
 
-Flags: `DFInt::CreatePlacePerMinute` (5), `CreatePlacePerPlayerPerMinute` (1), `SavePlacePerMinute` (10) — throttle budgets for the two throttler members.
+Descriptors:
+- LocalUser-only URL injectors: `func_SetPlaceAccessUrl("SetPlaceAccessUrl", Security::LocalUser)`, `func_SetAssetRevertUrl("SetAssetRevertUrl", Security::LocalUser)`, `func_setAssetVersionsUrl("SetAssetVersionsUrl", Security::LocalUser)` — store printf-format URL templates used by the getters below.
+- Yield funcs (**Security::None**): `RevertAsset(placeId, versionNumber)`, `SetPlacePermissions(placeId, accessType[EVERYONE], inviteList)`, `GetPlacePermissions(placeId)`, `GetAssetVersions(placeId, pageNum[1])`, `GetCreatorAssetID(creationID)`, `CreatePlaceAsync(placeName, templatePlaceID, description[""])`, `CreatePlaceInPlayerInventoryAsync(player, placeName, templatePlaceID, description[""])`, `SavePlaceAsync()`, `GetGamePlacesAsync()`.
 
-Reflection:
-- LocalUser-security URL setters: `"SetPlaceAccessUrl"(accessUrl)`, `"SetAssetRevertUrl"(revertUrl)`, `"SetAssetVersionsUrl"(versionsUrl)` — install printf-style format URLs used by the permission/revert/version calls.
-- Yield funcs (Security::None): `"RevertAsset"(placeId, versionNumber):bool`; `"SetPlacePermissions"(placeId, accessType=EVERYONE, inviteList)`; `"GetPlacePermissions"(placeId):ValueTable`; `"GetAssetVersions"(placeId, pageNum=1):ValueTable`; `"GetCreatorAssetID"(creationID):int`; `"CreatePlaceAsync"(placeName, templatePlaceID, description=""):int`; `"CreatePlaceInPlayerInventoryAsync"(player, placeName, templatePlaceID, description=""):int`; `"SavePlaceAsync"()`; `"GetGamePlacesAsync"():Instance(Pages)`.
-- Enum `AccessType`: ME/"Me", FRIENDS/"Friends", EVERYONE/"Everyone", INVITEONLY/"InviteOnly" (EnumDesc + Variant convert + StringConverter registered).
+Enum `AccessType` registered as "AccessType": ME/"Me", FRIENDS/"Friends", EVERYONE/"Everyone", INVITEONLY/"InviteOnly" (+ Variant/StringConverter plumbing).
 
-Behaviors:
-- `checkCreatePlaceAccess` gates: backend processing only ("can only be called from a server script"), non-empty name, templatePlaceId > 0, current place id > 0 ("place should be opened with Edit button"), throttle `createPlaceThrottle.checkLimit(getPlayerCount)`, and `LuaWebService::isApiAccessEnabled()` ("Studio API access is not enabled...").
-- `createPlaceAsyncInternal` POSTs to `<apiBaseUrl>universes/new-place?currentPlaceId=%d&placeName=<urlencoded>&templatePlaceId=%d[&playerId=%i]` via `HttpRbxApiService::postAsync(..., "CreatePlacePost", PRIORITY_SERVER_ELEVATED, TEXT_PLAIN, ...)`. Response parsed as int placeId (`boost::lexical_cast`), errors like "Game:CreatePlace response was not a valid placeId because ...". Inventory variant first shows a consent dialog via `MarketplaceService::launchClientLuaDialog("Do you allow game to create new place in your inventory?", "Yes", "No", player, ...)`; user refusal resumes with **-1**, not an error. Google Analytics events CreatePlace / CreatePlaceInPlayerInventory / SavePlace fire once each (boost::call_once).
-- `savePlaceAsync` — rejects frontend callers; requires apiAccessEnabled; POSTs the place XML via `dm->uploadPlace(baseUrl + "ide/publish/UploadExistingAsset?assetId=%d&isAppCreation=true", SAVE_ALL, ...)`.
-- `getAssetVersions`/`getPlacePermissions` — raw `Http::get` against the configured versions/access URLs (format-string with assetId/pageNum or placeId); results JSON-parsed via `WebParser::parseJSONTable` in `processServiceResults`.
-- `revertAsset` — `Http::post` to revert URL formatted with (assetId, versionNumber); truthiness = non-empty response.
-- `setPlacePermissions` — POST `<accessUrl>/update?<placeId>access=%s[&players=name...]`; inviteList only appended for INVITEONLY.
-- `getCreatorAssetID` — `HttpRbxApiService::getAsync("GetCreatorAssetID?creationID=%d")`; empty response → resume(0).
-- `getGamePlacesAsync` — creates a `StandardPages` instance over `<apiBaseUrl>universes/get-universe-places?placeid=%i` keyed "Places", fetches first chunk, resumes with the Pages object.
+Throttles: DFInt CreatePlacePerMinute(5), CreatePlacePerPlayerPerMinute(1), SavePlacePerMinute(10).
 
-## Usage
+Behavior:
+- `checkCreatePlaceAccess` — requires backendProcessing ("server script"), non-empty name, positive template id, current placeID > 0 ("place should be opened with Edit button"), throttle pass, and LuaWebService `isApiAccessEnabled`.
+- `createPlaceAsyncInternal` — POSTs `<apiBaseUrl>universes/new-place?currentPlaceId=…&placeName=<urlencoded>&templatePlaceId=…[&playerId=…]` via HttpRbxApiService PRIORITY_SERVER_ELEVATED; response parsed by `boost::lexical_cast<int>` (≤0 → error); GA events sent once per process (`boost::call_once`). Player-inventory variant first shows a MarketplaceService `launchClientLuaDialog` consent dialog; decline resumes with **-1**, not an error.
+- `savePlaceAsync` — rejects frontendProcessing, requires placeID>0 + throttle + API access, then `DataModel::uploadPlace(<baseUrl>ide/publish/UploadExistingAsset?assetId=…&isAppCreation=true, SAVE_ALL, …)`.
+- Permissions/versions/revert use the injected URL templates through raw `Http::get/post`; `httpPostHelper` maps empty/no response to resume(false).
+- `getGamePlacesAsync` builds `<apiBaseUrl>universes/get-universe-places?placeid=…` and returns a `StandardPages` ("Places") after fetching the first chunk.
 
-Server scripts building in-game creation tools; Studio's publish/save flows share the upload path. Environment fidelity: sandbox must serve or stub these endpoints (`universes/new-place`, `ide/publish/UploadExistingAsset`, GetCreatorAssetID, universes/get-universe-places) plus the three configurable URLs.
+## Usage / reflection touchpoints
+
+Web endpoints ride [HttpRbxApiService](HttpRbxApiService.md)/Http util; consent dialog via [MarketplaceService](MarketplaceService.md); pagination objects like other Pages consumers.
 
 ## Gotchas
 
-- CreatePlaceInPlayerInventoryAsync resolves to -1 on dialog decline — callers must treat -1 as "user declined", not error.
-- Throttles are per-process DFInt-configurable; limit errors are plain strings.
-- `httpPostHelper` has missing-return paths when response is null/empty (falls through after resumeFunction(false)).
-- UNKNOWN: default values of awardBadgeUrl-style format strings live in AssetService.h defaults, not this TU.
+- The three Set*Url injectors are Security::LocalUser — game scripts cannot repoint them, but defaults are EMPTY strings: RevertAsset/GetPlacePermissions/GetAssetVersions are no-ops that format garbage unless the client shell injected URLs.
+- Declined consent resolves SUCCESS with -1 (resumeFunction(-1)) — scripts must check for -1, no error is raised.
+- httpPostHelper dereferences `*response` when non-null but ALSO calls resume(false) without return when response is null — then falls through to compare `*response` again (latent double-resume path in source).
+- CreatePlace stats are once-per-process, not per-call.

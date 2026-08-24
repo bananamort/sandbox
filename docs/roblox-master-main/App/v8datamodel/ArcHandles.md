@@ -1,26 +1,33 @@
-# App/v8datamodel/ArcHandles.cpp
+# ArcHandles.cpp
 
 ## Purpose
 
-Implements `ArcHandles` ("ArcHandles") — the studio-style rotation handles adornment (subclass of HandlesBase). Renders arc handles on the Adornee for each enabled Axis and converts raw mouse input into per-axis MouseEnter/Leave/Drag/Button events, replicable to server listeners via event replicators.
+Implements `ArcHandles` ("ArcHandles"), the rotate-gizmo HandlesBase subclass: per-axis arc handles around an adornee, hit-tested from mouse input, raising axis-parameterized mouse events that replicate to listeners.
 
-## API
+## Key types and API
 
-Reflection:
-- `prop_Axes` — `"Axes"` (category_Data), type Axes (default 0x7 = all three axes), `getAxes`/`setAxes` with raisePropertyChanged.
-- RemoteEvents (Security::None, SCRIPTING, CLIENT_SERVER) + IMPLEMENT/CONSTRUCT/CONNECT_EVENT_REPLICATOR wiring:
-  - `"MouseEnter"(axis)` / `"MouseLeave"(axis)`
-  - `"MouseDrag"(axis, relativeAngle:float, deltaRadius:float)`
-  - `"MouseButton1Down"(axis)` / `"MouseButton1Up"(axis)`.
+Descriptors:
+- `prop_Axes("Axes", category_Data)` — Axes mask (ctor default `0x7`, all three axes), get/set change-tracked. No Security:: arguments.
 
-Methods: `int getHandlesNormalIdMask()` — maps each axis to both its positive and negative NormalIds in a Faces mask (used by hit-testing/rendering); `void setServerGuiObject()` — switches each replicator into listener mode based on whether local Lua listeners exist ("watching for local listeners" on the server); `onPropertyChanged` forwards to all five replicators; `GuiResponse process(const shared_ptr<InputObject>&)` — mouse-move updates hover (MouseEnter/Leave with NORM_UNDEFINED tracking) and while captured emits MouseDrag with sign flipped for negative faces (`reverse ? -relangle : relangle`); left-down captures `MouseDownCaptureInfo(adornee location, hitPointWorld, hitNormalId)` and sinks input; left-up clears capture and fires MouseButton1Up; invisible handles (`getVisible()==false`) never sink. `HandleType getHandleType()` → HANDLE_ROTATE.
+Remote events (all **Security::None**, SCRIPTING, CLIENT_SERVER, each with IMPLEMENT/CONSTRUCT/CONNECT_EVENT_REPLICATOR plumbing):
+- `"MouseEnter"` ("axis") / `"MouseLeave"` ("axis")
+- `"MouseDrag"` ("axis","relativeAngle","deltaRadius")
+- `"MouseButton1Down"` ("axis") / `"MouseButton1Up"` ("axis")
 
-## Usage
+Constant: `sArcHandles = "ArcHandles"`; base `DescribedCreatable<ArcHandles, HandlesBase, sArcHandles>`.
 
-Part of the drag/handles framework (HandlesBase → ArcHandles); used by studio-class tools and any script that parents ArcHandles to a part to implement custom rotate UX; events replicate client→server so server scripts can react.
+Behavior:
+- `getHandlesNormalIdMask()` — maps Axes to a Faces mask; NEG faces mirror their positive axis.
+- `process(InputObject&)` — invisible → notSunk. MouseMovement: while dragging recomputes relative angle/radius via `getAngleRadiusFromHandle` and fires MouseDrag (NEG normalIds invert angle sign); hover transitions fire MouseEnter/MouseLeave with `mouseOver` NormalId tracking. MouseButton1 down: hit-test `findTargetHandle`, capture adornee location + hit point + normal into `MouseDownCaptureInfo`, sink input, fire MouseButton1Down; up clears capture and fires MouseButton1Up.
+- `setServerGuiObject()` — server watches local listener presence: each replicator's `setListenerMode(!signal.empty())`.
+- `getHandleType()` — HANDLE_ROTATE.
+
+## Usage / reflection touchpoints
+
+Studio/script rotate affordance alongside [Handles](Handles.md) (HANDLE_TRANSLATE family) under [HandlesBase](HandlesBase.md)/[Adornment](Adornment.md); input arrives via [MouseCommand](MouseCommand.md)-style processing.
 
 ## Gotchas
 
-- MouseLeave uses `Axes::normalIdToAxis(hitNormalId)` even in the branch where no handle was found (hitNormalId is then uninitialized output of findTargetHandle) — latent quirk.
-- Drag deltas only exist between down and up (mouseDownCaptureInfo gate); angles are relative to the captured frame.
-- UNKNOWN: `getAngleRadiusFromHandle`/`findTargetHandle` geometry helpers live in HandlesBase/header, not this TU.
+- MouseLeave on hover-loss fires with the NEW hitNormalId variable (which is NORM_UNDEFINED after failed findTargetHandle) converted to an axis — a garbage axis value can reach scripts.
+- Drag events only flow while mouseDownCaptureInfo exists; there is no up-outside-cleanup beyond button-up path.
+- Listener mode is evaluated ONLY in setServerGuiObject — connecting a script after that moment may not flip replication until something refreshes it.

@@ -18,7 +18,8 @@ Header tree of the Roblox engine's shared libraries: reflection type system, Lua
 - [v8kernel/](v8kernel/INDEX.md) — COMPLETE (19/19).
 - [voxel/](voxel/INDEX.md) — COMPLETE (11/11 .h; 6 .inl folded into parents: AreaCopy←1, ChunkMap←1, Region←3, Water←1).
 - [voxel2/](voxel2/INDEX.md) — COMPLETE (6/6).
-- PENDING SUBDIRECTORIES (not yet documented): `util/` (~136 .h + Math.inl/Quaternion.inl; Http+ProtectedString already done above), `v8datamodel/` (~290), `v8world/` (~89 + SpatialHashMultiRes.inl).
+- [v8world/](v8world/INDEX.md) — COMPLETE (89/89 .h; SpatialHashMultiRes.inl folded into SpatialHashMultiRes.md per orchestrator ruling, noted in roster).
+- PENDING SUBDIRECTORIES (not yet documented): `util/` (~136 .h + Math.inl/Quaternion.inl; Http+ProtectedString already done above), `v8datamodel/` (~290).
 
 ## Notes
 

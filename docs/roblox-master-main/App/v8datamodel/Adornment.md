@@ -1,23 +1,25 @@
-# App/v8datamodel/Adornment.cpp
+# Adornment.cpp
 
 ## Purpose
 
-Implements the two abstract adornment base classes `PartAdornment` ("PartAdornment") and `PVAdornment` ("PVAdornment") — `GuiBase3d` descendants (created via `DescribedNonCreatable`, so they cannot be created by scripts) that attach overlay rendering (selection boxes, spheres, lassos...) to a target part or PVInstance. Concrete adornments (SelectionBox, SelectionSphere, etc.) subclass these.
+Implements the two adornment base classes: `PartAdornment` ("PartAdornment") — a GuiBase3d overlay anchored to a single `PartInstance` — and `PVAdornment` ("PVAdornment"), the same idea anchored to any `PVInstance`. Both are DescribedNonCreatable bases for the concrete Selection*/Handles* adornments.
 
-## API
+## Key types and API
 
-- `const char* const RBX::sPartAdornment = "PartAdornment"`, `sPVAdornment = "PVAdornment"`.
-- Reflection:
-  - `PartAdornment::prop_partAdornee` — `"Adornee"` (category_Data), RefPropDescriptor<PartAdornment, PartInstance>, backed by `getAdorneeDangerous`/`setAdornee`.
-  - `PVAdornment::prop_pvAdornee` — `"Adornee"` (category_Data), RefPropDescriptor<PVAdornment, PVInstance>, same accessor pattern.
-- `void setAdornee(T*)` on each class: swaps the weak reference (`adornee.lock()` compare, then `shared_from(value)`) and raises property changed.
+Descriptors:
+- `prop_partAdornee("Adornee", category_Data)` — RefPropDescriptor<PartAdornment, PartInstance>, get via `getAdorneeDangerous`, set with change-tracked raise. No Security:: arguments.
+- `prop_pvAdornee("Adornee", category_Data)` — RefPropDescriptor<PVAdornment, PVInstance>, same shape. Note both classes register a property literally named "Adornee".
 
-## Usage
+Constants: `sPartAdornment = "PartAdornment"`, `sPVAdornment = "PVAdornment"`.
 
-Base classes for all adornment-type instances rendered over their Adornee; the Lua-visible `Adornee` property comes straight from these descriptors. Rendering pipelines walk the tree for GuiBase3d instances and use the adornee weak ref for positioning.
+Behavior: ctors take a name string (DescribedNonCreatable); setters store a weak/shared ref (`adornee.lock()` compare + `shared_from(value)`) and raise PropertyChanged only on actual change.
+
+## Usage / reflection touchpoints
+
+Base for SelectionBox/SelectionSphere ([SelectionBox](SelectionBox.md), [SelectionSphere](SelectionSphere.md)) under PartAdornment, and lassos/handles families under PVAdornment; GuiBase3d render path shared with [GuiBase3d](GuiBase3d.md).
 
 ## Gotchas
 
-- Both classes are DescribedNonCreatable — `Instance.new("PartAdornment")` is not possible; only engine/studio-created subclasses exist.
-- Adornee is stored weakly (`adornee.lock()`), so destroying the adorned part leaves the adornment alive but dangling-safe.
-- UNKNOWN: rendering/`getAdorneeDangerous` implementations live in the header (V8DataModel/Adornment.h), not in this TU.
+- Getter is `getAdorneeDangerous` — returns raw pointer from a weak ref; dangling if the adornee is destroyed without clearing the property.
+- Two different classes expose identical "Adornee" property names with different target types — descriptor lookup is per-class.
+- Non-creatable: these exist only as scripting/serialization base types.

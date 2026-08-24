@@ -1,24 +1,26 @@
-# App/v8datamodel/Backpack.cpp
+# Backpack.cpp
 
 ## Purpose
 
-Implements `Backpack` ("Backpack") — the per-player container for tools and gear. Its entire content in this TU is the `IScriptFilter` implementation that decides which scripts run when parented inside a Backpack.
+Implements `Backpack` ("Backpack") — the per-player carried-items container. The TU is one policy function deciding whether a script inside the backpack should run, encoding the classic BaseScript/LocalScript × local/backend execution matrix (source comment spells it out verbatim).
 
-## API
+## Key types and API
 
-- `const char* const sBackpack = "Backpack"` (source comment: "rename class ultimately").
-- `Backpack::Backpack()` — sets name only; no reflection descriptors.
-- `bool Backpack::scriptShouldRun(BaseScript* script)` — the run policy (documented rule table in source):
-  1. A **LocalScript** runs only if this is the *local* player's backpack (`getParent() == Network::Players::findLocalPlayer`); on match it also calls `script->setLocalPlayer(shared_from(localPlayer))`.
-  2. A **BaseScript/Script** (non-local) runs if the context is backend processing (server).
-  3. Everything else returns false.
+Descriptors: none. Constant: `sBackpack = "Backpack"` (with source note "rename class ultimately").
 
-## Usage
+Behavior:
+- ctor — name shell only.
+- `scriptShouldRun(BaseScript*)` — asserts script is a descendant; finds local player; `isLocalBackpack = parent == localPlayer`:
+  1. Local backpack + LocalScript → `setLocalPlayer(localPlayer)`, run.
+  2. NOT LocalScript AND backendProcessing → run (BaseScripts in server-side backpacks).
+  3. Otherwise false.
 
-Backpack implements `IScriptFilter`; BaseScript's workspace negotiation (`computeNewWorkspace` → `ServiceProvider::create<RuntimeScriptService>(this)`) consults it, so dropping a Tool with Scripts into a player's Backpack starts/stops them per these rules as the Backpack moves between Player and Workspace.
+## Usage / reflection touchpoints
+
+Container semantics pair with [Hopper](Hopper.md) (the legacy tool-bin it once held), [Tool](Tool.md), and [PlayerGui](PlayerGui.md)-style per-player containers; execution gating mirrors [App/script](../../script/) contexts.
 
 ## Gotchas
 
-- Scripts inside a HopperBin within a local backpack are covered by the same filter through ancestry (see comment table: "In HopperBin if local backpack").
-- LocalScripts in a *server-side* backpack (not the local player's) never run.
-- Requires a Workspace service to be present, otherwise returns false.
+- A BaseScript in a LOCAL player's backpack does NOT run locally unless it's a LocalScript — rule 2 requires backendProcessing, which is false on the client.
+- setLocalPlayer is only called for the LocalScript-in-local-backpack path; server-run scripts never get it here.
+- No descriptors/security tiers at all — everything is inherited behavior.
