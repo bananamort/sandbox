@@ -17,10 +17,10 @@
 //     static-init into a name-keyed registry so FLog::GetValue / SetValue /
 //     SetValueFromServer / ForEachVariable / GetNumSynchronizedVariable
 //     operate on the same objects the call sites read directly.
-//   * FASTVARTYPE_SYNC aliases FASTVARTYPE_DYNAMIC: the server-replicated
-//     set IS the dynamic set, keeping ServerReplicator's count/iteration
-//     pair mutually consistent (ClientReplicator reads back into the same
-//     objects).
+//   * FASTVARTYPE_SYNC is its own kind: it tags exactly the
+//     SYNCHRONIZED_FASTFLAG(VARIABLE) family (SFFlag::get* accessors),
+//     which is the set ServerReplicator::serializeSFFlags replicates and
+//     ClientReplicator::deserializeSFFlags applies via SetValueFromServer.
 // Define RBX_FASTLOG_SILENT to compile all emitter calls to no-ops.
 
 #ifndef RBX_FASTLOG_H
@@ -39,16 +39,18 @@
 #include <vector>
 
 // Settings-variable kind taxonomy. Values are reconstruction-internal (they
-// are never serialized); SYNC deliberately aliases DYNAMIC so that the
-// replicated-count/iteration pair stays coherent.
+// are never serialized); SYNC is the server-replicated SFFlag family.
 enum FastVarType {
     FASTVARTYPE_STATIC  = 0,
     FASTVARTYPE_DYNAMIC = 1,
-    FASTVARTYPE_SYNC    = 1,
     FASTVARTYPE_AB_NEWUSERS       = 2,
     FASTVARTYPE_AB_NEWSTUDIOUSERS = 3,
     FASTVARTYPE_AB_ALLUSERS       = 4,
-    FASTVARTYPE_ANY     = 5
+    FASTVARTYPE_ANY     = 5,
+    // The SYNCHRONIZED_FASTFLAG(VARIABLE) family (SFFlag::get* accessors):
+    // the genuinely server-replicated flag set consumed by
+    // ServerReplicator::serializeSFFlags / ClientReplicator::deserializeSFFlags.
+    FASTVARTYPE_SYNC    = 6
 };
 
 namespace FLog {
@@ -101,6 +103,9 @@ inline void emitG(int group, char const* fmt, ...)
 
 // ==== SETTINGS-VARIABLE REGISTRY ====
 namespace FastVars {
+
+// Forward declaration: VarBase's constructor registers each instance.
+inline void registerVar(VarBase* v);
 
 struct VarBase {
     const char* const name;
@@ -192,6 +197,9 @@ struct FastStringVar : FastVars::VarBase {
 
 namespace FLog {
     typedef void (*ExternalLogFunc)(Channel id, const char* message);
+    typedef double (*NowSecondsFn)();
+
+    inline NowSecondsFn& nowSecondsSource() { static NowSecondsFn f = 0; return f; }
 
     inline void SetExternalLogFunc(ExternalLogFunc f)
     {
@@ -201,9 +209,11 @@ namespace FLog {
     // Runtime entry points (harvested: Time.cpp "FLog::Init(nowFastSec)",
     // Debug.cpp ReleaseAssert "FLog::FastLog(channel, msg, 0)",
     // ScriptContext.cpp "FLog::FastLogS(FLog::LuaProfiler, str, NULL)").
-    inline void Init(double startTime)
+    inline void Init(double (*getNowSeconds)())
     {
-        (void)startTime;
+        // Original call site: Time.cpp "FLog::Init(nowFastSec)" passes the
+        // engine's fast-clock function; store it as the log time source.
+        nowSecondsSource() = getNowSeconds;
     }
 
     inline void FastLog(int channel, const char* msg, int level)
@@ -286,7 +296,7 @@ namespace FLog {
         RBX::FastVars::VarMap& m = RBX::FastVars::varMap();
         unsigned short n = 0;
         for (RBX::FastVars::VarMap::iterator it = m.begin(); it != m.end(); ++it)
-            if (it->second->type == FASTVARTYPE_DYNAMIC)
+            if (it->second->type == FASTVARTYPE_SYNC)
                 ++n;
         return n;
     }
@@ -313,7 +323,7 @@ namespace FLog {
         std::lock_guard<std::mutex> lock(RBX::FastVars::varMutex());
         RBX::FastVars::VarMap& m = RBX::FastVars::varMap();
         for (RBX::FastVars::VarMap::iterator it = m.begin(); it != m.end(); ++it)
-            if (it->second->type == FASTVARTYPE_DYNAMIC)
+            if (it->second->type == FASTVARTYPE_SYNC)
                 it->second->fromString(it->second->defaultValue);
     }
 
@@ -418,6 +428,27 @@ namespace DFLog {
     __declspec(selectany) int name = (init); namespace { ::RBX::FastVars::IntVar rbx_fastvar_meta_##name(#name, FASTVARTYPE_DYNAMIC, &name); }
 #define RBX_DFSTRING(name, init) \
     __declspec(selectany) ::RBX::FastStringVar name(init, #name, FASTVARTYPE_DYNAMIC)
+
+// ---- Synchronized flags (SFFlag) ----
+// Harvested surface:
+//   SYNCHRONIZED_FASTFLAGVARIABLE(Name, default) -- definition sites
+//     (PathInterpolatedCFrame.cpp, PartInstance.cpp x2, Streaming.cpp x2,
+//      Replicator.JoinDataItem.cpp)
+//   SYNCHRONIZED_FASTFLAG(Name)                  -- extern-use sites
+//     (World.cpp x2, DirectPhysicsReceiver/RoundRobin/TopNErrorsPhysicsSender)
+//   Access is via SFFlag::get<Name>() function-style getters.
+// All sites are file scope. The variable is one process-wide selectany
+// object; every TU that runs either macro also defines the identical
+// inline accessor (ODR-safe), so use sites link without seeing the
+// defining TU. Registered as FASTVARTYPE_SYNC: this family is exactly the
+// set ServerReplicator::serializeSFFlags replicates and
+// ClientReplicator::deserializeSFFlags applies through SetValueFromServer.
+#define SYNCHRONIZED_FASTFLAGVARIABLE(name, init) \
+    __declspec(selectany) ::RBX::FastBoolVar name((init), #name, FASTVARTYPE_SYNC); \
+    namespace SFFlag { inline bool get##name() { return ::name.v != 0; } }
+#define SYNCHRONIZED_FASTFLAG(name) \
+    extern ::RBX::FastBoolVar name; \
+    namespace SFFlag { inline bool get##name() { return ::name.v != 0; } }
 
 // Call-site definition macros: instances are declared above; these are
 // deliberate no-ops so unknown names fail to compile at use sites.
