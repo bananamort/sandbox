@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- PostBuildEvents below are existence-guarded (CI run 32701964878):
+       buildshaders.bat was pruned from this source drop. When present
+       (full local checkout) the command runs exactly as before; when
+       absent the step echoes ==SKIPPED== instead of failing the build.
+       Same policy as the optional-binary copies in CustomBuildRules.props
+       (commit ad423fb0e). -->
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -125,7 +131,7 @@
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Command>"$(SolutionDir)buildshaders.bat"</Command>
+      <Command>if exist "$(SolutionDir)buildshaders.bat" ("$(SolutionDir)buildshaders.bat") else (echo ==SKIPPED== buildshaders.bat absent from source drop - skipping shader build)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -197,7 +203,7 @@
       <ForceFileOutput>MultiplyDefinedSymbolOnly</ForceFileOutput>
     </Link>
     <PostBuildEvent>
-      <Command>"$(SolutionDir)buildshaders.bat"</Command>
+      <Command>if exist "$(SolutionDir)buildshaders.bat" ("$(SolutionDir)buildshaders.bat") else (echo ==SKIPPED== buildshaders.bat absent from source drop - skipping shader build)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='NoOpt|Win32'">
@@ -230,7 +236,7 @@
       <ForceFileOutput>MultiplyDefinedSymbolOnly</ForceFileOutput>
     </Link>
     <PostBuildEvent>
-      <Command>"$(SolutionDir)buildshaders.bat"</Command>
+      <Command>if exist "$(SolutionDir)buildshaders.bat" ("$(SolutionDir)buildshaders.bat") else (echo ==SKIPPED== buildshaders.bat absent from source drop - skipping shader build)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

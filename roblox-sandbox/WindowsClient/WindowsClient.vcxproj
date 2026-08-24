@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- Pre/PostBuildEvents below are existence-guarded (CI runs
+       32701964878/32746195933): CoreScriptConverter2 tooling and
+       buildshaders.bat were pruned from this source drop. When present
+       (full local checkout) each command runs exactly as before; when
+       absent the step echoes ==SKIPPED== instead of failing the build.
+       Same policy as the optional-binary copies in CustomBuildRules.props
+       (commit ad423fb0e). -->
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -108,10 +115,10 @@
 	  <ForceFileOutput>Enabled</ForceFileOutput>
     </Link>
     <PostBuildEvent>
-      <Command>"$(SolutionDir)buildshaders.bat"</Command>
+      <Command>if exist "$(SolutionDir)buildshaders.bat" ("$(SolutionDir)buildshaders.bat") else (echo ==SKIPPED== buildshaders.bat absent from source drop - skipping shader build)</Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>..\CoreScriptConverter2\tool\win32\BuildCoreScripts.bat ..\rsc.config</Command>
+      <Command>if exist "..\CoreScriptConverter2\tool\win32\BuildCoreScripts.bat" (..\CoreScriptConverter2\tool\win32\BuildCoreScripts.bat ..\rsc.config) else (echo ==SKIPPED== CoreScriptConverter2 tooling absent from source drop - skipping CoreScript regeneration)</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -148,12 +155,10 @@
       <ForceFileOutput>Enabled</ForceFileOutput>
     </Link>
     <PostBuildEvent>
-      <Command>
-"$(SolutionDir)buildshaders.bat"
-</Command>
+      <Command>if exist "$(SolutionDir)buildshaders.bat" ("$(SolutionDir)buildshaders.bat") else (echo ==SKIPPED== buildshaders.bat absent from source drop - skipping shader build)</Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>..\CoreScriptConverter2\tool\win32\BuildCoreScripts.bat ..\rsc.config</Command>
+      <Command>if exist "..\CoreScriptConverter2\tool\win32\BuildCoreScripts.bat" (..\CoreScriptConverter2\tool\win32\BuildCoreScripts.bat ..\rsc.config) else (echo ==SKIPPED== CoreScriptConverter2 tooling absent from source drop - skipping CoreScript regeneration)</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='NoOpt|Win32'">
@@ -190,10 +195,10 @@
 	  <ForceFileOutput>Enabled</ForceFileOutput>
     </Link>
     <PostBuildEvent>
-      <Command>"$(SolutionDir)buildshaders.bat"</Command>
+      <Command>if exist "$(SolutionDir)buildshaders.bat" ("$(SolutionDir)buildshaders.bat") else (echo ==SKIPPED== buildshaders.bat absent from source drop - skipping shader build)</Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>..\CoreScriptConverter2\tool\win32\BuildCoreScripts.bat ..\rsc.config</Command>
+      <Command>if exist "..\CoreScriptConverter2\tool\win32\BuildCoreScripts.bat" (..\CoreScriptConverter2\tool\win32\BuildCoreScripts.bat ..\rsc.config) else (echo ==SKIPPED== CoreScriptConverter2 tooling absent from source drop - skipping CoreScript regeneration)</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
