@@ -40,21 +40,27 @@ jobs:
         shell: cmd
         working-directory: ${{ github.workspace }}
         run: |
+          rem Stash the Roblox-customized config before any fill can touch it
+          copy /Y roblox-sandbox\Library\boost\boost\config\user.hpp "%RUNNER_TEMP%\rbx_user.hpp" >nul
           if not exist roblox-sandbox\Library\boost\tools\build\src\build-system.jam (
             echo Restoring stripped Boost pieces from official 1.74.0 release
             curl -L -o boost_1_74_0.zip https://archives.boost.io/release/1.74.0/source/boost_1_74_0.zip
             7z x -y boost_1_74_0.zip >nul
-            robocopy boost_1_74_0 roblox-sandbox\Library\boost /E /XF boost\config\user.hpp /NFL /NDL /NP
+            robocopy boost_1_74_0 roblox-sandbox\Library\boost /E /NFL /NDL /NP
             if errorlevel 8 exit /b 1
             rem Release zips put headers in boost\; our tree consumes the git-layout include\boost\ (normally made by b2 install)
-            robocopy boost_1_74_0\boost roblox-sandbox\Library\boost\include\boost /E /XF boost\config\user.hpp /NFL /NDL /NP
+            robocopy boost_1_74_0\boost roblox-sandbox\Library\boost\include\boost /E /NFL /NDL /NP
             if errorlevel 8 exit /b 1
-            copy /Y roblox-sandbox\Library\boost\boost\config\user.hpp roblox-sandbox\Library\boost\include\boost\config\user.hpp >nul
-            echo ==DIAG-userhpp==
-            findstr /L /C:"ROBLOX_BOOST_CONFIGS" roblox-sandbox\Library\boost\boost\config\user.hpp >nul && echo ROOT_HAS_MACRO || echo ROOT_MISSING_MACRO
-            findstr /L /C:"ROBLOX_BOOST_CONFIGS" roblox-sandbox\Library\boost\include\boost\config\user.hpp >nul && echo INCLUDE_HAS_MACRO || echo INCLUDE_MISSING_MACRO
-            findstr /R /C:"#.*include .*boost/config/user.hpp" Base\include\rbx\Boost.hpp >nul && echo BOOSTHPP_INCLUDES_USERHPP || echo BOOSTHPP_INCLUDE_LINE_UNMATCHED
-            exit /b 0
+          ) else (
+            echo Boost build system present, nothing to restore
+          )
+          rem Restore Roblox config to BOTH layouts unconditionally
+          copy /Y "%RUNNER_TEMP%\rbx_user.hpp" roblox-sandbox\Library\boost\boost\config\user.hpp >nul
+          copy /Y "%RUNNER_TEMP%\rbx_user.hpp" roblox-sandbox\Library\boost\include\boost\config\user.hpp >nul
+          echo ==DIAG-userhpp==
+          findstr /L /C:"ROBLOX_BOOST_CONFIGS" roblox-sandbox\Library\boost\boost\config\user.hpp >nul && echo ROOT_HAS_MACRO || echo ROOT_MISSING_MACRO
+          findstr /L /C:"ROBLOX_BOOST_CONFIGS" roblox-sandbox\Library\boost\include\boost\config\user.hpp >nul && echo INCLUDE_HAS_MACRO || echo INCLUDE_MISSING_MACRO
+          exit /b 0
           ) else (
             echo Boost build system present, nothing to restore
           )
