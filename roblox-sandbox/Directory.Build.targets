@@ -17,5 +17,12 @@
   <PropertyGroup Condition="'$(ATLMFC_ROOT)' != ''">
     <IncludePath>$(ATLMFC_ROOT)\atlmfc\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(ATLMFC_ROOT)\atlmfc\lib\x86;$(ATLMFC_ROOT)\atlmfc\lib;$(LibraryPath)</LibraryPath>
+    <!-- Forced into every TU ahead of all sources (/FI): declares the Win8+
+         loader surface that the only installed ATLMFC (14.51) requires,
+         independent of which Windows headers win resolution (vendored
+         7.1-era tree shadows the platform SDK on /I; modern SDK gates the
+         API behind _WIN32_WINNT >= 0x0602). See ci_atl_loader_shim.h and
+         CI runs 32704355280/32743525757/32746195933. -->
+    <ForcedIncludeFiles>$(MSBuildThisFileDirectory)ci_atl_loader_shim.h</ForcedIncludeFiles>
   </PropertyGroup>
 </Project>
