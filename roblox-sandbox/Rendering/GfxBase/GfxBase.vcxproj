@@ -411,4 +411,4 @@
     <TargetName Condition="'$(Configuration)|$(Platform)'=='ReleaseTest|Win32'">RenderLibBase</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">RenderLibBase</TargetName>
   </PropertyGroup>
-</Project></Project>
+</Project>
