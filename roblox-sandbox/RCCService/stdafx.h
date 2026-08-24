@@ -20,10 +20,16 @@
 
 #define _ATL_APARTMENT_THREADED
 
-#define _WIN32_WINNT 0x0501
+// Floor raised from 0x0501/NTDDI_WINXPSP1 to Win7: the ATLMFC headers
+// injected for the v143 toolchain (Directory.Build.targets) call
+// SetDefaultDllDirectories unconditionally (atlcore.h:663; CI run
+// 32704355280, C2039/C2065 across RCCService/WindowsClient TUs). That API
+// is only declared when _WIN32_WINNT >= 0x0600, so an XP surface cannot
+// compile against this toolchain's ATL regardless of target.
+#define _WIN32_WINNT 0x0601
 #define WINVER _WIN32_WINNT
-#define _WIN32_WINDOWS _WIN32_WINNT 
-#define NTDDI_VERSION 0x05010100	// NTDDI_WINXPSP1
+#define _WIN32_WINDOWS _WIN32_WINNT
+#define NTDDI_VERSION 0x06010000	// NTDDI_WIN7
 
 #define _WIN32_IE 0x0601
 
