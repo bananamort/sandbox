@@ -274,11 +274,6 @@ namespace FLog {
         return GetValue(name, out);
     }
 
-    inline bool SetValue(const std::string& name, const std::string& value)
-    {
-        return SetValue(name, value, FASTVARTYPE_ANY);
-    }
-
     inline bool SetValue(const std::string& name, const std::string& value, FastVarType type)
     {
         std::lock_guard<std::mutex> lock(RBX::FastVars::varMutex());
@@ -290,6 +285,12 @@ namespace FLog {
             return false;
         it->second->fromString(value);
         return true;
+    }
+
+    // Delegates to the 3-arg form, which must be declared first.
+    inline bool SetValue(const std::string& name, const std::string& value)
+    {
+        return SetValue(name, value, FASTVARTYPE_ANY);
     }
 
     inline bool SetValue(const std::string& name, const std::string& value, FastVarType type, bool fromServer)
