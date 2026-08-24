@@ -54,6 +54,19 @@ namespace RBX {
         {
             return declare(sName.c_str());
         }
+		// Runtime twin of the declare<>() non-type-template form below. The
+		// MSVC 14.5x front end fails to specialize reference-to-object NTTP
+		// member templates against extern-declared name globals in this
+		// nested-template context ("Failed to specialize function template"
+		// in NonFactoryProduct/FactoryProduct::className). Observable
+		// behavior is identical: null pointer -> getNullName(), otherwise
+		// intern by string value through the same registry.
+		FORCEINLINE static const Name& declareClassName(const char* const& sName)
+		{
+			if(sName == NULL)
+				return getNullName();
+			return declare(sName);
+		}
 		template<const char* const& sName>
 		static const Name& declare()
 		{
@@ -156,7 +169,7 @@ namespace RBX {
 		Named(Arg0 arg0, Arg1 arg1, Arg2 arg2, Arg3 arg3) : BaseClass(arg0, arg1, arg2, arg3) {}
 
 		static const Name& name() {
-			return Name::declare<sName>();
+			return Name::declareClassName(sName);
 		}
 		virtual const Name& getName() const {
 			return name();

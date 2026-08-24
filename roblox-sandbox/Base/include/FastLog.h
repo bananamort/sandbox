@@ -34,6 +34,7 @@
 #include <deque>
 #include <map>
 #include <mutex>
+#include <ostream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -196,11 +197,13 @@ struct FastStringVar : FastVars::VarBase {
 
 // Concatenation: exact-match free operators so string + FastStringVar (and
 // the mirrored forms) never depend on conversion-operator participation in
-// overload resolution.
+// overload resolution. operator<< is likewise exact-match: the stream
+// templates cannot deduce basic_string through a user conversion.
 inline std::string operator+(const std::string& lhs, const FastStringVar& rhs) { return lhs + rhs.v; }
 inline std::string operator+(const FastStringVar& lhs, const std::string& rhs) { return lhs.v + rhs; }
 inline std::string operator+(const FastStringVar& lhs, const char* rhs) { return lhs.v + rhs; }
 inline std::string operator+(const char* lhs, const FastStringVar& rhs) { return lhs + rhs.v; }
+inline std::ostream& operator<<(std::ostream& os, const FastStringVar& s) { return os << s.v; }
 
 } // namespace RBX
 
@@ -269,6 +272,11 @@ namespace FLog {
     {
         (void)includeDefaultIfUnset;
         return GetValue(name, out);
+    }
+
+    inline bool SetValue(const std::string& name, const std::string& value)
+    {
+        return SetValue(name, value, FASTVARTYPE_ANY);
     }
 
     inline bool SetValue(const std::string& name, const std::string& value, FastVarType type)
@@ -458,6 +466,16 @@ namespace DFLog {
 #define SYNCHRONIZED_FASTFLAG(name) \
     extern ::RBX::FastBoolVar name; \
     namespace SFFlag { inline bool get##name() { return ::name.v != 0; } }
+
+// ---- AB-experiment flags (harvested: Statistics.cpp DummyTest via
+// ABTEST_NEWSTUDIOUSERS_VARIABLE, RenderView.cpp FrameRateThrottling via
+// ABTEST_NEWUSERS_VARIABLE). Pure registrations for the AB scan performed
+// by FLog::ForEachVariable(..., FASTVARTYPE_AB_*); never read directly.
+// Internal-linkage per-TU objects: registry dedup keeps the first.
+#define ABTEST_NEWUSERS_VARIABLE(name) \
+    namespace { ::RBX::FastBoolVar rbx_abtest_##name(false, #name, FASTVARTYPE_AB_NEWUSERS); }
+#define ABTEST_NEWSTUDIOUSERS_VARIABLE(name) \
+    namespace { ::RBX::FastBoolVar rbx_abtest_##name(false, #name, FASTVARTYPE_AB_NEWSTUDIOUSERS); }
 
 // Call-site definition macros: instances are declared above; these are
 // deliberate no-ops so unknown names fail to compile at use sites.
