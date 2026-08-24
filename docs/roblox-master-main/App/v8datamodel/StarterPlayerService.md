@@ -19,7 +19,7 @@ Child rules: askAddChild/askForbidChild accept ONLY StarterPlayerScripts by defa
 
 Flow:
 - `setupPlayer(Player*)`: copies camera mode/zoom bounds/display distances/autoJump onto the player.
-- `onServiceProvider` (server only): setupPlayer over all Players descendants; hooks workspaceLoadedSignal → `setupPlayerScripts` which creates missing StarterPlayerScripts, and under UseStarterPlayerCharacterScripts a missing StarterCharacterScripts (note bug: searches for StarterCharacterScripts via findFirstChildOfType<StarterPlayerScripts>() template).
+- `onServiceProvider` (server only): setupPlayer over all Players descendants; hooks workspaceLoadedSignal → `setupPlayerScripts` which creates missing StarterPlayerScripts, and under UseStarterPlayerCharacterScripts a missing StarterCharacterScripts (existence check uses the correct `findFirstChildOfType<StarterCharacterScripts>` template; the local variable holding the result is merely declared as the base-class pointer type).
 - `recordSettingsInGA()`: seven GA_CATEGORY_GAME events mapping each enum to a string label.
 
 ## Usage / reflection touchpoints
@@ -28,7 +28,7 @@ Fully script-facing place-settings surface consumed at join time. Pairs with Pla
 
 ## Gotchas
 
-- setupPlayerScripts' StarterCharacterScripts existence check uses the WRONG template type (StarterPlayerScripts) — a stray StarterPlayerScripts would suppress character-scripts creation.
+- Earlier review note retracted after grep verification: the StarterCharacterScripts existence check does NOT use the wrong template — `findFirstChildOfType<RBX::StarterCharacterScripts>()` is correct (line 341); only the receiving local is typed as base-class `StarterPlayerScripts*`, which is cosmetic.
 - LoadCharacterAppearance silently ignores writes when its flag is off — property appears writable but stays stale.
 - Zoom-distance setters cross-clamp against each other's CURRENT values, not atomically — setting max below min then min can transiently invert ordering.
 - Defaults are stamped onto players only at server provider init; players joining later rely on Network-side calls of setupPlayer (UNKNOWN caller).

@@ -40,7 +40,7 @@ Owned by Workspace ([Workspace](Workspace.md)); subject contract with Humanoid/I
 ## Gotchas
 
 - LOCKED_CAMERA is REGISTERED as the string "Scriptable" — enum value ≠ display name everywhere in scripts.
-- setRoll/setCameraPanMode/etc. silently zero/no-op outside Scriptable type with only a console warning (roll).
+- setRoll outside Scriptable type prints a warning ("SetRoll can only be used on Camera objects with a CameraType of Scriptable") AND forces roll back to 0; `SetCameraPanMode`, however, has NO type gate in this TU — it stores any mode unconditionally (gating lives in callers/consumers).
 - Setting CFrame while an illegal value was previously "goal-set" can desync goal vs actual until next legal set.
 - characterZoom comment admits duplication with ICharacterSubject ("code is not currently shared") — occlusion handled ONLY in the subject path.
 - WorldToScreenPoint returns w (clip w) as z of the Vector3 — depth semantics differ from project()'s zImagePlane·2·q.z path; mixing them misorders occlusion checks.

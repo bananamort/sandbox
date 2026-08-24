@@ -49,4 +49,5 @@ No REFLECTION/descriptor macros in this TU — zero methods, properties, or even
 - `onPartAncestryChanged` deletes at most ONE pair per callback (break after first match) and does not rescan — stale duplicates of the same part pair would survive until the next full `findPermissibleJointSurfacePairs`.
 - `TerrainManualJointSurfacePair::createJoint` parented the weld under PartInst1 (the non-terrain part) while `ManualJointSurfacePair` parents under PartInst0 — asymmetric ownership.
 - Face ids use sentinel `(size_t)-1`; several draw paths silently no-op on the sentinel rather than asserting.
+- `SmoothTerrainManualJointSurfacePair::createJoint`'s duplicate check is asymmetric: it skips creation when an existing manual joint has primitive(0)==p0 **or** primitive(1)==p1 — so any pre-existing manual joint where p1 sits in slot 1 (e.g., an unrelated part-to-part manual weld) suppresses the terrain joint, even though the other side was never checked against p0.
 - UNKNOWN: full `ConstraintSurfacePair` interface beyond what this TU uses (e.g., getP0/getP1 accessors used here) lives in V8DataModel/ManualJointHelper.h outside this file.

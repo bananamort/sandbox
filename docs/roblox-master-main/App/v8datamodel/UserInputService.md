@@ -37,4 +37,5 @@ The primary script input API. Consumers everywhere: TextBox.md, ScrollingFrame.m
 - currentMousePosition starts at (−10000,−10000) until first real movement.
 - The changed-event mouse merge mutates a SHARED InputObject across frames — handlers retaining references see later frames' data.
 - GetFocusedTextBox errors-and-returns-null unless its DFFlag is enabled (same crippling pattern as TextBox:IsFocused).
+- Core-channel touch asymmetry: on INPUT_STATE_BEGIN a touch fires `coreTouchMovedEvent` (NOT a started event) alongside `coreInputBeganEvent`, while the gameplay channel gets `touchStartedEvent`; END fans to `coreTouchEndedEvent` normally — core-channel TouchStarted listeners effectively never fire from this path.
 - UNKNOWN: processedMouseEvent native half; Profiler::isCapturingMouseInput semantics.

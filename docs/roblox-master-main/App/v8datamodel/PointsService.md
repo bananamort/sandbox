@@ -32,5 +32,5 @@ Script-facing at Security::None but every call is runtime-gated to server contex
 - GetAwardablePoints is a hardcoded INT_MAX stub — no real quota check exists despite the rate limiter on calls.
 - Award batches are keyed by userId: multiple awards coalesce amounts and ALL original callbacks fire with the TOTAL awarded figure — individual amounts are indistinguishable in resume values.
 - doBatchAwardPoints returns early inside catch WITHOUT clearing remaining requests — one throw abandons the whole queue's other users that round (they retry next flush).
-- The over-limit branch errors but does NOT remove the entry from batchAwardPointRequests before the final clear() — wait, it does continue then clear() wipes them; those callers get errors only.
+- The over-limit branch errors each offending caller (`continue`) but leaves the entries in place until the loop ends — the final `batchAwardPointRequests.clear()` then wipes them, so those callers receive only the error (their award is silently dropped, not deferred).
 - canUseService() inverted naming: returns false when SSS missing entirely too.

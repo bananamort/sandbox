@@ -23,7 +23,7 @@ Behavior:
 - attach(): records FULL initial world via visitDescendants + resetBaseWaypoint("base" merged into single waypoint); hooks dataModel descendantAdded/Removing/itemChangedSignal.
 - setWaypoint(name): trims redos past playWaypoint, merges oldest while >maxWaypoints or >maxMemoryUsage; requestWaypoint cleans CSGDictionaryService/NonReplicatedCSGDictionaryService first.
 - checkSettingWaypoint during RunState: Aggregate→Reject, Snapshot/Hybrid→Accept.
-- isReplicatedChange (Security identity Replicator_) routes records into EXISTING waypoints (base-first search) instead of recording — Team Create sync keeps history consistent.
+- isReplicatedChange (Security identity Replicator_) routes records into EXISTING waypoints instead of recording — property/cell changes scan waypoints NEWEST→OLDEST for an item already holding that descriptor (terrain falls back to a forced base-waypoint update), while new instances record straight into the BASE waypoint; Team Create sync keeps history consistent.
 - Camera property changes record ONLY Name/Parent.
 - Run transitions: STOPPED/PAUSED → setRunWaypoint (reports missed physics CFrame/Velocity/RotVelocity by diffing waypoints when not Snapshot); RUNNING from STOPPED marks runStartWaypoint; reset() unplays back to it.
 - Stats: ChangeHistoryStatsItem publishes "Data Size"/"Stack Size" under StatsService.

@@ -16,7 +16,7 @@ DFFlags: DisplayTextBoxTextWhileTypingMobile(false), PasteWithCapsLockOn(false),
 
 Focus model:
 - `gainFocus(event)`: cursor→end, clear-on-focus wipes buffer; left-mouse-UP gain places cursor by click (`getCursorPos` half-split fallback); sets local Humanoid setTyping(true), DataModel gui target + `setSuppressNavKeys(true)`, fires Focused + UserInputService::textBoxGainFocus.
-- `captureFocus()` (Lua): same minus event, defers real focus to next key event via shouldCaptureFocus.
+- `captureFocus()` (Lua): same as gainFocus minus the event — it sets `shouldCaptureFocus = true` and then IMMEDIATELY calls `gainFocus(nil)` anyway, so focus is taken now; the stale flag just causes a redundant second `gainFocus(event)` when the next key event arrives (processKeyEvent consumes it).
 - `releaseFocus(enterPressed, input, contextCharacter)`: commits bufferedText → setText, typing(false), restores nav keys, FocusLost + textBoxReleaseFocus. externalReleaseFocus (from UserInputService mobile path) takes EXTERNAL text as final buffer.
 - Ancestry change releases focus against the OLD parent context.
 

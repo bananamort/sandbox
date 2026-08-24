@@ -56,7 +56,6 @@ A–L half is rostered separately (partial; separate writer). Note: `factoryregi
 - RightAngleRampInstance.md → [RightAngleRampInstance](RightAngleRampInstance.md) — right-angle ramp variant (_PRISM_PYRAMID_ gated).
 - RobloxReplicatedStorage.md → [RobloxReplicatedStorage](RobloxReplicatedStorage.md) — RobloxLocked engine storage twin.
 - RootInstance.md → [RootInstance](RootInstance.md) — Studio root owning World: insert pipelines, insert-point math, service routing, waypoints.
-- Remote cross-ref: none.
 
 ## S
 
@@ -85,6 +84,9 @@ A–L half is rostered separately (partial; separate writer). Note: `factoryregi
 - SpecialMesh.md → [SpecialMesh](SpecialMesh.md) — MeshType enum mesh with auto-FILE_MESH on id assignment.
 - Stats.md → [Stats](Stats.md) — StatsService reporting (post path deprecated/no-op!) + Stats::Item bound tree; signed remote gather-script bootstrap; hardcoded Influx creds.
 - StarterPlayerService.md → [StarterPlayerService](StarterPlayerService.md) — "StarterPlayer" place defaults (camera/movement modes, zoom bounds), player stamping, GA recording.
+- StudioTool.md → [StudioTool](StudioTool.md) — Studio tool-palette base: Enabled + Equipped/Unequipped/Activated/Deactivated, installs StudioToolMouseCommand on equip.
+- StudioToolMouseCommand.md → [StudioToolMouseCommand](StudioToolMouseCommand.md) — binds a StudioTool to input (down=Activated/up=Deactivated) with unequip-race teardown.
+- StudioToolVerb.md → [StudioToolVerb](StudioToolVerb.md) — Verb wrapper equipping/toggling a StudioTool; checked state from current mouse command.
 - Surface.md → [Surface](Surface.md) — face-view struct + custom descriptors exposing 24 per-face properties on PartInstance.
 - SurfaceGui.md → [SurfaceGui](SurfaceGui.md) — 3D face-projected GUI: per-face matrix, unprojected input, cookie lookup, StarterGui special case.
 - SurfaceSelection.md → [SurfaceSelection](SurfaceSelection.md) — single-face highlight adornment (+hackFlag0 decoy).
@@ -110,7 +112,6 @@ A–L half is rostered separately (partial; separate writer). Note: `factoryregi
 - TouchInputService.md → [TouchInputService](TouchInputService.md) — platform-thread touch buffer marshaling into persistent InputObjects.
 - TouchTransmitter.md → [TouchTransmitter](TouchTransmitter.md) — TouchInterest debounce of duplicate touch pairs (+hackFlag7 decoy).
 - TweenService.md → [TweenService](TweenService.md) — legacy GuiObject tween stepping + completion callbacks.
-- TweenService cross-ref: none.
 
 ## U
 

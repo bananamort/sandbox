@@ -14,7 +14,7 @@ Lifecycle/behavior:
 - `onServiceProvider`: on detach clears modals/connections; on attach adopts CoreGui's RobloxGui viewport as its own buffered viewport (unless it IS that gui).
 - `onPropertyChanged`: base AbsoluteSize/AbsolutePosition changes re-handleResize against bufferedViewport AND raise the matching Replicating* descriptor (server→client propagation hook).
 - Renderability: `isAncestorRenderableGui()` walks ancestors for BasePlayerGui; recomputed in `onAncestorChanged`, flipping `renderable` + shouldRenderSetDirty.
-- Viewport: `render2dContext(adorn, context)` refreshes bufferedViewport from `adorn->getUserGuiRect()` before Super render; `setBufferedViewport` no-ops when unchanged but still handleResizes.
+- Viewport: `render2dContext(adorn, context)` refreshes bufferedViewport from `adorn->getUserGuiRect()` before Super render; `setBufferedViewport` is a complete no-op when the value is unchanged (handleResize runs only inside the changed branch).
 - Absolute position getter SUBTRACTS GuiService globalGuiInset (topbar offset compensation).
 - Parenting: `askSetParent` REFUSES any GuiBase2d parent ("main window parent can be any kind of non-GUI instance").
 - Input: `canProcessMeAndDescendants()` returns false — each ScreenGui processes individually to avoid double-processing nested guis; process/processGesture pass through with a Mac HUD comment.

@@ -10,7 +10,7 @@ Implements `PartInstance`, the engine class behind the script-facing `BasePart` 
 
 Methods:
 - `BreakJoints()` (None) — `destroyJoints`: kills auto AND manual joints via `World::destroyAutoJoints`. Deprecated twin `breakJoints` marked deprecated → BreakJoints.
-- `MakeJoints()` / deprecated legacy `makeJoints` (None) — `World::createAutoJoints`.
+- `MakeJoints()` / legacy lowercase twin `makeJoints` (None — note: unlike `breakJoints`, `makeJoints` carries NO deprecated attribute in this TU) — `World::createAutoJoints`.
 - `GetMass()` + legacy `getMass` (CustomBoundFunc, None) — with DFFlag MaterialPropertiesEnabled returns `getCalculateMass(workspace->getUsingNewPhysicalProperties())`, else body mass.
 - `IsGrounded()` (None) — `Primitive::computeIsGrounded`.
 - `GetConnectedParts(recursive: bool = false)` (None) — non-recursive = kinematic-joint neighbors; recursive walks the ungrounded assembly, or (grounded case) kinematic joints recursively excluding terrain.
@@ -37,7 +37,7 @@ Properties (category in parens):
 - `NetworkOwnerV3` (Data, REPLICATE_ONLY) — SystemAddress ownership property used by replication; `NetworkIsSleeping` (Data, REPLICATE_ONLY).
 
 Events:
-- `Touched(otherPart)` (+ deprecated `touched`) — fired via TouchTransmitter gating; `TouchEnded(otherPart)` (+ deprecated `StoppedTouching` aliasing it); `LocalSimulationTouched(part)`; `OutfitChanged()`; `NetworkOwnerChanged(systemAddress)` — RemoteEventDesc, **Security::LocalUser**, REPLICATE_ONLY CLIENT_SERVER (its `getOrCreateNetworkOwnerChangedSignal` returns NULL here — signal resolved through the base-class path); `OwnershipChange` exists only under RBX_TEST_BUILD.
+- `Touched(otherPart)` (+ deprecated `touched`) — fired via TouchTransmitter gating; `TouchEnded(otherPart)` (+ deprecated `StoppedTouching`, registered through its OWN accessor `getOrCreateDeprecatedStoppedTouchingSignal`, not the TouchEnded one); `LocalSimulationTouched(part)`; `OutfitChanged()`; `NetworkOwnerChanged(systemAddress)` — RemoteEventDesc, **Security::LocalUser**, REPLICATE_ONLY CLIENT_SERVER (its `getOrCreateNetworkOwnerChangedSignal` returns NULL here — signal resolved through the base-class path); `OwnershipChange` exists only under RBX_TEST_BUILD.
 
 Enums registered: `Material` (Plastic…Neon, Air/Water/Rock/Glacier/Snow/Sandstone/Mud/Basalt/Ground/CrackedLava; legacy names "Corroded Metal"→CorrodedMetal, "Aluminum"→Foil), `FormFactor` (Symmetric/Brick/Plate/Custom, legacy "Block"→Brick), `NetworkOwnership` (Automatic/Manual). Statics debug toggles: showContactPoints, showJointCoordinates, highlightSleepParts, highlightAwakeParts, showBodyTypes, showAnchoredParts, showPartCoordinateFrames, showUnalignedParts, showSpanningTree, showMechanisms, showAssemblies, showReceiveAge, disableInterpolation, showInterpolationPath.
 

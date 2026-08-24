@@ -39,5 +39,5 @@ Studio plumbing consumed by InsertService, toolbox UI, clipboard paste. Pairs wi
 - moveToPoint silently no-ops if pv lacks a primaryPart or isn't inside this root — no error.
 - Services are rejected only with an error print in two separate code paths; the instance is silently dropped either way.
 - insertCharacterView's HopperBin shortcut checks findLocalPlayer but not success of parenting; insertRemoteCharacterView's Tool check ignores HopperBin entirely (asymmetric special cases).
-- focusCameraOnParts breaks out of its frustum loop on FIRST off-screen part but keeps checking subsequent parts' lock status — needsCameraAdjustment reflects last-checked part when earlier ones were in-frustum... actually it breaks immediately once true; parts after a true result are unchecked.
+- focusCameraOnParts breaks out of its frustum loop at the FIRST off-screen part (`needsCameraAdjustment = !camera->isPartInFrustum(...)` then `break` when true) — parts after an off-screen one are never checked, and the flag reflects only that single part rather than any aggregate.
 - UNKNOWN: PromptMode/InsertMode enum definitions header-side; viewPort update mechanism ("every render") lives outside this TU.

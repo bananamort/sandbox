@@ -9,7 +9,7 @@ Implements `CommonVerbs` — an aggregate struct that simply CONSTRUCTS the enti
 No descriptors, no Security:: tiers — pure composition.
 
 - Single ctor `CommonVerbs(DataModel*)` initializing every verb member from Commands.cpp ([Commands](Commands.md)) and the tool-verb families declared header-side (ToolsModel/ToolsPart/ToolsSurface siblings).
-- Member groups visible in the ctor order: stats (7), run state (3), transform tools (axisRotate/resize/advMove/advRotate/advArrow), manual-joint + grid settings (9), surface tools (11 incl. smoothNoOutlines), anchor/lock/fill/material/materialVerb/colorVerb/dropper, firstPerson/selectChildren/snap/playDelete/deleteSelection, moveUp plate+brick variants / moveDown / rotate / tilt, selectAll/allCanSelect/canNotSelect, translucent/canCollide/unlockAll, game/grab/clone/hammer tools.
+- Member groups visible in the ctor order: join command, stats (7), run state (3), transform tools (axisRotate/resize/advMove/advRotate/advArrow), manual-joint creation toggle + grid settings (10), surface tools (11 incl. smoothNoOutlines), anchor/lock/fill/material/materialVerb/colorVerb/dropper, firstPerson/selectChildren/snap/playDelete/deleteSelection, moveUp plate+brick variants / moveDown / rotate / tilt, selectAll/allCanSelect/canNotSelect, translucent/canCollide/unlockAll, game/grab/clone/hammer tools.
 
 ## Usage / reflection touchpoints
 

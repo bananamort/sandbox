@@ -23,7 +23,7 @@ Mechanics:
 
 Gather-script bootstrap (`tryToStartScript`, server-only): GETs ClientSharedSettings URL (guid D6925E56-…), regex-ish extracts "StatsGatheringScriptUrl":"…" from JSON (hand parsing, backslash stripping), Http GETs that script, submits `runScript` under DataModel Write lock: VMProtectBeginMutation("19") wrap + `ProtectedString::fromTrustedSource` + `ContentProvider::verifyRequestedScriptSignature(…, "StatsScript", true)` + executeInNewThread at Security::RobloxGameScript_; ALL exceptions swallowed "to make it harder to see (security)". onServiceProvider retries while baseUrl unset via propertyChangedSignal.
 
-Free functions: setUserId (also Analytics::setUserId), setBrowserTrackerId, reportGameStatus → POST client-status/set with browserTrackerId+status (skipped when either empty); httpPost helper sets recordStatistics=false (avoid feedback loops), gzips (>256 bytes flag) sync or async.
+Free functions: setUserId (also Analytics::setUserId), setBrowserTrackerId, reportGameStatus → POST client-status/set with browserTrackerId+status (skipped when either empty); httpPost helper sets recordStatistics=false (avoid feedback loops) and passes a `data.size() > 256` boolean as Http::post's third argument on both sync and async paths (meaning defined by Http's signature header-side).
 
 Influx settings declared but UNUSED in this TU: DFInt HttpInfluxHundredthsPercentage(0), DFString HttpInfluxURL(default influx host:8087), HttpInfluxDatabase "Default", HttpInfluxUser "roblox", **HttpInfluxPassword "te$tu$3r"** (hardcoded credential in source).
 

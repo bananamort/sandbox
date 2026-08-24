@@ -10,7 +10,7 @@ Implements FIVE classes: `ControllerService` ("ControllerService", service ownin
 Descriptors (**Security::None**):
 - "BindButton(button, caption)" + deprecated lowercase twin "bindButton"; "UnbindButton(button)"; "GetButton(button):bool" + deprecated "getButton".
 - Event "ButtonChanged(button:Button)" — no security tier (default).
-- Enum `Button`: Jump, Dismount. StringConverter has an inverted bug: `if(text.find("Jump"))` treats ANY non-matching-prefix string as truthy → find returns 0 for strings STARTING with Jump, so "Jump" maps to DISMOUNT... actually find("Jump") on "Jump" returns 0 (false), so "Jump" falls through to the Dismount check which also returns npos≠0? std::string::find returns npos when missing; `if(npos)` is TRUE — so EVERY string parses as JUMP first unless it contains "Jump" at position 0, in which case it ALSO becomes JUMP via DISMOUNT branch never reached. Net effect: all parseable strings become JUMP; "Dismount" unreachable.
+- Enum `Button`: Jump, Dismount. StringConverter is fully INVERTED by truthiness bugs: `if(text.find("Jump"))` is FALSE only when the string STARTS with "Jump" (position 0), and `if(npos)` is always TRUE otherwise. Net mapping: a string beginning with "Jump" falls through to the second check and becomes **DISMOUNT**; every other string — including literal "Dismount" and arbitrary garbage — becomes **JUMP**.
 - Button state map with captions; setButton raises buttonChangedSignal only on transitions; getButton/getButtonCaption THROW when unbound.
 
 ### HumanoidController
@@ -31,6 +31,6 @@ BindButton family script-facing at Security::None. Pairs with SkateboardControll
 
 ## Gotchas
 
-- The Button StringConverter makes "Dismount" UNPARSEABLE from strings (always resolves to Jump) — silent data corruption loading string-encoded buttons.
+- The Button StringConverter inverts both names: "Dismount" parses as Jump, "Jump" (or any "Jump"-prefixed string) parses as Dismount, and arbitrary garbage also parses as Jump — silent data corruption loading string-encoded buttons.
 - VehicleController::onStepped RBXASSERT(0)s every frame after seat destruction until controller itself dies.
 - bindButton re-binding overwrites nothing (insert into multimap-like set with make_pair) — duplicates possible (UNKNOWN container semantics header-side).

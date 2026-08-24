@@ -35,6 +35,6 @@ Run is Plugin-security; everything else None/LocalUser(TEST). Pairs with TimerSe
 
 - setConfiguration mutates GLOBAL singletons (PhysicsSettings, FLog::Asserts, NetworkSettings send rate) — concurrent tests or live games share the damage until restoreConfiguration.
 - Client assertion replication means Check counts TWICE server-side for client-run scripts (remote handler increments again via onRemoteConditionalResult).
-- Require/Fail trigger done() immediately even mid-script batch; remaining scripts keep running but results freeze... actually stopScripts runs, killing siblings.
+- Require/Fail trigger done() immediately even mid-script batch — done() calls stop(), which runs stopScripts and KILLS all sibling test scripts on the spot.
 - MacroSubstituter's [==[ ]==] long-bracket embedding breaks on test expressions CONTAINING "==]".
 - identity elevation uses caller's current security context at addScript time — Run() from Plugin yields Plugin-identity test scripts.

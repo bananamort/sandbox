@@ -10,7 +10,7 @@ Implements `RemoteFunction` and `RemoteEvent`, the two client↔server script co
 Descriptors (**Security::None** on all):
 - Yield funcs: "InvokeServer(arguments)" / "InvokeClient(player, arguments):Tuple".
 - AsyncCallback descriptors: "OnServerInvoke(player, arguments)" + change notifier; "OnClientInvoke(arguments)".
-- Internal RemoteEventDescs, all Security::None REPLICATE_ONLY CLIENT_SERVER: "RemoteOnInvokeServer(id, player, arguments)", "RemoteOnInvokeClient(id, arguments)", "RemoteOnInvokeSuccess(id, arguments)", "RemoteOnInvokeError(id, error:string)".
+- Internal RemoteEventDescs, all Security::None REPLICATE_ONLY CLIENT_SERVER: "RemoteOnInvokeServer(id, player, arguments)", "RemoteOnInvokeClient(id, arguments)", "RemoteOnInvokeSuccess(id, arguments)", "RemoteOnInvokeError(id, arguments)" (the last one's second parameter is literally named "arguments" in the descriptor despite carrying the std::string error text).
 
 Mechanics:
 - Direction guards throw: InvokeServer client-only ("can only be called from the client"), InvokeClient server-only + Player arg validated. Play solo (neither present) simulates locally.

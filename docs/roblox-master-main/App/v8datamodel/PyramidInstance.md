@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Implements `PyramidInstance` ("PyramidPart", instance name "Pyramid") — an N-sided pyramid PartInstance variant (DescribedNonCreatable), compiled only under `#ifdef _PRISM_PYRAMID_`. Near-verbatim twin of PrismInstance (source itself notes they should share a base class).
+Implements `PyramidInstance` ("PyramidPart", instance name "Pyramid") — an N-sided pyramid PartInstance variant (DescribedNonCreatable), compiled only under `#ifdef _PRISM_PYRAMID_`. Near-verbatim twin of PrismInstance (the shared-base-class complaint is a comment in PrismInstance.cpp: "This is identical to Pyramid - should descend from same object....."; this TU carries no such note).
 
 ## Key types and API
 

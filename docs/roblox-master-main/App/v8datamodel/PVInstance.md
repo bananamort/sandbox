@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Implements `PVInstance`, the abstract base ("PVInstance" = Position-Velocity Instance) for everything placeable with a coordinate frame in the world — ancestor of PartInstance and its geometry family. This TU is small: legacy drag move helpers delegating into Workspace::moveToPoint with different join modes, top-level PV-parent walk, debug axis rendering, legacy file-format tolerance for old "Feature"-tagged parts, and a booby-trapped legacy "CoordinateFrame" UI property that always throws.
+Implements `PVInstance`, the abstract base (registered class name "PVInstance") for everything placeable with a coordinate frame in the world — ancestor of PartInstance and its geometry family. This TU is small: legacy drag move helpers delegating into Workspace::moveToPoint with different join modes, top-level PV-parent walk, debug axis rendering, legacy file-format tolerance for old "Feature"-tagged parts, and a booby-trapped legacy "CoordinateFrame" UI property that always throws.
 
 ## Key types and API
 

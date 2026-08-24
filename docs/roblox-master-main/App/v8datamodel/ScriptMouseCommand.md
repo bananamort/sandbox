@@ -11,7 +11,7 @@ Extends MouseCommand (see MouseCommand.md for base contract).
 - Ctor(workspace): FASTLOG lifetime trace, creates `Mouse` via Creatable, sets its workspace.
 - Dtor: detaches mouse workspace (NULL).
 - `getCursorId()`: returns `mouse->getIcon()` — script-controlled cursor via Mouse.Icon.
-- Input overrides — onMouseDown/onMouseHover/onMouseIdle/onMouseWheelForward/onMouseWheelBackward/onRightMouseDown/onRightMouseUp/onMouseUp/onPeekKeyDown/onPeekKeyUp: ALL are `mouse->update(inputObject); return shared_from(this);` (keep-capture). No filtering whatsoever.
+- Input overrides — onMouseDown/onMouseWheelForward/onMouseWheelBackward/onRightMouseDown/onRightMouseUp/onMouseUp/onPeekKeyDown/onPeekKeyUp: all are `mouse->update(inputObject); return shared_from(this);` (keep-capture). The two VOID overrides onMouseHover/onMouseIdle only call `mouse->update(inputObject)` with no capture semantics. No filtering anywhere.
 - `getName()`: returns `Mouse::className()` — masquerades as "Mouse" for command naming.
 
 ## Usage / reflection touchpoints

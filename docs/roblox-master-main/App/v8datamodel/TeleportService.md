@@ -31,7 +31,7 @@ Core multi-place API at Security::None (script-facing) + RobloxScript callbacks.
 
 ## Gotchas
 
-- sanitizeCustomLoadingGui strips scripts from BOTH the original AND the clone — caller's gui loses its children permanently.
+- Script stripping is split across two sites on the CLIENT path: `sanitizeCustomLoadingGui` destroys descendant LuaSourceContainers on the ORIGINAL gui, and `TeleportImpl` strips the CLONE again before stashing it — caller's gui always loses its children permanently. Note the SERVER path (`ServerTeleport`) never strips the clone, so the loading gui handed to `onTeleportInternal`/InsertService still carries its scripts when it replicates.
 - GetPlayerPlaceInstanceAsync writes the MEMBER `url` shared with the teleport thread — concurrent use races the poll URL.
 - ProcessGetPlayerPlaceInstanceResultsSuccess dereferences itData after an end() check WITHOUT continue (missing-key path reads invalid iterator).
 - Static carryover (teleported/previous*/customTeleportLoadingGui/dataTable) survives DataModel teardown by design — cross-session state.
