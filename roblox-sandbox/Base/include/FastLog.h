@@ -104,7 +104,8 @@ inline void emitG(int group, char const* fmt, ...)
 // ==== SETTINGS-VARIABLE REGISTRY ====
 namespace FastVars {
 
-// Forward declaration: VarBase's constructor registers each instance.
+// Forward declarations: VarBase's constructor registers each instance.
+struct VarBase;
 inline void registerVar(VarBase* v);
 
 struct VarBase {
@@ -192,6 +193,14 @@ struct FastStringVar : FastVars::VarBase {
     std::string toString() const { return v; }
     void fromString(const std::string& s) { v = s; }
 };
+
+// Concatenation: exact-match free operators so string + FastStringVar (and
+// the mirrored forms) never depend on conversion-operator participation in
+// overload resolution.
+inline std::string operator+(const std::string& lhs, const FastStringVar& rhs) { return lhs + rhs.v; }
+inline std::string operator+(const FastStringVar& lhs, const std::string& rhs) { return lhs.v + rhs; }
+inline std::string operator+(const FastStringVar& lhs, const char* rhs) { return lhs.v + rhs; }
+inline std::string operator+(const char* lhs, const FastStringVar& rhs) { return lhs + rhs.v; }
 
 } // namespace RBX
 
