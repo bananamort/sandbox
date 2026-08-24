@@ -362,7 +362,10 @@ MigrationBackup/
 FodyWeavers.xsd
 
 # Roblox
-App/include/security/RandomConstant.h
+# RandomConstant.h was originally build-generated (hence the ignore) and was
+# stripped from the source drop entirely; the sandbox keeps a reconstructed
+# seed-only shim under version control instead (see the header itself).
+# App/include/security/RandomConstant.h
 App/AlreadyBuiltRandomConstant.h
 App/tmp.h
 

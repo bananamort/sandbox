@@ -228,7 +228,6 @@
     </ClCompile>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="..\ClientBase\ReflectionMetadata.cpp" />
-    <ClCompile Include="RandomPadding.cpp" />
     <ClCompile Include="RbxWebView.cpp" />
     <ClCompile Include="ReleasePatcher.cpp" />
     <ClCompile Include="RenderJob.cpp">
