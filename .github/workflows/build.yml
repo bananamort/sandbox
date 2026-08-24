@@ -50,6 +50,10 @@ jobs:
             robocopy boost_1_74_0\boost roblox-sandbox\Library\boost\include\boost /E /XF boost\config\user.hpp /NFL /NDL /NP
             if errorlevel 8 exit /b 1
             copy /Y roblox-sandbox\Library\boost\boost\config\user.hpp roblox-sandbox\Library\boost\include\boost\config\user.hpp >nul
+            echo ==DIAG-userhpp==
+            findstr /L /C:"ROBLOX_BOOST_CONFIGS" roblox-sandbox\Library\boost\boost\config\user.hpp >nul && echo ROOT_HAS_MACRO || echo ROOT_MISSING_MACRO
+            findstr /L /C:"ROBLOX_BOOST_CONFIGS" roblox-sandbox\Library\boost\include\boost\config\user.hpp >nul && echo INCLUDE_HAS_MACRO || echo INCLUDE_MISSING_MACRO
+            findstr /R /C:"#.*include .*boost/config/user.hpp" Base\include\rbx\Boost.hpp >nul && echo BOOSTHPP_INCLUDES_USERHPP || echo BOOSTHPP_INCLUDE_LINE_UNMATCHED
             exit /b 0
           ) else (
             echo Boost build system present, nothing to restore
