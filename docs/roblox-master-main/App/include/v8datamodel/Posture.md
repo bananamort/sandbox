@@ -19,5 +19,5 @@ Header defining exactly one enum: `RBX::CharacterActionType` — a three-value t
 
 ## Cross-links
 
-- Implementation: [App/v8datamodel/Posture.md](../../v8datamodel/Posture.md).
+- Implementation: `App/v8datamodel/Posture.cpp` exists in-tree but has no certified doc yet (UNKNOWN details).
 - Consumer domain: [SkateboardController.md](SkateboardController.md), [Seat.md](Seat.md), humanoid docs under App/v8datamodel.

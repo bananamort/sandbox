@@ -10,7 +10,7 @@ Base class for wearable/attachable character items — the `Accoutrement` Instan
 
 - Class descriptors: `sAccoutrement`, `sHat`, `sAccessory` (extern names).
 - State enum: `AccoutrementState { NOTHING, HAS_HANDLE, IN_WORKSPACE, IN_CHARACTER, EQUIPPED }`.
-- Replicated state: `int getBackendAccoutrementState() const`; `void setBackendAccoutrementState(int value)` (replication signal); private setter `setBackendAccoutrementStateNoReplicate(int)`. Comment: backend writes, frontend reads.
+- Replicated state: `int getBackendAccoutrementState() const`; `void setBackendAccoutrementState(int value)` (replication signal); protected setter `setBackendAccoutrementStateNoReplicate(int)`. Comment: backend writes, frontend reads.
 - Attachment frame: `const CoordinateFrame& getAttachmentPoint() const` / `void setAttachmentPoint(const CoordinateFrame&)`; UI decomposition props `getAttachmentPos/Forward/Up/Right()` and matching setters (`Vector3`).
 - Handle access: `PartInstance* getHandle()`; `const PartInstance* getHandleConst() const`.
 - `Attachment* findFirstMatchingAttachment(Instance* model, const std::string& originalAttachment)`.

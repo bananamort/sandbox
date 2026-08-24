@@ -7,7 +7,7 @@
 ## Declared API
 
 Free types:
-- `struct BoundFunctionData` — `std::string title/description/image; UDim2 position; bool hasTouchButton; shared_ptr<const Reflection::Tuple> inputTypes; boost::function<void(shared_ptr<Reflection::Tuple>)> luaFunction; weak_ptr<InputObject> lastInput;` four ctors + member `operator==` (pointer-compares inputTypes tuples when both set).
+- `struct BoundFunctionData` — `std::string title/description/image; UDim2 position; bool hasTouchButton; shared_ptr<const Reflection::Tuple> inputTypes; boost::function<void(shared_ptr<Reflection::Tuple>)> luaFunction; weak_ptr<InputObject> lastInput;` four ctors + friend `operator==` (pointer-compares inputTypes tuples when both set).
 - `typedef boost::unordered_map<std::string, BoundFunctionData> FunctionMap; FunctionVector = std::vector<std::pair<std::string, BoundFunctionData>>; FunctionPair = pair<function<void(shared_ptr<Instance>)>, function<void(std::string)>>; FunctionPairMap` (yield-function registry).
 - `enum PlayerActionType { CHARACTER_FORWARD=0, BACKWARD=1, LEFT=2, RIGHT=3, JUMP=4 };`
 

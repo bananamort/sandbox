@@ -25,5 +25,5 @@
 
 ## Cross-links
 
-- Base: [CacheableContentProvider.md](CacheableContentProvider.md) (implementation: [App/v8datamodel/CacheableContentProvider.md](../../v8datamodel/CacheableContentProvider.md)).
+- Base: [CacheableContentProvider.md](CacheableContentProvider.md) (base-class implementation: `App/v8datamodel/CacheableContentProvider.cpp`, no certified doc).
 - Siblings: [MeshContentProvider.md](MeshContentProvider.md), [SolidModelContentProvider.md](SolidModelContentProvider.md).

@@ -18,7 +18,7 @@
 
 - The wrapper holds a shared_ptr to its Animator, so the engine object outlives script expectations unless the controller is destroyed.
 - All real playback logic lives in [Animator](Animator.md); this class only delegates — no play/stop surface of its own in this drop.
-- Commented-out forward includes (`Workspace`, `Primitive`, `PartInstance`) hint at an older, larger interface.
+- Commented-out forward declarations (`Workspace`, `Primitive`, `PartInstance`) hint at an older, larger interface.
 
 ## UNKNOWN
 

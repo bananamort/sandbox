@@ -8,7 +8,7 @@
 
 `class Animator : public DescribedCreatable<Animator, Instance, sAnimator>, public IStepped`
 
-- Constructors: `Animator();` and `Animator(Instance* replicatingContainer)` — "use this to add Animator behavior to another Instance in the tree, like Humanoid".
+- Constructors: `Animator();` and `Animator(Instance* replicatingContainer)` — "use this to add Animator behavor to another Instance in the tree, like Humanoid".
 - Public: `float getGameTime() const`; `shared_ptr<Instance> loadAnimation(shared_ptr<Instance> animation)`; `void reloadAnimation(shared_ptr<AnimationTrackState>)`; `std::string getActiveAnimation() const`; `shared_ptr<const Reflection::ValueArray> getPlayingAnimationTracks()`; `void tellParentAnimationPlayed(shared_ptr<Instance> animationTrack)`.
 - Public test hook: `shared_ptr<PartInstance> testForServerLockPart;`
 - Replication surface: remote signals `onPlaySignal<void(ContentId, float fadeTime, float weight, float speed)>`, `onStopSignal<void(ContentId, float)>`, `onAdjustSpeedSignal<void(ContentId, float)>`, `onSetTimePositionSignal<void(ContentId, float)>`; matching handlers `onPlay/onStop/onAdjustSpeed/onSetTimePosition(...)`; senders `replicateAnimationPlay/Stop/Speed/TimePosition(...)`; `passiveLoadAnimation(ContentId)`.
