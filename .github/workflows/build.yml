@@ -83,32 +83,21 @@ jobs:
 
       - name: Build RCCService (ReleaseRcc)
         shell: cmd
-        working-directory: ${{ github.workspace }}
+        working-directory: roblox-sandbox
         run: |
-          call "%ProgramFiles(x86)%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x86 || goto :vcfail
-          rem If vcvars picked a toolset without atlmfc, prepend the one we found
+          rem Belt-and-suspenders: prepend ATLMFC if the dev env missed it
           echo %INCLUDE% | findstr /i atlmfc >nul || set "INCLUDE=%ATLMFC_ROOT%\atlmfc\include;%INCLUDE%"
           echo %LIB% | findstr /i atlmfc >nul || set "LIB=%ATLMFC_ROOT%\atlmfc\lib\x86;%ATLMFC_ROOT%\atlmfc\lib;%LIB%"
-          cd /d roblox-sandbox
           msbuild Roblox.sln -m -p:Configuration=ReleaseRcc -p:Platform=Win32 -flp:logfile=build-rcc.log;verbosity=normal
-          goto :eof
-          :vcfail
-          echo vcvarsall failed
-          exit /b 1
 
       - name: Build WindowsClient (Release)
         shell: cmd
-        working-directory: ${{ github.workspace }}
+        working-directory: roblox-sandbox
         run: |
-          call "%ProgramFiles(x86)%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x86 || goto :vcfail
+          rem Belt-and-suspenders: prepend ATLMFC if the dev env missed it
           echo %INCLUDE% | findstr /i atlmfc >nul || set "INCLUDE=%ATLMFC_ROOT%\atlmfc\include;%INCLUDE%"
           echo %LIB% | findstr /i atlmfc >nul || set "LIB=%ATLMFC_ROOT%\atlmfc\lib\x86;%ATLMFC_ROOT%\atlmfc\lib;%LIB%"
-          cd /d roblox-sandbox
           msbuild Roblox.sln -m -p:Configuration=Release -p:Platform=Win32 -flp:logfile=build-client.log;verbosity=normal
-          goto :eof
-          :vcfail
-          echo vcvarsall failed
-          exit /b 1
 
       - name: Collect binaries
         shell: pwsh
