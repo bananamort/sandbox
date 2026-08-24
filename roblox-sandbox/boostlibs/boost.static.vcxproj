@@ -187,6 +187,21 @@
     <ClCompile Include="..\Library\boost\libs\thread\src\win32\thread.cpp" />
     <ClCompile Include="..\Library\boost\libs\thread\src\win32\tss_dll.cpp" />
     <ClCompile Include="..\Library\boost\libs\thread\src\win32\tss_pe.cpp" />
+    <ClCompile Include="..\Library\boost\libs\date_time\src\gregorian\greg_month.cpp" />
+    <ClCompile Include="..\Library\boost\libs\date_time\src\gregorian\greg_weekday.cpp" />
+    <ClCompile Include="..\Library\boost\libs\date_time\src\gregorian\gregorian_types.cpp" />
+    <ClCompile Include="..\Library\boost\libs\date_time\src\gregorian\date_generators.cpp" />
+    <ClCompile Include="..\Library\boost\libs\program_options\src\cmdline.cpp" />
+    <ClCompile Include="..\Library\boost\libs\program_options\src\config_file.cpp" />
+    <ClCompile Include="..\Library\boost\libs\program_options\src\convert.cpp" />
+    <ClCompile Include="..\Library\boost\libs\program_options\src\options_description.cpp" />
+    <ClCompile Include="..\Library\boost\libs\program_options\src\parsers.cpp" />
+    <ClCompile Include="..\Library\boost\libs\program_options\src\positional_options.cpp" />
+    <ClCompile Include="..\Library\boost\libs\program_options\src\split.cpp" />
+    <ClCompile Include="..\Library\boost\libs\program_options\src\utf8_codecvt_facet.cpp" />
+    <ClCompile Include="..\Library\boost\libs\program_options\src\value_semantic.cpp" />
+    <ClCompile Include="..\Library\boost\libs\program_options\src\variables_map.cpp" />
+    <ClCompile Include="..\Library\boost\libs\program_options\src\winmain.cpp" />
     <ClCompile Include="..\Library\cpp-netlib\libs\network\src\uri\uri.cpp" />
   </ItemGroup>
   <ItemGroup>
