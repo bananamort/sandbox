@@ -13,7 +13,12 @@ Header tree of the Roblox engine's shared libraries: reflection type system, Lua
 - [v8xml/](v8xml/INDEX.md) — COMPLETE (8/8).
 - stdafx.md — complete.
 - Root-level headers previously done: [util/Http.md](util/Http.md), [util/ProtectedString.md](util/ProtectedString.md), security/*.md ×4.
-- PENDING SUBDIRECTORIES (not yet documented): `solver/` (1/10 done: [Constraint.md](solver/Constraint.md); remaining 9: ConstraintJacobian, DebugSerializer, Solver, SolverBody, SolverConfig, SolverContainers, SolverKernel, SolverProfiler, SolverSerializer), `tool/` (29), `util/` (~136 .h + Math.inl/Quaternion.inl; Http+ProtectedString already done above), `v8datamodel/` (~290), `v8kernel/` (20), `v8world/` (~89 + SpatialHashMultiRes.inl), `voxel/` (11 .h + 6 .inl), `voxel2/` (6).
+- [solver/](solver/INDEX.md) — COMPLETE (10/10).
+- [tool/](tool/INDEX.md) — COMPLETE (30/30).
+- [v8kernel/](v8kernel/INDEX.md) — COMPLETE (19/19).
+- [voxel/](voxel/INDEX.md) — COMPLETE (11/11 .h; 6 .inl folded into parents: AreaCopy←1, ChunkMap←1, Region←3, Water←1).
+- [voxel2/](voxel2/INDEX.md) — COMPLETE (6/6).
+- PENDING SUBDIRECTORIES (not yet documented): `util/` (~136 .h + Math.inl/Quaternion.inl; Http+ProtectedString already done above), `v8datamodel/` (~290), `v8world/` (~89 + SpatialHashMultiRes.inl).
 
 ## Notes
 
