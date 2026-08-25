@@ -14,10 +14,11 @@ Workstream numbers follow execution order per docs/ARCHITECTURE.md (Pipeline sec
 
 ## Current
 
-- 2 — 14 writer agents running across all in-scope modules; each output goes through an independent reviewer before acceptance.
-- 3 — Windows build run in flight; its failure log becomes the conformance-fix worklist once docs certify the affected areas.
+**Workstream 2 (Documentation campaign) is COMPLETE.**
 
-## Notes
+Final state:
+- Writing: 100% (`tools/reconcile_docs.py` → RECONCILE_OK; every in-scope source has a doc).
+- Review: 100% — all 26 module groups independently reviewed with full-read verification, 0 FAILs across every CERTIFICATION.
+- Aggregate certification tally (PASS/FIXED across certified modules): App/script+early-slices, WindowsClient 22/16, Base 68/24, Lua-5.1.4 34/21, GfxCore 47/16, Network 100/19, trio 15/34, RCCService 47/16, v8datamodel cpps A–L 93/16 + M–Z 80/18, v8dm headers A–M 111/17 + N–Z 92/5, util 128/9, humanoid impl 10/7, v8world 87/2, small-modules batch 94/22, solver 10/1, tool 25/6, voxel2 3/4, v8kernel 15/5, voxel 7/5.
 
-- Decisions and their rationale live in `docs/ARCHITECTURE.md` (numbered 1–12); this file tracks status only.
-- Network policy is the operator-approved live logging proxy; see ARCHITECTURE decision 7.
+Remaining workstreams: 3 Build enablement (compile green; link blocked solely on era-correct binary provisioning — FMOD done, LibOVR done, next run tells), then 4 graft ∥ 5 instrumentation → 6 Wine → 7 already complete.
