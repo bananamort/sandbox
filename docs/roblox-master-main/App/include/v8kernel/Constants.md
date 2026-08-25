@@ -15,8 +15,8 @@ Physics-tuning constants for the v8 kernel: the step-hierarchy clock (UI → wor
 
 - Gravity is negative-Y convention baked here (`−9.81`); code adding "gravity" must not negate again.
 - The LEGO_* names are historical: values now parameterize general Roblox joints; force tables are private and only reachable via `getKmsMaxJointForce`.
-- Only two functions are defined in-header; everything else resolves in Constants.cpp — values may differ per build config.
+- Only three functions are defined in-header (`uiStepsPerSec`, `longUiStepsPerSec`, `getKmsGravity`); everything else resolves in Constants.cpp outside App/include.
 
 ## UNKNOWN
 
-- Actual values of worldStepsPerWorldStep chain members (in .cpp outside App/include).
+- Actual values of the declared-elsewhere timestep/solver constants (defined in App/v8kernel/Constants.cpp).

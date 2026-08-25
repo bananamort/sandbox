@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The kernel's rigid-body node: a tree (IndexedTree) of bodies forming assemblies, with mass properties, per-assembly state versioning (`stateIndex`), lazy PV (position+velocity) updates, optional [Link.md](Link.md) joints, a pooled [Cofm.md](Cofm.md) for branch aggregates, and an owning [SimBody.md](SimBody.md] on assembly roots. Header carries the canonical World-Body/StateRoot/RigidRoot diagram.
+The kernel's rigid-body node: a tree (IndexedTree) of bodies forming assemblies, with mass properties, per-assembly state versioning (`stateIndex`), lazy PV (position+velocity) updates, optional [Link.md](Link.md) joints, a pooled [Cofm.md](Cofm.md) for branch aggregates, and an owning [SimBody.md](SimBody.md) on assembly roots. Header carries the canonical World-Body/StateRoot/RigidRoot diagram.
 
 ## Declared API
 
@@ -22,7 +22,7 @@ The kernel's rigid-body node: a tree (IndexedTree) of bodies forming assemblies,
 
 ## Gotchas
 
-- The PV ladder is load-bearing for thread safety: Fast variants are only valid inside the physics step; Unsafe requires external lock; Spin_Lock/PvSafe self-lock. Mixing them wrong is UB, not just stale data.
+- The PV ladder is load-bearing for thread safety: Fast variants assert `pvIsUpToDate()` (fishing assert — PV already refreshed; in-repo callers are step-pipeline code — solver (`Solver.cpp`), `Contact.cpp`, `Pair.cpp`, `Connector.cpp`/`ContactConnector.cpp`/`PolyConnectors.cpp` — plus gameplay-side `HumanoidState.cpp`, which reads velocities mid-step under its own synchronization); Unsafe requires the caller to hold the Data Model write lock or Body::mutex; Spin_Lock/PvSafe take the spin mutex themselves. Mixing them wrong is UB, not just stale data.
 - `getConstMeInParent` asserts no link — const path only valid within a rigid clump.
 - Mass properties split: own (`mass/moment/cofmOffset`) vs branch aggregates (via Cofm cache, dirty-propagated from children).
 - `worldBody` is a process-wide singleton initialized via `initStaticData` — anchored bodies ultimately hang off it.

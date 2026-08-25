@@ -15,7 +15,7 @@ Connector base for everything the kernel iterates (contacts, joints, humanoid, b
 - Rotate spring math documented in-header: "Force = kForce * d_length … kTorque = kForce * L * L".
 - `class RotateConnector : public JointConnector`
   - Ctor: `(Body* b0, Body* b1, const CoordinateFrame& j0, const CoordinateFrame& j1, float baseAngle, float kValue, float armLength)`.
-  - Protected state: bodies `b0/b1`, joint frames `j0/j1`, `float k;` integrator props `currentAngle, desiredAngle, increment; bool zeroVelocity; float baseRotation;` ("rotation when assembled").
+  - Private state: `float baseRotation;` ("rotation when assembled"). Protected state: bodies `b0/b1`, joint frames `j0/j1`, `float k;` integrator props `currentAngle, desiredAngle, increment; bool zeroVelocity;`
   - Protected: `computeNormalRotation(Vector3&)`, `computeNormalRotationFromBase(Vector3&)`, `...Fast(...)` variant, `virtual void stepGoals();`, getBody override, computeForce override.
   - Public: `void reset();` ("after networking receive — update to synch internal desiredRotation"); `setRotationalGoal(float)` / `setVelocityGoal(float)`; static `computeJointAngle(b0CF, b1CF, j0CF, j1CF, Vector3& normal)`.
 - `class PointToPointBreakConnector : public JointConnector`
