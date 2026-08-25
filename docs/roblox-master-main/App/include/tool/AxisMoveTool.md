@@ -9,8 +9,8 @@ Defines `AxisToolBase` (this file's real content; no class literally named AxisM
 - `class AxisToolBase : public ArrowToolBase` (from [ToolsArrow.md](ToolsArrow.md))
   - `AxisToolBase(Workspace* workspace)`.
   - Private state: `std::auto_ptr<MegaDragger> megaDragger; std::string cursor; bool dragging; Vector2int16 downPoint2d; RbxRay dragRay; int dragAxis; Vector3 lastPoint3d;` ("dynamic — last point on the Ray we dragged to").
-  - Private helpers: `bool getExtents(Extents&) const;` two overloads `getOverHandle(inputObject[, hitPointWorld, normalId])`.
-  - Protected overrides: `onMouseIdle/onHover/onDown/onMove/onUp`, `render2d`, `render3dAdorn`, `getCursorName()` → cursor; `drawConnectors()` → true.
+  - Private helpers: `bool getExtents(Extents&) const;` two overloads `getOverHandle(inputObject[, hitPointWorld, normalId])`; private override `drawConnectors()` → true.
+  - Protected overrides: `onMouseIdle/onMouseHover/onMouseDown/onMouseMove/onMouseUp`, `render2d`, `render3dAdorn`, `getCursorName()` → cursor.
   - Pure virtuals each subclass must implement: `virtual Color3 getHandleColor() const = 0;` `virtual HandleType getDragType() const = 0;`
 
 ## Gotchas

@@ -18,5 +18,5 @@ The modern Studio "move/resize/join" advanced arrow tool (`Named<AdvArrowTool, s
 ## Gotchas
 
 - `scalingPart` is a **static** weak_ptr shared across all tool instances — stale across sessions if not cleared by setSelection.
-- Ghost preview contract: ctor snapshot fields (`origPartPosition/Size/Transparency`) must be saved on drag start and restored on failure/cancel; `advResizeImpl` vs `resizeFloat` differ in intersection checking semantics.
+- Ghost preview contract: ctor snapshot fields (`origPartPosition/Size/Transparency`) must be saved on drag start and restored on failure/cancel; per the .cpp, `resizeFloat(...)` is just `part->destroyJoints()` → `advResizeImpl(...)` → `part->join()` — same `checkIntersection` flag, and the impl itself grid-quantizes `amount` through `moveIncrement()` before resizing.
 - Ctor leaves `targetPV` unset and `localNormalId`/`hitPointGrid`/`down` uninitialized until first hover.

@@ -14,7 +14,7 @@ In-game drag tool (the "game" grab/drag used during play, as opposed to Studio e
 
 ## Gotchas
 
-- The draggable-part predicate is the security-relevant piece (prevents dragging anchored/locked parts in live games); its rules live in the .cpp, not here.
+- The draggable-part predicate is the security-relevant piece — per `App/tool/GameTool.cpp` it is `!part->getPartLocked() && !part->lockedInPlace() && characterCanReach(hitPoint)` (lock flags + reach distance); none of that logic lives in this header.
 
 ## UNKNOWN
 

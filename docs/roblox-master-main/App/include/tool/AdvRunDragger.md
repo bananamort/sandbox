@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Advanced (Studio) snap dragger: extends the [RunDragger.md](RunDragger.md) concept with grid modes ([DragTypes.md](DragTypes.md) `DraggerGridMode`), joint-create mode, and a multi-part drag mode that hides parts and substitutes a temporary part (`tempPart`) dragged as one body. Owned by [AdvLuaDragger.md](AdvLuaDragger.md)/adv tools. Debug gate `DEBUG_MULTIPLE_PARTS_DRAG` (commented out by default).
+Advanced (Studio) snap dragger: extends the [RunDragger.md](RunDragger.md) concept with grid modes ([DragTypes.md](DragTypes.md) `DraggerGridMode`), joint-create mode, and a multi-part drag mode that substitutes a temporary part (`tempPart`, sized/gridded over the group extents) as the drag handle while the real parts are dragged alongside it. Owned by [AdvLuaDragger.md](AdvLuaDragger.md)/adv tools. Debug gate `DEBUG_MULTIPLE_PARTS_DRAG` (commented out by default).
 
 ## Declared API
 
@@ -17,6 +17,6 @@ Advanced (Studio) snap dragger: extends the [RunDragger.md](RunDragger.md) conce
 
 ## Gotchas
 
-- Multi-part mode *removes real parts from the world* (saved into `savedPrimsForMultiDrag`) and replaces them with `tempPart` — crash/deletion hazards if finish path is skipped.
+- Multi-part mode swaps `dragPart` to a freshly created `tempPart` sized/gridded over the group extents; the real primitives are **not** removed from or hidden in the world — they live on in `savedPrimsForMultiDrag`, get moved along with the temp part during drags, and have their pre-drag poses cached in `originalLocations` (restored by `findNoSnapPosition` when no snap is hit).
 - `initLocal` vs `init` asymmetry: only initLocal takes the extra WeakParts; calling the wrong one silently disables group behavior.
 - `snapGridOriginNeedsUpdating` lazy-invalidates the local grid origin when snapping to a new face.

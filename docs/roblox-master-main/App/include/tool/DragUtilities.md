@@ -19,6 +19,6 @@ Static utility bag for the whole drag family: ray casting against world/planes w
 
 ## Gotchas
 
-- Two overloads named `hitObjectOrPlane` / two `partsToPrimitives` with different return contracts — easy to call the wrong one; the World*-returning variant allocates from a world.
+- Two overloads named `hitObjectOrPlane` / three `partsToPrimitives` overloads with different contracts — easy to call the wrong one; only the G3D::Array variant returns a `World*`.
 - Weak-pointer arrays everywhere: `anyPartAlive` exists precisely because entries die mid-drag.
 - `toGrid` default arg `Vector3::zero()` means "use the global grid" by convention — zero is a sentinel, not a literal cell size.

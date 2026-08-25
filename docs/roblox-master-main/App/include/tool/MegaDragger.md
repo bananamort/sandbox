@@ -21,5 +21,5 @@ The heavyweight multi-part drag engine used by group/axis tools: owns the drag p
 
 - `contactManager` is a **reference member** — MegaDragger is non-assignable and lifetime-bound to its ContactManager.
 - Default `joinType = UNJOIN_JOIN`: drags unjoin from neighbors then re-join on finish unless caller passes otherwise ([DragTypes.md](DragTypes.md)).
-- The `...2` suffixed variants return collision info via out-param instead of silently resolving — prefer them for new callers needing feedback.
+- `safeMoveAlongLine2` reports collision via the `bool& out_isCollided` out-param instead of silently resolving — prefer it when callers need feedback (`safeRotateAlongLine2`'s extra parameter is an input rotation angle, not feedback).
 - `getMousePart()` asserts; call `mousePartAlive()` first.

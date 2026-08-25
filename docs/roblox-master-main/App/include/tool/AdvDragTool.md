@@ -25,4 +25,4 @@ DragTool -> PartDragTool | GroupDragTool
 ## Gotchas
 
 - Leftover merge-review comments in-header: "TEMP COMMENT: verify merging..." / "Verifying merge..." — historical, not functional warnings.
-- Signature is identical to [DragTool.md](DragTool.md)'s dispatcher; the difference is which tool family it instantiates (adv variants honoring `isAdvArrowToolEnabled`).
+- Signature mirrors [DragTool.md](DragTool.md)'s dispatcher; the implementation (`App/tool/AdvDragTool.cpp`) unconditionally wraps `dragInstances` into a `PartArray`, creates an [AdvLuaDragTool.md](AdvLuaDragTool.md), and returns the result of its `onMouseDown` — no adv/legacy switching happens inside this dispatcher itself.

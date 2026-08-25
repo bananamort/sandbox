@@ -11,10 +11,10 @@ All in `namespace RBX`:
 - `class BodyPairIndices : public std::pair<int,int>` — "use class definition rather than typedef so we can forward declare"; ctors `()` and `(int a, int b)`.
 - `class VirtualDisplacementPOD` — union `{simd::v4f_pod linV4; Vector3Pod lin;}` + same for angular; `serialize(DebugSerializer&)`. Non-simd view still used by integration.
 - `class VirtualDisplacement` — simd twin (`simd::v4f lin, ang`); "only ever used on the stack". Ctors from two v4f or from POD; implicit `operator VirtualDisplacementPOD()`; `reset()` zeroes; getters `getLin/getAng`; `serialize`.
-- `class VirtualDisplacementArray` — ctor `(size_t size, size_t alignment)` over `ArrayDynamic<VirtualDisplacementPOD>` with `ArrayNoInit()`; `reset()` zero-fills; `getData() const/non-const` (POD*), `getSize()`, indexing `operator[](int)` returning POD refs with `RBXASSERT_VERY_FAST` bounds; `serialize`.
+- `class VirtualDisplacementArray` — ctor `(size_t size, size_t alignment)` over `ArrayDynamic<VirtualDisplacementPOD>` with `ArrayNoInit()`; `reset()` zero-fills; `getData() const/non-const` (POD*), `getSize()`, indexing `operator[](int)` returning POD **by value** on the const overload / by reference on the non-const one, with `RBXASSERT_VERY_FAST` bounds; `serialize`.
 - `class EffectiveMass` — `simd::v4f lin, ang`; `applyMultiplier(simd::v4f m)` (lane-wise multiply both parts), `reset`, `getLin/getAng`.
 - `class EffectiveMassPair` — holds `EffectiveMass a, b` (bodies A/B); ctor `(a, b)` or default; `reset`, `applyMultipliers(mA, mB)`, getters `getLinA/getLinB/getAngA/getAngB`, `getPartA/getPartB`; `serialize`.
-- `class ConstraintJacobian` — unions `{Vector3Pod lin; simd::v4f_pod linV4;}` / ang; `reset()`. Plain aggregate, no methods.
+- `class ConstraintJacobian` — unions `{Vector3Pod lin; simd::v4f_pod linV4;}` / ang; `reset()`. No other methods or state beyond those.
 - `class ConstraintJacobianPair` — public members `ConstraintJacobian a, b;`
   - Tag classes `LinA/LinB/AngA/AngB` select parts via explicit specializations of `template<PartSelect> simd::v4f get<>() const` / `set<>(const simd::v4f&)`.
   - Direct accessors `getLinA/getLinB/getAngA/getAngB` + matching setters; `reset()` (both bodies).

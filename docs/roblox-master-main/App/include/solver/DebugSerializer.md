@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Little-endian byte-buffer serializer used by [SolverSerializer.md](SolverSerializer.md) to record solver frames. Everything is appended into a public `std::vector<char> data` via `operator&` overloads; a SFINAE trait dispatches to any type's own `serialize(DebugSerializer&) const` method. `DebugSerializerScope` implements length-prefixed blocks.
+Raw host-byte-order byte-buffer serializer used by [SolverSerializer.md](SolverSerializer.md) to record solver frames. Everything is appended into a public `std::vector<char> data` via `operator&` overloads; a SFINAE trait dispatches to any type's own `serialize(DebugSerializer&) const` method. `DebugSerializerScope` implements length-prefixed blocks.
 
 ## Declared API
 
@@ -25,5 +25,5 @@ Little-endian byte-buffer serializer used by [SolverSerializer.md](SolverSeriali
 - Enum serialization writes all `sizeof(T)` bytes but types the buffer `uint8_t[...]`; enums larger than 1 byte still serialize their full width.
 - `storeAt` indexes `data` directly without bounds checking — out-of-range index is UB (the scope ctor/dtor pair keeps this safe only if no other thread resizes concurrently).
 - The pointer overload dereferences without a null check.
-- `tag` truncates names longer than 255 chars (`uint8` length).
+- `tag` stores the name length in a `uint8` (`boost::uint8_t length = strlen(name)`) — names ≥256 chars wrap **modulo 256** (not capped at 255), so a 300-char name writes length 44 followed by its first 44 chars.
 - `DebugSerializerScope` ctor writes a `size_t` placeholder, so block sizes are 8 bytes on 64-bit hosts and 4 on 32-bit — format not portable across bitness.

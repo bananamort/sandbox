@@ -7,14 +7,14 @@ All-static collision-aware placement math shared by the dragger family: given a 
 ## Declared API
 
 - `class Dragger` — all static; private helpers first:
-  - `primitivesFromInstances(pvInstances, G3D::Array<Primitive*>&)`; intersection core: `intersectingWorldOrOthers(primitives, contactManager, bottomPlaneHeight)`, `intersectingGroundPlane(primitives, yHeight)` (+ `_EXT` twins taking extents + ignorePrims + movedSoFar), `isIntersecting(prim1, cframe1, prim2, cframe2)` dispatching to `checkBallPolyIntersection` / `checkBallBallIntersection` / `checkPolyPolyIntersection`.
+  - `primitivesFromInstances(pvInstances, G3D::Array<Primitive*>&)`; intersection core: `intersectingWorldOrOthers(primitives, contactManager, bottomPlaneHeight)`, `intersectingGroundPlane(primitives, yHeight)` (+ `_EXT` twins taking precomputed extents and a `movedSoFar` out-param; the world/others `_EXT` twin additionally takes an `ignorePrimitives` set, the ground-plane `_EXT` twin does not), `isIntersecting(prim1, cframe1, prim2, cframe2)` dispatching to `checkBallPolyIntersection` / `checkBallBallIntersection` / `checkPolyPolyIntersection`.
   - Movement core: `movePrimitives(primitives, delta, snapToWorld=true)`, `movePrimitivesDelta(..., Vector3& movedSoFar)`, `movePrimitivesGoal(...goal, movedSoFar, snapToWorld=true)`, `safePlaceAlongLine(primitives, startMove, endMove, movedSoFar, contactManager, snapToWorld=true)`, search ladder `searchFine` / `searchUpGross` / `searchDownGross` (+ `_EXT` versions), `moveExtents` / `moveExtentsDelta`.
   - Public constants:
     - `static const Vector3& dragSnap()` → `(1.0f, 0.1f, 1.0f)`.
     - `static float maxDragDepth()` → **−400** — header comment: "Physics automatically removes parts that fall lower than −500. We'll allow dragging, moving, resizing down to −400."
     - `static float groundPlaneDepth()` → 0.0f.
   - Public safe moves: `safeMoveNoDrop(primitives, tryMove, contactManager)` ("Moves up as necessary for no overlap"); `safeMoveYDrop(primitives, tryMove, contactManager, customPlaneHeight = groundPlaneDepth())` ("Floating — move down; Intersecting — move up"); `safeMoveAlongLine(primitives, tryMove, contactManager, customPlaneHeight = groundPlaneDepth(), snapToWorld = true)` ("quickly find farthest safe move"); `safeRotateAlongLine(primitives, tryMove, contactManager)`; `safeRotate(primitives, rotate, contactManager)` and `safeRotate2(same)` ("Rotate around a grid point, then find a safe place").
-  - Queries: `computeExtents` overloads (vector<Primitive*>, G3D::Array — marked "ToDo::Deprecate Array Version" — and vector<PVInstance*>); `computeExtentsRelative(vector or Array, CoordinateFrame& relativeFrame)`; `computePrimaryPart(vector<Primitive*>)` ×2; `intersectingWorldOrOthers(PartInstance&, contactManager, tolerance, bottomPlaneHeight)` and primitives+tolerance overload.
+  - Queries: `computeExtents` overloads (vector<Primitive*>, G3D::Array — marked "ToDo::Deprecate Array Version" — and vector<PVInstance*>); `computeExtentsRelative(vector or Array, CoordinateFrame& relativeFrame)`; `computePrimaryPart` ×2 (`std::vector<Primitive*>` and `G3D::Array<Primitive*>` overloads); `intersectingWorldOrOthers(PartInstance&, contactManager, tolerance, bottomPlaneHeight)` and primitives+tolerance overload.
 
 ## Gotchas
 

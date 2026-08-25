@@ -11,6 +11,6 @@ Static factory for the "drop" flavor of drag interaction: like a DragTool but se
 
 ## Gotchas
 
-- `selectIfNoDrag`: if the drag set ends up empty, that instance gets selected instead — dual-purpose factory.
-- `suppressPartsAlign = false` default keeps legacy snapping behavior; pass true to skip parts-alignment on drop.
+- Dispatch (per `App/tool/DropTool.cpp`): empty drag set → returns a **null** command; exactly one part → `PartDropTool` (which receives `selectIfNoDrag` verbatim); more than one → `GroupDropTool`.
+- `suppressPartsAlign = false` default keeps legacy snapping behavior — but it is **only** forwarded on the multi-part `GroupDropTool` path; the single-part `PartDropTool` path never sees it.
 - Forward declares `Workspace`, `PartInstance`, `PVInstance` though only `Workspace` and `Instance` appear in the signature (leftovers).

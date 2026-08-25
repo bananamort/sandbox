@@ -8,10 +8,10 @@ Arrow-tool hierarchy: `ArrowToolBase` (selection hover + decal picking), `AdvArr
 
 - `class ArrowToolBase : public MouseCommand`
   - `ArrowToolBase(Workspace*)` / virtual dtor, both FASTLOG1 on `FLog::MouseCommandLifetime`.
-  - Private: `bool altKeyDown;` Protected: `Decal* findDecal(PartInstance*, inputObject);` virtual `onMouseIdle/onHover/onDown/getCursorName/onPeekKeyDown/render3dAdorn`; `void renderHoverOver(Adorn*, bool drillDownOnly = true);` `PartInstance* overInstance;`
+  - Private: `bool altKeyDown;` Protected: `Decal* findDecal(PartInstance*, inputObject);` virtual `onMouseIdle/onMouseHover/onMouseDown/getCursorName/onPeekKeyDown/render3dAdorn`; `void renderHoverOver(Adorn*, bool drillDownOnly = true);` `PartInstance* overInstance;`
   - Public static: `static bool showDraggerGrid;`
 - `class AdvArrowToolBase : public ArrowToolBase`
-  - Private: `ManualJointHelper manualJointHelper;` (V8DataModel/ManualJointHelper.h); `typedef std::map<boost::weak_ptr<PartInstance>, float> PartsTransparencyCollection;` **static** `originalPartsTransparency;`
+  - Private: `ManualJointHelper manualJointHelper;` (V8DataModel/ManualJointHelper.h). Protected: `typedef std::map<boost::weak_ptr<PartInstance>, float> PartsTransparencyCollection;` **static** `originalPartsTransparency;`
   - Public enum: `JointCreationMode { WELD_ALL = 0, SURFACE_JOIN_ONLY = 1, NO_JOIN = 2 }`.
   - Virtuals: `onMouseDown/onMouseMove/onMouseUp/getCursorName`; non-virtual `onKeyDown`.
   - `void determineManualJointConditions(void);`
