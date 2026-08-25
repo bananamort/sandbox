@@ -25,7 +25,7 @@ The terrain voxel storage class: chunk-per-SpatialRegion map of cells + packed m
 - Regions are ephemeral by design — caching one across jobs/frames races reallocation (explicit header contract).
 - Single-region limit on `getRegion`: callers spanning boundaries must iterate per region or use [AreaCopy.md](AreaCopy.md).
 - Listener callbacks fire synchronously inside setCell — re-entrant setCell from a listener is caller beware.
-- `isAllocated()` refers to lazy chunk allocation; false just means no chunks initialized yet.
+- `isAllocated()` returns `countOfNonEmptyCells > 0` (App/voxel/Grid.cpp L201–203) — true only once at least one *non-empty* cell exists; an initialized chunk holding all-empty cells still reports false. It is not a "chunks allocated" flag.
 
 ## UNKNOWN
 

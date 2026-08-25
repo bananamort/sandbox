@@ -30,6 +30,7 @@ Template helper for tasks needing fast voxel access across SpatialRegion boundar
 - The copy is stale the instant the source changes — refresh with loadData before each use; no dirty tracking.
 - `voxelCoordToArrayIndex` has no bounds check in release; out-of-box coordinates silently alias.
 - Chunk layout is y-major (`x + z*XDim + y*XDim*ZDim`) — different from Grid::Chunk which uses region dimensions.
+- `kStaticEndRegion` (AreaCopy.h L58) is declared but **never defined anywhere in the tree** (grep-verified) — any odr-use (binding a reference, taking its address) is a link error; only the null-region fast path in getRegion is actually usable.
 
 ## UNKNOWN
 

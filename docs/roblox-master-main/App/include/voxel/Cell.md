@@ -21,7 +21,7 @@ The voxel cell atom: a 1-byte `Cell` union of `SolidTerrainCell` (block shape + 
 
 ## Gotchas
 
-- The whole cell is **one byte** shared between solid and water interpretations: writing `solid.block = CELL_BLOCK_Empty` while water data occupies those exact bits is how explicit-water cells are represented — never mix field sets without checking block first.
+- The whole cell is **one byte** shared between solid and water interpretations: an explicit-water cell stores `CELL_BLOCK_Empty` in the block bits (3–5) — named `blockMustBeEmpty` in the water view — while the force/direction payload lives in `dataPart2` (bits 0–2) and `dataPart1` (bits 6–7); `WaterCell::setForceAndDirection` does NOT touch the block bits, so marking a cell as explicit water requires setting both field sets separately. Never mix field sets without checking block first.
 - Material nibble storage elsewhere ([Util.md](Util.md)) stores material−1 with 0 meaning "see cell" semantics via readMaterial's Empty→Water special case.
 - Three serialization pairs are byte-identical implementations kept separate for API history — they are NOT different formats.
 - MAX_CELL_MATERIALS (18) ≠ max enum value (255); Unspecified deliberately sits outside the countable range.

@@ -40,7 +40,7 @@ Read-only view over an axis-aligned voxel sub-box, templated on the storage type
 
 ## Gotchas
 
-- **Source-level syntax bug**: Region.iterator.inl line ~124, two-direction `getNeighborMaterial` assert reads `kFaceDirectionToLocationOffset[direction2))` — missing closing `]`. Any TU that *instantiates* that overload fails to compile; it evidently has no live callers.
+- **Source-level syntax bug**: Region.iterator.inl line ~124, two-direction `getNeighborMaterial` assert reads `kFaceDirectionToLocationOffset[direction2))` — missing closing `]`. Latent because the broken tokens live inside the `RBXASSERT_SLOW(...)` argument: builds where that macro discards its argument compile fine even when the overload is instantiated; builds with slow asserts active fail with `expected ']'` in any TU that *instantiates* it (verified by compiler repro). The overload DOES have live callers: Rendering/GfxRender/MegaCluster.cpp L1043 (`detectOutlines`) and L1119 (`detectWedgeOutlines`) call it on RenderArea (=AreaCopy) region iterators — those paths depend on slow asserts being compiled out.
 - All-empty `materialAt` returns **Water**, not a neutral material — code treating it as "default material" will mislabel empty terrain.
 - Iterator holds a reference to the owning region: regions from [Grid.md](Grid.md) must outlive their iterators (no storing, per Grid's contract).
 - Neighbor accessors are unchecked-in-release pointer arithmetic — stepping outside the box aliases adjacent memory silently.
