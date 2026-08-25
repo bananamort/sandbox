@@ -24,8 +24,8 @@ Smooth-voxel meshing pipeline: `generateGeometry` builds a LOD-aware `BasicMesh`
 
 - Vertex "material" is an 8-bit index into the [MaterialTable.md](MaterialTable.md) — table size must be ≤256.
 - The 18-entry texture basis arrays are sized to the "normal segment (0-17)" encoding baked into GraphicsVertex channels — changing one breaks the other.
-- `prepareTables()` is a required global init; calling generateGeometry first is UB.
-- Packed path quantizes positions to Vector3int16 relative to packInfo — out-of-range meshes clamp/corrupt rather than error.
+- `prepareTables()` is a required global init (it fills the static `gEdgeTable`); calling generateGeometry first reads an all-zero edge table — silently broken geometry, not a crash.
+- Packed path quantizes positions to Vector3int16 relative to packInfo with a plain `int`→`short` conversion — out-of-range meshes truncate/wrap silently rather than error.
 
 ## UNKNOWN
 - Exact surface-net/marching-cubes flavor used by generateGeometry (implementation in .cpps).

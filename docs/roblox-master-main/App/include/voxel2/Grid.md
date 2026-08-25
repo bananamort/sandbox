@@ -26,9 +26,9 @@ Namespace RBX::Voxel2:
 
 - Occupancy is forced to 0 whenever material is Air — the ctor's arithmetic trick makes explicit zeroing unnecessary but also means you cannot store an Air cell with nonzero occupancy.
 - `read(region)` with no allocation in range yields an empty Box whose `get()` returns the shared `emptyCell` — writes through read-modify-write cycles must go through `write`.
-- Mip levels: each Chunk keeps 4 Boxes (lod 0..3) — `read(..., lod)` selects one; writers are responsible for mip coherence via write paths.
+- Mip levels: each Chunk keeps 4 Boxes (lod 0..3) — `read(..., lod)` selects one; `Grid::write` regenerates the affected mip chain (mips 1..3) itself, so coherence holds only while all mutations go through write paths (direct Box/chunk edits desync mips).
 - Listener vector is raw pointers with no ownership; disconnect before destroying listeners.
 - Serialization format is opaque from this header (implemented with [BitSerializer.md](BitSerializer.md) presumably); strings are not self-describing across versions.
 
 ## UNKNOWN
-- Chunk size used for the Vector3int32 key (implied by fromChunk callers, not stated here).
+- Chunk size used for the Vector3int32 key (not stated in this header; App/voxel2/Grid.cpp pins `kChunkSizeLog2 = 5`, i.e. 32³ chunks).

@@ -25,6 +25,7 @@ Template bit-stream codec for Voxel2 chunk data: delta-encoded chunk indices (1/
 - Run-length cap is 512 (`count < 512` loop bound) — longer uniform runs split into multiple tokens.
 - Decode validates total cell count but not material values (>63) or stream truncation beyond the throw path — corrupt streams can still fabricate odd materials.
 - Air cells are free in runs but still occupy a token; fully-empty chunks cost exactly 1 bit.
+- Wire format is host-dependent: run lengths are bit-cast through `(const unsigned char*)&temp` on an `unsigned int` (little-endian layout assumed) and index diffs narrow through plain `char`/`short` (signedness implementation-defined) — streams are only safely interchangeable between like-configured platforms.
 
 ## UNKNOWN
 - Which concrete BitStream types feed this (network vs save-file adapters live outside App/include).

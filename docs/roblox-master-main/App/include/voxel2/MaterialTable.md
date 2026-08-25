@@ -21,8 +21,8 @@ Data-driven material definitions for smooth-voxel terrain rendering: loaded from
 ## Gotchas
 
 - All getters index raw vectors — an out-of-range material id from grid data is UB here, not an exception.
-- The format of `file` is defined by load() in the .cpp (not visible from this header); materialCount must match or loading misbehaves.
+- The format of `file` is defined by load() in the .cpp (not visible from this header); `materialCount` acts as a floor, not an exact match — a short file table is padded with dummy materials (and a failed load leaves only those dummies plus a 1×1 dummy atlas), while a larger file table is kept as-is.
 - Material ids in [Grid.md](Grid.md) cells are indices into this table — table order is serialization-relevant.
 
 ## UNKNOWN
-- Load file format/schema details (implementation outside App/include).
+- (Resolved from App/voxel2/MaterialTable.cpp:) `file` is rapidjson JSON with a `platform` selector, a per-platform `atlas` object (width/height/tileSize/tileCount/borderSize), and a `materials` array keyed by name, texture_top/side/bottom (or single texture), type ("soft"/"hard"/"hardsoft"), mapping ("cube" or default), and optional deformation nodes (shift/cubify/quantize/barrel/water).
