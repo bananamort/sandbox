@@ -105,6 +105,14 @@ jobs:
           Get-ChildItem -Recurse -Include fmod.dll -Path roblox-sandbox\fmod\win32 | ForEach-Object { Copy-Item $_.FullName -Destination $out }
           Get-ChildItem $out
 
+      - name: Build VMProtectSDK32 stub dll
+        shell: cmd
+        run: |
+          copy /Y roblox-sandbox\Library\VMProtect\stub\VMProtectSDK_stub.c artifacts\ >nul
+          copy /Y roblox-sandbox\Library\VMProtect\stub\VMProtectSDK32.def artifacts\ >nul
+          cl /nologo /LD /Fe artifacts\VMProtectSDK32.dll artifacts\VMProtectSDK_stub.c /DEF artifacts\VMProtectSDK32.def /link /MACHINE:X86
+          del artifacts\VMProtectSDK_stub.c artifacts\VMProtectSDK32.def artifacts\VMProtectSDK_stub.obj >nul 2>&1
+
       - name: Smoke-run RCCService -Console
         shell: pwsh
         timeout-minutes: 3
