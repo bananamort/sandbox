@@ -124,54 +124,21 @@ jobs:
           Add-Content d3dx9_35.def "    D3DXGetShaderConstantTable"
           cl /nologo /LD d3dx9_35_stub.c /DEF d3dx9_35.def /link /MACHINE:X86
 
+      - name: Dump exe dependencies
+        shell: cmd
+        run: dumpbin /DEPENDENTS artifacts\RCCService.exe
+
       - name: Smoke-run RCCService -Console
         shell: pwsh
         timeout-minutes: 3
         run: |
           $exe = Join-Path (Get-Location) "artifacts\RCCService.exe"
-          if (-not (Test-Path $exe)) { Write-Error "RCCService.exe not found in artifacts"; exit 1 }
-          Write-Host "=== Artifacts directory ==="
-          Get-ChildItem (Split-Path $exe) | Format-Table Name, Length
-          Write-Host "=== Non-system DLL imports of RCCService.exe ==="
-          $peBytes = [System.IO.File]::ReadAllBytes($exe)
-          $peOff = [BitConverter]::ToInt32($peBytes, 0x3C)
-          $numSections = [BitConverter]::ToUInt16($peBytes, $peOff + 6)
-          $optSize = [BitConverter]::ToUInt16($peBytes, $peOff + 20)
-          $optOff = $peOff + 24
-          $impDirRVA = [BitConverter]::ToUInt32($peBytes, $optOff + 104 + 8)
-          $secOff = $optOff + $optSize
-          $sections = @()
-          for ($i = 0; $i -lt $numSections; $i++) {
-            $so = $secOff + $i * 40
-            $vaddr = [BitConverter]::ToUInt32($peBytes, $so + 12)
-            $rawsz = [BitConverter]::ToUInt32($peBytes, $so + 16)
-            $rawptr = [BitConverter]::ToUInt32($peBytes, $so + 20)
-            $sections += @{ VA = $vaddr; RawSz = $rawsz; RawPtr = $rawptr }
-          }
-          function RvaToOff([uint32]$rva) {
-            foreach ($s in $sections) {
-              if ($rva -ge $s.VA -and $rva -lt ($s.VA + $s.RawSz)) { return $s.RawPtr + ($rva - $s.VA) }
-            }
-            return $null
-          }
-          $descOff = RvaToOff $impDirRVA
-          while ($descOff -and ($descOff + 20) -le $peBytes.Length) {
-            $nameRva = [BitConverter]::ToUInt32($peBytes, $descOff + 12)
-            if ($nameRva -eq 0) { break }
-            $nOff = RvaToOff $nameRva
-            if ($null -ne $nOff) {
-              $end = $nOff; while ($end -lt $peBytes.Length -and $peBytes[$end] -ne 0) { $end++ }
-              $dllName = [System.Text.Encoding]::ASCII.GetString($peBytes, $nOff, $end - $nOff)
-              Write-Host "  IMPORTS: $dllName"
-            }
-            $descOff += 20
-          }
-          Write-Host "=== Launching RCCService -Console ==="
+          if (-not (Test-Path $exe)) { Write-Error "RCCService.exe not found"; exit 1 }
           $p = Start-Process -FilePath $exe -ArgumentList "-Console" -WorkingDirectory (Split-Path $exe) -PassThru -RedirectStandardOutput rcc_out.txt -RedirectStandardError rcc_err.txt
           Start-Sleep -Seconds 12
           if ($p.HasExited) {
-            Get-Content rcc_out.txt -ErrorAction SilentlyContinue | Select-Object -Last 30
-            Get-Content rcc_err.txt -ErrorAction SilentlyContinue | Select-Object -Last 30
+            if (Test-Path rcc_out.txt) { Get-Content rcc_out.txt | Select-Object -Last 30 }
+            if (Test-Path rcc_err.txt) { Get-Content rcc_err.txt | Select-Object -Last 30 }
             Write-Error "::error::RCCService exited early with code $($p.ExitCode)"
             exit 1
           }
