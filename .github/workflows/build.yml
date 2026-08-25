@@ -102,7 +102,26 @@ jobs:
           $out = "artifacts"
           New-Item -ItemType Directory -Force -Path $out | Out-Null
           Get-ChildItem -Recurse -Include RCCService.exe,RobloxPlayerBetaRaw.exe | ForEach-Object { Copy-Item $_.FullName -Destination $out }
+          Get-ChildItem -Recurse -Include fmod.dll -Path roblox-sandbox\fmod\win32 | ForEach-Object { Copy-Item $_.FullName -Destination $out }
           Get-ChildItem $out
+
+      - name: Smoke-run RCCService -Console
+        shell: pwsh
+        timeout-minutes: 3
+        run: |
+          $exe = Join-Path (Get-Location) "artifacts\RCCService.exe"
+          if (-not (Test-Path $exe)) { Write-Error "RCCService.exe not found in artifacts"; exit 1 }
+          Copy-Item (Join-Path (Get-Location) "artifacts\fmod.dll") (Join-Path (Get-Location) "artifacts") -ErrorAction SilentlyContinue
+          $p = Start-Process -FilePath $exe -ArgumentList "-Console" -WorkingDirectory (Split-Path $exe) -PassThru -RedirectStandardOutput rcc_out.txt -RedirectStandardError rcc_err.txt
+          Start-Sleep -Seconds 12
+          if ($p.HasExited) {
+            Get-Content rcc_out.txt -ErrorAction SilentlyContinue | Select-Object -Last 30
+            Get-Content rcc_err.txt -ErrorAction SilentlyContinue | Select-Object -Last 30
+            Write-Error "::error::RCCService exited early with code $($p.ExitCode)"
+            exit 1
+          }
+          Stop-Process -Id $p.Id -Force
+          Write-Host "SMOKE_OK: RCCService alive at T+12s"
 
       - name: Upload artifacts and logs
         if: always()
@@ -113,4 +132,48 @@ jobs:
             artifacts/
             roblox-sandbox/build-rcc.log
             roblox-sandbox/build-client.log
+            rcc_out.txt
+            rcc_err.txt
           if-no-files-found: ignore
+
+  wine-runtime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: windows-build
+    env:
+      WINEARCH: win32
+      WINEPREFIX: /home/runner/.wine_sandbox
+      WINEDEBUG: -all
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: build-output
+          path: artifact
+
+      - name: Install Wine (i386)
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends wine wine32 winetricks
+
+      - name: Init 32-bit prefix + era CRT
+        run: |
+          wineboot --init || true
+          winetricks -q vcrun2015 || echo "winetricks vcrun2015 reported failure (may already satisfy); continuing"
+
+      - name: Smoke-run RCCService under Wine
+        run: |
+          mkdir -p run && cp artifact/RCCService.exe artifact/fmod.dll run/ 2>/dev/null || true
+          cd run
+          wine RCCService.exe -Console > rcc_out.log 2>&1 &
+          WPID=$!
+          sleep 12
+          if kill -0 $WPID 2>/dev/null; then
+            echo "SMOKE_OK: RCCService alive at T+12s under Wine"
+            kill $WPID 2>/dev/null || true
+            wineserver -k 2>/dev/null || true
+          else
+            echo "RCCService exited early under Wine; last output:"
+            tail -40 rcc_out.log
+            exit 1
+          fi
