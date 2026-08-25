@@ -116,15 +116,11 @@ jobs:
       - name: Build d3dx9_35 stub dll
         shell: pwsh
         run: |
-          Set-Content -Path artifacts\d3dx9_35_stub.c -Value @'
-#include <windows.h>
-void* __stdcall D3DXGetShaderConstantTable(unsigned long shader) { return 0; }
-'@
-          Set-Content -Path artifacts\d3dx9_35.def -Value @'
-LIBRARY d3dx9_35
-EXPORTS
-    D3DXGetShaderConstantTable
-'@
+          Set-Content artifacts\d3dx9_35_stub.c "#include <windows.h>"
+          Add-Content artifacts\d3dx9_35_stub.c "void* __stdcall D3DXGetShaderConstantTable(unsigned long shader) { return 0; }"
+          Set-Content artifacts\d3dx9_35.def "LIBRARY d3dx9_35"
+          Add-Content artifacts\d3dx9_35.def "EXPORTS"
+          Add-Content artifacts\d3dx9_35.def "    D3DXGetShaderConstantTable"
           cl /nologo /LD /Fe artifacts\d3dx9_35.dll artifacts\d3dx9_35_stub.c /DEF artifacts\d3dx9_35.def /link /MACHINE:X86
 
       - name: Smoke-run RCCService -Console
