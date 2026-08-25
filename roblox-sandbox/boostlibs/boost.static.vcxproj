@@ -187,6 +187,9 @@
     <ClCompile Include="..\Library\boost\libs\thread\src\win32\thread.cpp" />
     <ClCompile Include="..\Library\boost\libs\thread\src\win32\tss_dll.cpp" />
     <ClCompile Include="..\Library\boost\libs\thread\src\win32\tss_pe.cpp" />
+    <ClCompile Include="..\Library\boost\libs\filesystem\src\directory.cpp" />
+    <ClCompile Include="..\Library\boost\libs\filesystem\src\exception.cpp" />
+    <ClCompile Include="..\Library\boost\libs\thread\src\tss_null.cpp" />
     <ClCompile Include="..\Library\boost\libs\date_time\src\gregorian\greg_month.cpp" />
     <ClCompile Include="..\Library\boost\libs\date_time\src\gregorian\gregorian_types.cpp" />
     <ClCompile Include="..\Library\boost\libs\program_options\src\cmdline.cpp" />
