@@ -184,6 +184,7 @@
     <ClCompile Include="..\Library\boost\libs\system\src\error_code.cpp" />
     <ClCompile Include="..\Library\boost\libs\thread\src\future.cpp" />
     <ClCompile Include="..\Library\boost\libs\thread\src\tss_null.cpp" />
+    <ClCompile Include="tss_cleanup_shim.cpp" />
     <ClCompile Include="..\Library\boost\libs\thread\src\win32\thread.cpp" />
     <ClCompile Include="..\Library\boost\libs\thread\src\win32\tss_dll.cpp" />
     <ClCompile Include="..\Library\boost\libs\thread\src\win32\tss_pe.cpp" />
