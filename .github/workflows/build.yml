@@ -218,6 +218,13 @@ jobs:
               Copy-Item -Path "roblox-sandbox\$d" -Destination bin\ -Recurse -Force
             }
           }
+          foreach ($f in @(
+            'roblox-sandbox/RCCService/AppSettings.xml',
+            'roblox-sandbox/RCCService/gameserver.txt',
+            'roblox-sandbox/WindowsClient/AppSettings.xml'
+          )) {
+            if (Test-Path $f) { Copy-Item $f bin\ }
+          }
           Get-ChildItem bin | Select-Object Name, Length
       - name: Dump dependents of provisioned modules
         shell: cmd
