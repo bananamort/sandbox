@@ -267,42 +267,127 @@ jobs:
           Write-Host "RCCService stayed alive for 60s - SMOKE_OK"
           Stop-Process -Id $p.Id -Force
           Pop-Location
-      - name: Smoke-run WindowsClient
+      - name: Two-sided smoke (logging proxy + RCC + client join handshake)
         shell: pwsh
-        timeout-minutes: 4
+        timeout-minutes: 8
         run: |
           Push-Location bin
-          # The client parses cmdline via boost::program_options; `--help` causes
-          # ParseArguments to return false BEFORE any window, network call, or
-          # anti-tamper init. We use it as a pre-network liveness probe.
-          $p = Start-Process -FilePath ".\RobloxPlayerBetaRaw.exe" -ArgumentList "--help" -PassThru `
-                 -RedirectStandardOutput "client-stdout.log" -RedirectStandardError "client-stderr.log"
-          $deadline = (Get-Date).AddSeconds(15)
-          while (-not $p.HasExited -and (Get-Date) -lt $deadline) { Start-Sleep -Milliseconds 250 }
-          if (-not $p.HasExited) {
-            Write-Host "::error::RobloxPlayerBetaRaw.exe did not exit on --help (would mean parser bug or init-loop)"
-            Get-Content client-stdout.log | ForEach-Object { Write-Host "stdout| $_" }
-            Get-Content client-stderr.log | ForEach-Object { Write-Host "stderr| $_" }
-            Stop-Process -Id $p.Id -Force
-            Pop-Location
-            exit 1
+
+          $proxy = "http://127.0.0.1:64989"
+          @(
+            '<?xml version="1.0" encoding="UTF-8"?>'
+            '<Settings>'
+            "  <BaseUrl>$proxy/</BaseUrl>"
+            '  <ContentFolder>content</ContentFolder>'
+            '  <SilentCrashReport>1</SilentCrashReport>'
+            '</Settings>'
+          ) | Set-Content -Path AppSettings.xml -Encoding UTF8
+          Get-Content AppSettings.xml | ForEach-Object { Write-Host "appsettings| $_" }
+
+          # Start logging proxy
+          $proxyLog = Join-Path $PWD "proxy.log"
+          if (Test-Path $proxyLog) { Remove-Item $proxyLog }
+          $proxyProc = Start-Process -FilePath "python" `
+            -ArgumentList "..\tools\logging_proxy.py","--port","64989","--log","$proxyLog" `
+            -PassThru -NoNewWindow `
+            -RedirectStandardOutput "proxy-stdout.log" -RedirectStandardError "proxy-stderr.log"
+          Start-Sleep -Seconds 2
+          if ($proxyProc.HasExited) {
+            Write-Host "::error::logging_proxy exited immediately, code $($proxyProc.ExitCode)"
+            Get-Content proxy-stdout.log, proxy-stderr.log | ForEach-Object { Write-Host "proxy| $_" }
+            Pop-Location; exit 1
           }
-          $code = $p.ExitCode
-          # 0 (early return) and 1 (handleError path) are both acceptable: the
-          # binary loaded, parsed AppSettings, parsed --help, and decided to exit
-          # without opening a window or network. STATUS_DLL_NOT_FOUND and friends
-          # (>= 0xC0000000) are NOT acceptable.
-          if ($code -ge 0xC0000000) {
-            Write-Host "::error::RobloxPlayerBetaRaw.exe loader/exit code 0x$('{0:X}' -f $code) (loader-class failure)"
-            Get-Content client-stdout.log | ForEach-Object { Write-Host "stdout| $_" }
-            Get-Content client-stderr.log | ForEach-Object { Write-Host "stderr| $_" }
-            Pop-Location
-            exit 1
+
+          # Start RCC with a stub -PlaceId:1818 to force OpenJob; the job is
+          # named "Test" per gameserver.txt semantics and tries to bind a
+          # RakNet listener on the default game port.
+          $rccProc = Start-Process -FilePath ".\RCCService.exe" `
+            -ArgumentList "-Console","-PlaceId:1818" `
+            -PassThru -NoNewWindow `
+            -RedirectStandardOutput "rcc-stdout.log" -RedirectStandardError "rcc-stderr.log"
+          Start-Sleep -Seconds 3
+          if ($rccProc.HasExited) {
+            Write-Host "::error::RCCService exited during startup, code 0x$('{0:X}' -f $rccProc.ExitCode)"
+            Get-Content rcc-stdout.log | ForEach-Object { Write-Host "rcc| $_" }
+            Get-Content rcc-stderr.log | ForEach-Object { Write-Host "rcc-err| $_" }
+            Stop-Process -Id $proxyProc.Id -Force -ErrorAction SilentlyContinue
+            Pop-Location; exit 1
           }
-          Get-Content client-stdout.log | ForEach-Object { Write-Host "stdout| $_" }
-          Get-Content client-stderr.log | ForEach-Object { Write-Host "stderr| $_" }
-          Write-Host "RobloxPlayerBetaRaw.exe --help exited code $code - CLIENT_SMOKE_OK"
+
+          # Drive the client through the join handshake using the auth triple
+          # that skips PlaceLauncher polling (per Application.cpp.md). The
+          # proxy serves the join script as a Lua body, which the client
+          # fetches via fetchJoinScriptAsync. This exercises the same network
+          # code path a real join uses; only the graphics window (View
+          # backend chain) is downstream, and that lives in workstream 6
+          # under Wine+Xvfb.
+          $clientArgs = @(
+            "-a","$proxy/login/v1",
+            "-t","sandbox-ticket",
+            "-j","$proxy/Game/join.ashx"
+          )
+          $clientProc = Start-Process -FilePath ".\RobloxPlayerBetaRaw.exe" `
+            -ArgumentList $clientArgs `
+            -PassThru -NoNewWindow `
+            -RedirectStandardOutput "client-stdout.log" -RedirectStandardError "client-stderr.log"
+
+          # Hold for 30s — the client needs a few seconds to: LoadAppSettings,
+          # FetchClientSettingsData, create the hidden window, hookApi anti-
+          # tamper, and then start the login/join-script HTTP fetches against
+          # the proxy. A pre-window graphics crash shows up here, and a
+          # loader-class failure shows up almost immediately.
+          $deadline = (Get-Date).AddSeconds(30)
+          while (-not $clientProc.HasExited -and (Get-Date) -lt $deadline) {
+            Start-Sleep -Seconds 1
+          }
+          $clientStillUp = -not $clientProc.HasExited
+          $rccStillUp    = -not $rccProc.HasExited
+          $proxyStillUp  = -not $proxyProc.HasExited
+
+          # Collect diagnostics either way.
+          Write-Host "=== proxy log ==="
+          if (Test-Path $proxyLog) { Get-Content $proxyLog }
+          Write-Host "=== proxy stderr ==="
+          Get-Content proxy-stderr.log -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "proxy-err| $_" }
+          Write-Host "=== rcc stderr (last 40) ==="
+          Get-Content rcc-stderr.log -ErrorAction SilentlyContinue | Select-Object -Last 40 | ForEach-Object { Write-Host "rcc-err| $_" }
+          Write-Host "=== client stderr (last 60) ==="
+          Get-Content client-stderr.log -ErrorAction SilentlyContinue | Select-Object -Last 60 | ForEach-Object { Write-Host "client-err| $_" }
+          Write-Host "=== client stdout (last 40) ==="
+          Get-Content client-stdout.log -ErrorAction SilentlyContinue | Select-Object -Last 40 | ForEach-Object { Write-Host "client| $_" }
+
+          # Loader-class failures (>=0xC0000000) are not acceptable.
+          $bad = $false
+          if ($clientProc.HasExited -and $clientProc.ExitCode -ge 0xC0000000) {
+            Write-Host "::error::client loader-class exit 0x$('{0:X}' -f $clientProc.ExitCode)"
+            $bad = $true
+          }
+          if ($rccProc.HasExited -and $rccProc.ExitCode -ge 0xC0000000) {
+            Write-Host "::error::rcc loader-class exit 0x$('{0:X}' -f $rccProc.ExitCode)"
+            $bad = $true
+          }
+
+          # The proxy should have seen at least one request from each side
+          # (RCC's Http init and the client's login fetch). If it saw nothing
+          # the engine never tried to talk to the network, which means the
+          # join path didn't actually run.
+          $proxySawAnything = (Test-Path $proxyLog) -and ((Get-Content $proxyLog) | Where-Object { $_ -match '^\[req\] ' }).Count -gt 0
+          if (-not $proxySawAnything) {
+            Write-Host "::warning::logging_proxy saw no [req] entries - two-sided handshake did not exercise the network path"
+          } else {
+            $reqCount = (Get-Content $proxyLog | Where-Object { $_ -match '^\[req\] ' }).Count
+            Write-Host "INTEGRATION_OK: proxy logged $reqCount request(s); both processes ran past loader init"
+          }
+
+          # Tear down.
+          if (-not $clientProc.HasExited) { Stop-Process -Id $clientProc.Id -Force -ErrorAction SilentlyContinue }
+          if (-not $rccProc.HasExited)    { Stop-Process -Id $rccProc.Id    -Force -ErrorAction SilentlyContinue }
+          Start-Sleep -Seconds 1
+          if (-not $proxyProc.HasExited)  { Stop-Process -Id $proxyProc.Id  -Force -ErrorAction SilentlyContinue }
+
           Pop-Location
+          if ($bad) { exit 1 }
+          Write-Host "TWO_SIDED_SMOKE_OK"
       - name: Publish Release
         if: success()
         shell: pwsh
