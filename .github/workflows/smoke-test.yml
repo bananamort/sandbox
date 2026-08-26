@@ -8,22 +8,42 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 10
     steps:
-      - name: Download existing binaries
-        uses: actions/download-artifact@v4
+      - uses: actions/checkout@v4
+
+      - name: Init MSVC x86
+        uses: ilammy/msvc-dev-cmd@v1
         with:
-          run-id: 32936571643
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          path: bin
+          arch: x86
 
-      - name: List downloaded
+      - name: Download exes from last successful build
         shell: pwsh
-        run: Get-ChildItem -Recurse bin
-
-      - name: Verify exes present
-        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if (-not (Get-ChildItem -Recurse -Include RCCService.exe -Path bin)) { Write-Error "Missing RCCService.exe"; exit 1 }
-          if (-not (Get-ChildItem -Recurse -Include RobloxPlayerBetaRaw.exe -Path bin)) { Write-Error "Missing RobloxPlayerBetaRaw.exe"; exit 1 }
+          New-Item -ItemType Directory -Force -Path bin | Out-Null
+          gh run download 32876642354 -n build-output -R bananamort/sandbox -D dl
+          Copy-Item dl\artifacts\RCCService.exe bin/
+          Copy-Item dl\artifacts\RobloxPlayerBetaRaw.exe bin/
+          Get-ChildItem bin
+
+      - name: Build stub DLLs (seconds)
+        shell: cmd
+        working-directory: bin
+        run: |
+          copy /Y ..\roblox-sandbox\Library\VMProtect\stub\VMProtectSDK_stub.c . >nul
+          copy /Y ..\roblox-sandbox\Library\VMProtect\stub\VMProtectSDK32.def . >nul
+          cl /nologo /LD VMProtectSDK_stub.c /DEF VMProtectSDK32.def /link /MACHINE:X86
+          del VMProtectSDK_stub.c VMProtectSDK32.def VMProtectSDK_stub.obj >nul 2>&1
+          echo void* __stdcall D3DXGetShaderConstantTable(unsigned long s) { return 0; } > d3dx9_35_stub.c
+          echo LIBRARY d3dx9_35 > d3dx9_35.def
+          echo EXPORTS >> d3dx9_35.def
+          echo     D3DXGetShaderConstantTable >> d3dx9_35.def
+          cl /nologo /LD d3dx9_35_stub.c /DEF d3dx9_35.def /link /MACHINE:X86
+          del d3dx9_35_stub.c d3dx9_35.def d3dx9_35_stub.obj >nul 2>&1
+
+      - name: Copy fmod.dll
+        shell: pwsh
+        run: Copy-Item ..\roblox-sandbox\fmod\win32\fmod.dll bin/
 
       - name: Smoke-run RCCService
         shell: cmd
