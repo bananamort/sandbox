@@ -145,30 +145,7 @@ jobs:
         run: |
           $exe = Join-Path (Get-Location) "artifacts\RCCService.exe"
           if (-not (Test-Path $exe)) { Write-Error "RCCService.exe not found"; exit 1 }
-          Write-Host "=== artifacts contents ==="
           Get-ChildItem artifacts | Format-Table Name, Length
-          Add-Type -TypeDefinition @"
-          using System;
-          using System.Runtime.InteropServices;
-          public static class DllProbe {
-              [DllImport("kernel32.dll", SetLastError = true)]
-              public static extern IntPtr LoadLibrary(string path);
-              [DllImport("kernel32.dll")]
-              public static extern bool FreeLibrary(IntPtr h);
-          }
-"@
-          foreach ($dll in @("VMProtectSDK32.dll","d3dx9_35.dll","fmod.dll")) {
-            $path = Join-Path (Get-Location) "artifacts\$dll"
-            if (-not (Test-Path $path)) { Write-Host "MISSING: $dll"; continue }
-            $h = [DllProbe]::LoadLibrary($path)
-            if ($h -eq [IntPtr]::Zero) {
-              $err = [System.Runtime.InteropServices.Marshal]::GetLastWin32Error()
-              Write-Host "LOAD FAILED: $dll (Win32Error: $err)"
-            } else {
-              Write-Host "LOAD OK: $dll"
-              [DllProbe]::FreeLibrary($h) | Out-Null
-            }
-          }
           $p = Start-Process -FilePath $exe -ArgumentList "-Console" -WorkingDirectory (Split-Path $exe) -PassThru -RedirectStandardOutput rcc_out.txt -RedirectStandardError rcc_err.txt
           Start-Sleep -Seconds 12
           if ($p.HasExited) {
