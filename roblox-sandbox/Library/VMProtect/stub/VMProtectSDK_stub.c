@@ -26,7 +26,7 @@ void __stdcall VMProtectBeginUltraLockByKey(const char * arg0)
 {
 }
 
-void __stdcall VMProtectEnd(void arg0)
+void __stdcall VMProtectEnd(void)
 {
 }
 
@@ -34,11 +34,11 @@ BOOL __stdcall VMProtectIsDebuggerPresent(BOOL arg0)
 {
 }
 
-BOOL __stdcall VMProtectIsVirtualMachinePresent(void arg0)
+BOOL __stdcall VMProtectIsVirtualMachinePresent(void)
 {
 }
 
-BOOL __stdcall VMProtectIsValidImageCRC(void arg0)
+BOOL __stdcall VMProtectIsValidImageCRC(void)
 {
 }
 
