@@ -32,14 +32,16 @@ jobs:
         run: |
           copy /Y ..\roblox-sandbox\Library\VMProtect\stub\VMProtectSDK_stub.c . >nul
           copy /Y ..\roblox-sandbox\Library\VMProtect\stub\VMProtectSDK32.def . >nul
-          cl /nologo /LD VMProtectSDK_stub.c /DEF VMProtectSDK32.def /link /MACHINE:X86
-          del VMProtectSDK_stub.c VMProtectSDK32.def VMProtectSDK_stub.obj >nul 2>&1
+          cl /nologo /LD VMProtectSDK_stub.c /DEF VMProtectSDK32.def /FeVMProtectSDK32.dll /link /MACHINE:X86
+          if not exist VMProtectSDK32.dll exit /b 1
+          del VMProtectSDK_stub.c VMProtectSDK32.def VMProtectSDK_stub.obj VMProtectSDK_stub.lib VMProtectSDK_stub.exp >nul 2>&1
           echo void* __stdcall D3DXGetShaderConstantTable(unsigned long s) { return 0; } > d3dx9_35_stub.c
           echo LIBRARY d3dx9_35 > d3dx9_35.def
           echo EXPORTS >> d3dx9_35.def
           echo     D3DXGetShaderConstantTable >> d3dx9_35.def
-          cl /nologo /LD d3dx9_35_stub.c /DEF d3dx9_35.def /link /MACHINE:X86
-          del d3dx9_35_stub.c d3dx9_35.def d3dx9_35_stub.obj >nul 2>&1
+          cl /nologo /LD d3dx9_35_stub.c /DEF d3dx9_35.def /Fed3dx9_35.dll /link /MACHINE:X86
+          if not exist d3dx9_35.dll exit /b 1
+          del d3dx9_35_stub.c d3dx9_35.def d3dx9_35_stub.obj d3dx9_35_stub.lib d3dx9_35_stub.exp >nul 2>&1
 
       - name: Copy fmod.dll
         shell: pwsh
