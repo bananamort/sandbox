@@ -29,6 +29,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Cache build intermediates
+        uses: actions/cache@v4
+        with:
+          path: |
+            roblox-sandbox/**/obj
+            roblox-sandbox/**/*.obj
+            roblox-sandbox/**/*.pdb
+          key: w32-build-${{ github.sha }}
+          restore-keys: |
+            w32-build-
+
       - uses: microsoft/setup-msbuild@v2
 
       - name: Initialize MSVC x86 developer environment
