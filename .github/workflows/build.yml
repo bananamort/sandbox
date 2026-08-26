@@ -29,8 +29,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Cache build intermediates
-        uses: actions/cache@v4
+      - name: Restore build intermediates
+        uses: actions/cache/restore@v4
         with:
           path: |
             roblox-sandbox/**/obj
@@ -192,6 +192,16 @@ jobs:
             rcc_out.txt
             rcc_err.txt
           if-no-files-found: ignore
+
+      - name: Save build intermediates
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            roblox-sandbox/**/obj
+            roblox-sandbox/**/*.obj
+            roblox-sandbox/**/*.pdb
+          key: w32-build-${{ github.sha }}
 
   wine-runtime:
     runs-on: ubuntu-latest
