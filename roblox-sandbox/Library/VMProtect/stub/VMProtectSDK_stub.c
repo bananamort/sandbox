@@ -2,6 +2,10 @@
 // Parameters given synthetic names for MSVC C compilation.
 #include <windows.h>
 
+// Layout opaque here; callers use the full SDK header. Size only affects
+// nothing at runtime since the stub bodies ignore parameters.
+typedef struct { unsigned int nState; } VMProtectSerialNumberData;
+
 void __stdcall VMProtectBegin(const char * arg0)
 {
 }
