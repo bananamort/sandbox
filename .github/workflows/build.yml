@@ -20,7 +20,6 @@ on:
       - 'roblox-sandbox/PropertySheets/**'
       - 'roblox-sandbox/CustomBuildRules.*'
       - 'roblox-sandbox/Roblox.sln'
-      - '.github/workflows/build.yml'
 
 env:
   BOOST_VERSION: "1.74.0"
