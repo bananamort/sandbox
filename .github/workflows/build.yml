@@ -25,6 +25,9 @@ env:
   BOOST_VERSION: "1.74.0"
   BOOST_URL: "https://archives.boost.io/release/1.74.0/source/boost_1_74_0.zip"
 
+permissions:
+  contents: write
+
 jobs:
   build-rcc:
     runs-on: windows-latest
@@ -166,6 +169,15 @@ jobs:
           Get-ChildItem bin
           if (-not (Test-Path bin/RCCService.exe)) { Write-Error "Missing RCCService.exe"; exit 1 }
           if (-not (Test-Path bin/RobloxPlayerBetaRaw.exe)) { Write-Error "Missing RobloxPlayerBetaRaw.exe"; exit 1 }
+      - name: Dump dependencies of each provisioned DLL
+        shell: cmd
+        run: |
+          echo === VMProtectSDK32.dll ===
+          dumpbin /DEPENDENTS bin\VMProtectSDK32.dll
+          echo === d3dx9_35.dll ===
+          dumpbin /DEPENDENTS bin\d3dx9_35.dll
+          echo === fmod.dll ===
+          dumpbin /DEPENDENTS bin\fmod.dll
       - name: Smoke-run RCCService
         shell: cmd
         timeout-minutes: 3
