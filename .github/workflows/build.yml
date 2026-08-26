@@ -37,6 +37,18 @@ jobs:
         uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: x86
+      - name: Locate ATLMFC headers
+        shell: pwsh
+        run: |
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $vs = & $vswhere -latest -products * -property installationPath
+          $found = $null
+          Get-ChildItem "$vs\VC\Tools\MSVC" -Directory | ForEach-Object {
+            $inc = Join-Path $_.FullName "atlmfc\include\atlbase.h"
+            if (Test-Path $inc) { $found = $_.FullName }
+          }
+          if ($found) { "ATLMFC_ROOT=$found" | Out-File -FilePath $env:GITHUB_ENV -Append }
+          else { Write-Host "::error::No ATLMFC headers found"; exit 1 }
       - name: Restore intermediates
         uses: actions/cache/restore@v4
         with:
@@ -87,6 +99,18 @@ jobs:
         uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: x86
+      - name: Locate ATLMFC headers
+        shell: pwsh
+        run: |
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $vs = & $vswhere -latest -products * -property installationPath
+          $found = $null
+          Get-ChildItem "$vs\VC\Tools\MSVC" -Directory | ForEach-Object {
+            $inc = Join-Path $_.FullName "atlmfc\include\atlbase.h"
+            if (Test-Path $inc) { $found = $_.FullName }
+          }
+          if ($found) { "ATLMFC_ROOT=$found" | Out-File -FilePath $env:GITHUB_ENV -Append }
+          else { Write-Host "::error::No ATLMFC headers found"; exit 1 }
       - name: Restore intermediates
         uses: actions/cache/restore@v4
         with:
