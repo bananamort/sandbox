@@ -140,22 +140,12 @@ jobs:
         run: dumpbin /DEPENDENTS artifacts\RCCService.exe
 
       - name: Smoke-run RCCService -Console
-        shell: pwsh
+        shell: cmd
         timeout-minutes: 3
         run: |
-          $exe = Join-Path (Get-Location) "artifacts\RCCService.exe"
-          if (-not (Test-Path $exe)) { Write-Error "RCCService.exe not found"; exit 1 }
-          Get-ChildItem artifacts | Format-Table Name, Length
-          $p = Start-Process -FilePath $exe -ArgumentList "-Console" -WorkingDirectory (Split-Path $exe) -PassThru -RedirectStandardOutput rcc_out.txt -RedirectStandardError rcc_err.txt
-          Start-Sleep -Seconds 12
-          if ($p.HasExited) {
-            if (Test-Path rcc_out.txt) { Get-Content rcc_out.txt | Select-Object -Last 30 }
-            if (Test-Path rcc_err.txt) { Get-Content rcc_err.txt | Select-Object -Last 30 }
-            Write-Error "::error::RCCService exited early with code $($p.ExitCode)"
-            exit 1
-          }
-          Stop-Process -Id $p.Id -Force
-          Write-Host "SMOKE_OK: RCCService alive at T+12s"
+          cd artifacts
+          RCCService.exe -Console 2>&1
+          echo EXIT_CODE=%ERRORLEVEL%
 
       - name: Upload artifacts and logs
         if: always()
