@@ -58,29 +58,20 @@ Hooks live in shared engine code and are indistinguishable from the implementati
 - `openState` / globals setup — inventory of the exposed environment
 - `startScript` / `LuaVM::load` — chunk sources, chunknames, nested `loadstring` payloads
 - VM loop and bridge layer — function enter/exit, global get/set, constant access
+- Signal bridge (`LuaSignalBridge.cpp`) — every connection made, closure identity, signal identity
+- Instance property bridges — every property read/write through descriptors
 - `RBX::Http` layer — every egress: URL, method, payload
 - Scheduler and yield paths — thread lifecycles, timing behavior
 
-Logging cannot be disabled from inside the sandboxed environment.
+All hooks feed a single capture stream. Logging cannot be disabled from inside the sandboxed environment.
 
-### Full source recovery model
+### Full source recovery
 
-The instrumentation operates at four simultaneous semantic levels. Custom-VM obfuscators (Luraph, MoonSec, etc.) implement their interpreters **in Lua**, meaning their entire execution is Luau instructions on our stack. There are zero blind spots at any depth.
+Custom-VM obfuscators (Luraph, MoonSec, etc.) implement their interpreters **in Lua**, meaning their entire execution is Luau instructions on our stack. Every instruction, closure creation, table access, string operation, and API call passes through the hooks above regardless of nesting depth. There are no blind spots.
 
-| Level | What's captured | Obfuscation sensitivity |
-|---|---|---|
-| 1 — Luau instruction | Every VM instruction with full register/constant context | None — sees through all layers |
-| 2 — Closure lifecycle | Creation (with upvalues), invocation, yield, return | None — closures exist as real objects |
-| 3 — Bridge/API interaction | `GetService`, property access, event connect/fire, method calls | None — must cross our C bridge |
-| 4 — Engine effect | HTTP requests fired, instances created, files accessed | None — effects happen in our engine |
+**Forced coverage**: after natural execution quiesces, recorded signal connections fire with synthesized arguments; created-but-not-invoked closures invoke with type-derived parameters. This forces event-gated code paths (button handlers, player-join callbacks, timers) to execute and produce traces.
 
-**Reconstruction pipeline**: Level 3+4 capture *what the script does* regardless of obfuscation encoding. Level 2 captures *structure* (which closures exist, how they relate). Level 1 provides ground truth for verification. The combination reconstructs complete behavioral source without any knowledge of the obfuscator's internals.
-
-**Forced coverage**: after natural execution quiesces, all recorded signal connections fire with synthesized arguments; all created-but-not-invoked closures invoke with type-derived parameters. This forces event-gated code paths (button handlers, player-join callbacks, timers) to execute and produce traces.
-
-Reference: `unveilr` hooks at the Lua level from inside an executor, requiring per-obfuscator workarounds for setfenv/loadstring/hookOp issues across MoonSec, Luraph, Prometheus, etc. Our approach instruments below Lua entirely, making those workarounds unnecessary.
-
-Variable renaming is handled downstream by a separate tool; this system recovers structure, logic flow, constants, and behavioral semantics.
+Reference: `unveilr` hooks at the Lua level from inside an executor, requiring per-obfuscator workarounds for setfenv/loadstring/hookOp issues across MoonSec, Luraph, Prometheus, etc. Our approach instruments below Lua entirely, making those workarounds unnecessary. Variable renaming is handled downstream by a separate tool; this system recovers structure, logic flow, constants, and behavioral semantics.
 
 ## Pipeline and gates
 
