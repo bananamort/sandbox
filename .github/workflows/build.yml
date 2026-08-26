@@ -83,7 +83,8 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: rcc-exe
-          path: roblox-sandbox/artifacts/RCCService.exe
+          path: artifacts/RCCService.exe
+          if-no-files-found: error
       - name: Save intermediates
         if: always()
         uses: actions/cache/save@v4
@@ -145,7 +146,8 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: client-exe
-          path: roblox-sandbox/artifacts/RobloxPlayerBetaRaw.exe
+          path: artifacts/RobloxPlayerBetaRaw.exe
+          if-no-files-found: error
       - name: Save intermediates
         if: always()
         uses: actions/cache/save@v4
@@ -155,7 +157,7 @@ jobs:
 
   validate:
     runs-on: windows-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     needs: [build-rcc, build-client]
     steps:
       - uses: actions/download-artifact@v4
@@ -163,28 +165,79 @@ jobs:
           pattern: '*-exe'
           merge-multiple: true
           path: bin
+      - uses: actions/checkout@v4
+      - name: Init MSVC x86
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x86
       - name: Verify
         shell: pwsh
         run: |
           Get-ChildItem bin
           if (-not (Test-Path bin/RCCService.exe)) { Write-Error "Missing RCCService.exe"; exit 1 }
           if (-not (Test-Path bin/RobloxPlayerBetaRaw.exe)) { Write-Error "Missing RobloxPlayerBetaRaw.exe"; exit 1 }
-      - name: Dump dependencies of each provisioned DLL
+      - name: Install era VC runtimes (x86)
         shell: cmd
         run: |
+          choco install vcredist2012 vcredist2013 -y --ignore-package-exit-codes
+      - name: Build stub DLLs (seconds)
+        shell: cmd
+        working-directory: bin
+        run: |
+          copy /Y ..\roblox-sandbox\Library\VMProtect\stub\VMProtectSDK_stub.c . >nul
+          copy /Y ..\roblox-sandbox\Library\VMProtect\stub\VMProtectSDK32.def . >nul
+          cl /nologo /LD VMProtectSDK_stub.c /DEF VMProtectSDK32.def /link /MACHINE:X86
+          del VMProtectSDK_stub.c VMProtectSDK32.def VMProtectSDK_stub.obj >nul 2>&1
+          echo void* __stdcall D3DXGetShaderConstantTable(unsigned long s) { return 0; } > d3dx9_35_stub.c
+          echo LIBRARY d3dx9_35 > d3dx9_35.def
+          echo EXPORTS >> d3dx9_35.def
+          echo     D3DXGetShaderConstantTable >> d3dx9_35.def
+          cl /nologo /LD d3dx9_35_stub.c /DEF d3dx9_35.def /link /MACHINE:X86
+          del d3dx9_35_stub.c d3dx9_35.def d3dx9_35_stub.obj >nul 2>&1
+      - name: Copy fmod.dll
+        shell: pwsh
+        run: Copy-Item roblox-sandbox\fmod\win32\fmod.dll bin/
+      - name: Dump dependents of provisioned modules
+        shell: cmd
+        run: |
+          echo === RCCService.exe ===
+          dumpbin /DEPENDENTS bin\RCCService.exe
+          echo === RobloxPlayerBetaRaw.exe ===
+          dumpbin /DEPENDENTS bin\RobloxPlayerBetaRaw.exe
+          echo === fmod.dll ===
+          dumpbin /DEPENDENTS bin\fmod.dll
           echo === VMProtectSDK32.dll ===
           dumpbin /DEPENDENTS bin\VMProtectSDK32.dll
           echo === d3dx9_35.dll ===
           dumpbin /DEPENDENTS bin\d3dx9_35.dll
-          echo === fmod.dll ===
-          dumpbin /DEPENDENTS bin\fmod.dll
+      - name: Recursive import audit
+        shell: pwsh
+        run: python tools/audit_win_deps.py bin
       - name: Smoke-run RCCService
-        shell: cmd
-        timeout-minutes: 3
+        shell: pwsh
+        timeout-minutes: 4
         run: |
-          cd bin
-          RCCService.exe -Console
-          echo EXIT_CODE=%ERRORLEVEL%
+          Push-Location bin
+          $p = Start-Process -FilePath ".\RCCService.exe" -ArgumentList "-Console" -PassThru -NoNewWindow `
+                 -RedirectStandardOutput "rcc-stdout.log" -RedirectStandardError "rcc-stderr.log"
+          $deadline = (Get-Date).AddSeconds(60)
+          while (-not $p.HasExited -and (Get-Date) -lt $deadline) { Start-Sleep -Seconds 2 }
+          if ($p.HasExited) {
+            Write-Host "::error::RCCService exited during startup, code 0x$('{0:X}' -f $p.ExitCode)"
+            Get-Content rcc-stdout.log | ForEach-Object { Write-Host "stdout| $_" }
+            Get-Content rcc-stderr.log | ForEach-Object { Write-Host "stderr| $_" }
+            Write-Host "--- Application event log entries mentioning RCCService ---"
+            try {
+              Get-WinEvent -LogName Application -MaxEvents 80 |
+                Where-Object { $_.Message -match 'RCCService' } |
+                ForEach-Object { Write-Host "[$($_.TimeCreated)] $($_.Message)" }
+            } catch { Write-Host "event log query failed: $_" }
+            Pop-Location
+            exit 1
+          }
+          Write-Host "RCCService stayed alive for 60s - SMOKE_OK"
+          Stop-Process -Id $p.Id -Force
+          Pop-Location
       - name: Publish Release
         if: success()
         shell: pwsh
@@ -192,5 +245,5 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           $tag = "build-$([DateTime]::UtcNow.ToString('yyyyMMdd-HHmmss'))"
-          gh release create $tag --repo bananamort/sandbox --title "Build $tag" --notes "Automated build from CI"
+          gh release create $tag --repo bananamort/sandbox --title "Build $tag" --notes "Automated build from CI (run $env:GITHUB_RUN_ID)"
           gh release upload $tag bin/RCCService.exe bin/RobloxPlayerBetaRaw.exe --repo bananamort/sandbox
