@@ -267,6 +267,42 @@ jobs:
           Write-Host "RCCService stayed alive for 60s - SMOKE_OK"
           Stop-Process -Id $p.Id -Force
           Pop-Location
+      - name: Smoke-run WindowsClient
+        shell: pwsh
+        timeout-minutes: 4
+        run: |
+          Push-Location bin
+          # The client parses cmdline via boost::program_options; `--help` causes
+          # ParseArguments to return false BEFORE any window, network call, or
+          # anti-tamper init. We use it as a pre-network liveness probe.
+          $p = Start-Process -FilePath ".\RobloxPlayerBetaRaw.exe" -ArgumentList "--help" -PassThru `
+                 -RedirectStandardOutput "client-stdout.log" -RedirectStandardError "client-stderr.log"
+          $deadline = (Get-Date).AddSeconds(15)
+          while (-not $p.HasExited -and (Get-Date) -lt $deadline) { Start-Sleep -Milliseconds 250 }
+          if (-not $p.HasExited) {
+            Write-Host "::error::RobloxPlayerBetaRaw.exe did not exit on --help (would mean parser bug or init-loop)"
+            Get-Content client-stdout.log | ForEach-Object { Write-Host "stdout| $_" }
+            Get-Content client-stderr.log | ForEach-Object { Write-Host "stderr| $_" }
+            Stop-Process -Id $p.Id -Force
+            Pop-Location
+            exit 1
+          }
+          $code = $p.ExitCode
+          # 0 (early return) and 1 (handleError path) are both acceptable: the
+          # binary loaded, parsed AppSettings, parsed --help, and decided to exit
+          # without opening a window or network. STATUS_DLL_NOT_FOUND and friends
+          # (>= 0xC0000000) are NOT acceptable.
+          if ($code -ge 0xC0000000) {
+            Write-Host "::error::RobloxPlayerBetaRaw.exe loader/exit code 0x$('{0:X}' -f $code) (loader-class failure)"
+            Get-Content client-stdout.log | ForEach-Object { Write-Host "stdout| $_" }
+            Get-Content client-stderr.log | ForEach-Object { Write-Host "stderr| $_" }
+            Pop-Location
+            exit 1
+          }
+          Get-Content client-stdout.log | ForEach-Object { Write-Host "stdout| $_" }
+          Get-Content client-stderr.log | ForEach-Object { Write-Host "stderr| $_" }
+          Write-Host "RobloxPlayerBetaRaw.exe --help exited code $code - CLIENT_SMOKE_OK"
+          Pop-Location
       - name: Publish Release
         if: success()
         shell: pwsh
