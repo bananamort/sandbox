@@ -210,6 +210,15 @@ jobs:
             exit 1
           }
           Copy-Item roblox-sandbox\Library\SDL2\lib\x86\SDL2.dll bin\
+      - name: Copy runtime data directories
+        shell: pwsh
+        run: |
+          foreach ($d in @('content','shaders','PlatformContent')) {
+            if (Test-Path "roblox-sandbox\$d") {
+              Copy-Item -Path "roblox-sandbox\$d" -Destination bin\ -Recurse -Force
+            }
+          }
+          Get-ChildItem bin | Select-Object Name, Length
       - name: Dump dependents of provisioned modules
         shell: cmd
         run: |
