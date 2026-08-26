@@ -468,6 +468,8 @@ XboxClient/libraries/*
 !Library/SDK/Bin/*
 
 !Library/SDL2/lib/*
+!Library/SDL2/lib/x86/
+!Library/SDL2/lib/x86/SDL2.dll
 
 !Library/curl/bin
 !Library/curl/bin/debug

@@ -201,6 +201,15 @@ jobs:
       - name: Copy fmod.dll
         shell: pwsh
         run: Copy-Item roblox-sandbox\fmod\win32\fmod.dll bin/
+      - name: Copy SDL2.dll
+        shell: pwsh
+        run: |
+          $sha = (Get-FileHash roblox-sandbox\Library\SDL2\lib\x86\SDL2.dll).Hash.ToLower()
+          if ($sha -ne 'ce15334fe253ff38b887214f57bc76a7d4286a346ad09e909f21c4a640003f86') {
+            Write-Host "::error::SDL2.dll hash mismatch: $sha"
+            exit 1
+          }
+          Copy-Item roblox-sandbox\Library\SDL2\lib\x86\SDL2.dll bin\
       - name: Dump dependents of provisioned modules
         shell: cmd
         run: |
