@@ -43,7 +43,7 @@ jobs:
 
       - name: Copy fmod.dll
         shell: pwsh
-        run: Copy-Item ..\roblox-sandbox\fmod\win32\fmod.dll bin/
+        run: Copy-Item roblox-sandbox\fmod\win32\fmod.dll bin/
 
       - name: Smoke-run RCCService
         shell: cmd
