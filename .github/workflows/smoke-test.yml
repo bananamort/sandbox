@@ -1,0 +1,34 @@
+name: smoke-test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - name: Download existing binaries
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 32936571643
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: bin
+
+      - name: List downloaded
+        shell: pwsh
+        run: Get-ChildItem -Recurse bin
+
+      - name: Verify exes present
+        shell: pwsh
+        run: |
+          if (-not (Get-ChildItem -Recurse -Include RCCService.exe -Path bin)) { Write-Error "Missing RCCService.exe"; exit 1 }
+          if (-not (Get-ChildItem -Recurse -Include RobloxPlayerBetaRaw.exe -Path bin)) { Write-Error "Missing RobloxPlayerBetaRaw.exe"; exit 1 }
+
+      - name: Smoke-run RCCService
+        shell: cmd
+        timeout-minutes: 3
+        run: |
+          cd bin
+          RCCService.exe -Console
+          echo EXIT_CODE=%ERRORLEVEL%
