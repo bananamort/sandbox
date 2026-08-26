@@ -2320,69 +2320,195 @@ cmd /c "exit /b 0"</Command>
     <ClCompile Include="tool\ResizeTool.cpp" />
     <ClCompile Include="Tool\RunDragger.cpp" />
     <ClCompile Include="Tool\ToolsArrow.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\VM\src\lapi.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\VM\src\laux.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\VM\src\lbaselib.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\VM\src\lbitlib.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\VM\src\lbuffer.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\VM\src\lbuflib.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\VM\src\lbuiltins.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\VM\src\lclass.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\VM\src\lclasslib.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\VM\src\lcorolib.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\VM\src\ldblib.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\VM\src\ldebug.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\VM\src\ldo.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\VM\src\lfunc.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\VM\src\lgc.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\VM\src\lgcdebug.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\VM\src\linit.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\VM\src\lintlib.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\VM\src\lmathlib.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\VM\src\lmem.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\VM\src\lnumprint.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\VM\src\lobject.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\VM\src\loslib.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\VM\src\lperf.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\VM\src\lstate.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\VM\src\lstring.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\VM\src\lstrlib.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\VM\src\ltable.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\VM\src\ltablib.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\VM\src\ltm.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\VM\src\ludata.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\VM\src\lutf8lib.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\VM\src\lveclib.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\VM\src\lvector.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\VM\src\lvmexecute.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\VM\src\lvmload.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\VM\src\lvmutils.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\Compiler\src\BuiltinFolding.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\Compiler\src\Builtins.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\Compiler\src\Compiler.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\Compiler\src\ConstantFolding.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\Compiler\src\CostModel.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\Compiler\src\TableShape.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\Compiler\src\Types.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\Compiler\src\ValueTracking.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\Compiler\src\lcode.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\Ast\src\Allocator.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\Ast\src\Ast.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\Ast\src\Confusables.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\Ast\src\Cst.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\Ast\src\Lexer.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\Ast\src\Location.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\Ast\src\Parser.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\Ast\src\PrettyPrinter.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\Common\src\BytecodeWire.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\Common\src\StringUtils.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\Common\src\TimeTrace.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\Bytecode\src\BytecodeBuilder.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\Bytecode\src\BytecodeGraph.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\Bytecode\src\Sccp.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\Config\src\Config.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\Config\src\LinterConfig.cpp" />
-    <ClCompile Include="Lua-5.1.4\src\Config\src\LuauConfig.cpp" />
+    <ClCompile Include="Lua-5.1.4\src\VM\src\lapi.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\VM\src\laux.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\VM\src\lbaselib.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\VM\src\lbitlib.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\VM\src\lbuffer.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\VM\src\lbuflib.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\VM\src\lbuiltins.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\VM\src\lclass.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\VM\src\lclasslib.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\VM\src\lcorolib.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\VM\src\ldblib.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\VM\src\ldebug.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\VM\src\ldo.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\VM\src\lfunc.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\VM\src\lgc.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\VM\src\lgcdebug.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\VM\src\linit.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\VM\src\lintlib.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\VM\src\lmathlib.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\VM\src\lmem.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\VM\src\lnumprint.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\VM\src\lobject.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\VM\src\loslib.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\VM\src\lperf.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\VM\src\lstate.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\VM\src\lstring.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\VM\src\lstrlib.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\VM\src\ltable.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\VM\src\ltablib.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\VM\src\ltm.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\VM\src\ludata.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\VM\src\lutf8lib.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\VM\src\lveclib.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\VM\src\lvector.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\VM\src\lvmexecute.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\VM\src\lvmload.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\VM\src\lvmutils.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\Compiler\src\BuiltinFolding.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\Compiler\src\Builtins.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\Compiler\src\Compiler.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\Compiler\src\ConstantFolding.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\Compiler\src\CostModel.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\Compiler\src\TableShape.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\Compiler\src\Types.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\Compiler\src\ValueTracking.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\Compiler\src\lcode.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\Ast\src\Allocator.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\Ast\src\Ast.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\Ast\src\Confusables.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\Ast\src\Cst.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\Ast\src\Lexer.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\Ast\src\Location.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\Ast\src\Parser.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\Ast\src\PrettyPrinter.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\Common\src\BytecodeWire.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\Common\src\StringUtils.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\Common\src\TimeTrace.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\Bytecode\src\BytecodeBuilder.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\Bytecode\src\BytecodeGraph.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\Bytecode\src\Sccp.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\Config\src\Config.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\Config\src\LinterConfig.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\Config\src\LuauConfig.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="security\SecurityContext.cpp" />
     <ClCompile Include="Gui\ChatOutput.cpp" />
     <ClCompile Include="gui\ChatWidget.cpp" />
