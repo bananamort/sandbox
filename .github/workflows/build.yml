@@ -185,3 +185,12 @@ jobs:
           cd bin
           RCCService.exe -Console
           echo EXIT_CODE=%ERRORLEVEL%
+      - name: Publish Release
+        if: success()
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $tag = "build-$([DateTime]::UtcNow.ToString('yyyyMMdd-HHmmss'))"
+          gh release create $tag --repo bananamort/sandbox --title "Build $tag" --notes "Automated build from CI"
+          gh release upload $tag bin/RCCService.exe bin/RobloxPlayerBetaRaw.exe --repo bananamort/sandbox
