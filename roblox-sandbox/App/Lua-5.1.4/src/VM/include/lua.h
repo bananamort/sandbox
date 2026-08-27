@@ -577,7 +577,45 @@ struct lua_Debug
     void* userdata; // only valid in lua_callhook
 
     char ssbuf[LUA_IDSIZE];
+
+    // --- Lua 5.1 compat fields (unused, for compilation) ---
+    int event; // compat: LUA_HOOK* event
+    const char* namewhat; // compat
+    int nups; // compat alias for nupvals
+    int lastlinedefined; // compat
+    int stacklevel; // compat
 };
+
+#define LUA_HOOKCALL 0
+#define LUA_HOOKRET 1
+#define LUA_HOOKLINE 2
+#define LUA_HOOKCOUNT 3
+#define LUA_HOOKTAILRET 4
+#define LUA_MASKCALL (1 << LUA_HOOKCALL)
+#define LUA_MASKRET (1 << LUA_HOOKRET)
+#define LUA_MASKLINE (1 << LUA_HOOKLINE)
+#define LUA_MASKCOUNT (1 << LUA_HOOKCOUNT)
+
+// --- Lua 5.1 compat shims for Luau ---
+#ifdef __cplusplus
+extern "C" {
+#endif
+// Old 3-arg lua_getinfo -> Luau 4-arg
+static inline int lua_getinfo_compat(lua_State* L, const char* what, lua_Debug* ar) { return lua_getinfo(L, 0, what, ar); }
+// Provide overload for old code that still calls 3-arg version via macro
+// If code calls lua_getinfo(L, "nS", &ar) it will now match this 3-arg overload
+static inline int lua_getinfo(lua_State* L, const char* what, lua_Debug* ar) { return lua_getinfo(L, 0, what, ar); }
+// Stub out removed Lua 5.1 debug API — make old engine code link
+static inline int lua_getstack(lua_State* L, int level, lua_Debug* ar) { (void)L; (void)level; (void)ar; return 0; }
+static inline int lua_sethook(lua_State* L, lua_Hook func, int mask, int count) { (void)L; (void)func; (void)mask; (void)count; return 0; }
+static inline lua_Hook lua_gethook(lua_State* L) { (void)L; return NULL; }
+static inline int lua_gethookmask(lua_State* L) { (void)L; return 0; }
+static inline int lua_gethookcount(lua_State* L) { (void)L; return 0; }
+static inline const char* lua_getlocal(lua_State* L, const lua_Debug* ar, int n) { (void)L; (void)ar; (void)n; return NULL; }
+static inline const char* lua_setlocal(lua_State* L, const lua_Debug* ar, int n) { (void)L; (void)ar; (void)n; return NULL; }
+#ifdef __cplusplus
+}
+#endif
 
 typedef void (*lua_Coverage)(void* context, const char* function, int linedefined, int depth, const int* hits, size_t size);
 
