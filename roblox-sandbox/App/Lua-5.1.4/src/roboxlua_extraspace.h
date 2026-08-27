@@ -5,9 +5,7 @@
 //
 // Luau 0.735 has only 1 extra slot (LUA_EXTRA_SIZE = LUA_VECTOR_SIZE - 2 = 1)
 // used for vector data. We use lua_getthreaddata/lua_setthreaddata (Luau public
-// API) as a per-coroutine side-table. The 2016 macros luai_userstate* are
-// emulated via thin wrappers in this header (call into the namespace impl)
-// so engine code that defines them in 2016 luaconf works without change.
+// API) as a per-coroutine side-table.
 #pragma once
 
 #include "VM/include/lua.h"  // brings in lua_getthreaddata / lua_setthreaddata
@@ -19,69 +17,68 @@
 
 namespace RBX { class BaseScript; class ScriptContext; namespace Lua { class Continuations; } }
 
-// Per-thread state. Replaces 2016's RobloxExtraSpace fields 1:1.
+// Per-thread state. Engine code does `RobloxExtraSpace::get(L)->identity = X`,
+// so the namespace struct must have identity/yieldCaptured as accessible
+// bitfields and the methods the engine calls (setContext, context,
+// eraseRefsFromAllNodes, getThreadCount) as inline methods. The side-table
+// pointer IS this struct, so methods operate on `this`.
 struct RobloxExtraSpace {
-    int identity : 5;                 // RBX::Security::Identities (0-31), default Anonymous
+    int identity : 5;                 // RBX::Security::Identities (0-31)
     int yieldCaptured : 1;            // set before lua_yield, cleared on resume
     int reserved : 26;                // padding
-    boost::weak_ptr<RBX::BaseScript> script;  // owning Script/ModuleScript
-    boost::scoped_ptr<RBX::Lua::Continuations> continuations;  // resume hooks
-    boost::intrusive_ptr<class WeakThreadRef::Node> node;       // GC keep-alive
+    boost::weak_ptr<RBX::BaseScript> script;
+    boost::scoped_ptr<RBX::Lua::Continuations> continuations;
+    boost::intrusive_ptr<class WeakThreadRef::Node> node;
     RBX::ScriptContext* context;
-    RobloxExtraSpace* parent;  // parent coroutine's extra space (for from arg)
+    RobloxExtraSpace* parent;
     std::vector<RobloxExtraSpace*> children;
-    void* legacyShared;  // threadCount+allThreads, owned by ScriptContext
+    void* legacyShared;
+
+    // 2016 instance methods — inline so the engine call pattern
+    // `RobloxExtraSpace::get(L)->method()` resolves to these via the
+    // global struct's lookup.
+    void setContext(RBX::ScriptContext* ctx) { this->context = ctx; }
+    RBX::ScriptContext* getContext() const { return this->context; }
+    void eraseRefsFromAllNodes();
+    int getThreadCount() const;
+
+    // Static get() that the engine's RobloxExtraSpace::get(L) call resolves
+    // to. Returns the side-table pointer for L.
+    static RobloxExtraSpace* get(lua_State* L) {
+        if (!L) return nullptr;
+        void* p = lua_getthreaddata(L);
+        return reinterpret_cast<RobloxExtraSpace*>(p);
+    }
 };
 
-// Use Lua's official per-thread pointer slot.
-inline RobloxExtraSpace* getRobloxExtraSpace(lua_State* L) {
-    if (!L) return nullptr;
-    void* p = lua_getthreaddata(L);
-    return reinterpret_cast<RobloxExtraSpace*>(p);
-}
-
+// The struct's static get(lua_State*) is the public API. The internal
+// lifecycle hooks (onNewState etc) use the side-table pointer directly.
 inline void setRobloxExtraSpace(lua_State* L, RobloxExtraSpace* es) {
     lua_setthreaddata(L, es);
 }
 
-// 2016 had: reinterpret_cast<RobloxExtraSpace*>((char*)L - sizeof(RobloxExtraSpace))
-// We use the named function so engine call sites `RobloxExtraSpace::get(L)` work
-// (via the static get() in 2016).
-namespace RBX {
-    struct RobloxExtraSpaceAccessor {
-        static ::RobloxExtraSpace* get(lua_State* L) { return getRobloxExtraSpace(L); }
-    };
-}
-
-// Lifecycle (luai_userstate* equivalents). Call from C++ wrapper or directly
-// from the engine. The 2016 lstate.c would call these from lua_newstate etc;
-// since we have no lstate.c, we expose them as a public API that the engine's
-// ScriptContext calls.
 namespace RobloxExtraSpaceImpl {
-    void onNewState(lua_State* L);    // luai_userstateopen
-    void onCloseState(lua_State* L);  // luai_userstateclose
-    void onNewThread(lua_State* L);   // luai_userstatethread
-    void onFreeThread(lua_State* L);  // luai_userstatefree
-    void onResume(lua_State* L);      // luai_userstateresume
-    void onYield(lua_State* L);       // luai_userstateyield (no-op for now)
+    void onNewState(lua_State* L);
+    void onCloseState(lua_State* L);
+    void onNewThread(lua_State* L);
+    void onFreeThread(lua_State* L);
+    void onResume(lua_State* L);
+    void onYield(lua_State* L);
 }
 
 extern std::set<RobloxExtraSpace*>& allExtraSpaces();
 
 inline void setRobloxExtraSpaceContext(lua_State* L, RBX::ScriptContext* ctx) {
-    if (auto* es = getRobloxExtraSpace(L)) es->context = ctx;
+    if (auto* es = RobloxExtraSpace::get(L)) es->context = ctx;
 }
-
 inline void setRobloxExtraSpaceIdentity(lua_State* L, int identity) {
-    if (auto* es = getRobloxExtraSpace(L)) es->identity = identity & 0x1F;
+    if (auto* es = RobloxExtraSpace::get(L)) es->identity = identity & 0x1F;
 }
-
 inline void setRobloxExtraSpaceScript(lua_State* L, boost::weak_ptr<RBX::BaseScript> s) {
-    if (auto* es = getRobloxExtraSpace(L)) es->script = s;
+    if (auto* es = RobloxExtraSpace::get(L)) es->script = s;
 }
-
 inline void setRobloxExtraSpaceYieldCaptured(lua_State* L, bool captured) {
-    if (auto* es = getRobloxExtraSpace(L)) es->yieldCaptured = captured ? 1 : 0;
+    if (auto* es = RobloxExtraSpace::get(L)) es->yieldCaptured = captured ? 1 : 0;
 }
 
 template<typename F>
@@ -91,12 +88,8 @@ inline void forEachExtraSpace(F&& f) {
     }
 }
 
-// Shim to 2016's RBX::RobloxExtraSpace::get(L) call pattern. The class in
-// 2016 is defined in luaconf.h; the engine code uses `RBX::RobloxExtraSpace
-// ::get(L)`. We provide that namespace class.
-namespace RBX {
-    class RobloxExtraSpace {
-    public:
-        static ::RobloxExtraSpace* get(lua_State* L) { return getRobloxExtraSpace(L); }
-    };
-}
+// 2016: the engine writes `RobloxExtraSpace::get(L)->setContext(this)`.
+// The 2016 setContext was inline in luaconf.h and operated on Shared.
+// In our shim the same call resolves to the inline method above; the
+// non-inline pieces (eraseRefsFromAllNodes, getThreadCount) go to the
+// .cpp where the global set is visible.

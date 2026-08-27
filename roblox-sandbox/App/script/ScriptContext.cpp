@@ -1028,6 +1028,7 @@ void ScriptContext::closeState(lua_State* globalState)
 	}
 
 	dumpThreadRefCounts();
+	RobloxExtraSpaceImpl::onCloseState(globalState);  // WS4-C3: mirror luai_userstateclose
 	lua_close(globalState);
 	dumpThreadRefCounts();
 	contextCount--;

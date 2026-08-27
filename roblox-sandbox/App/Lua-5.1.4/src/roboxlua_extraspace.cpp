@@ -2,6 +2,8 @@
 #include "roboxlua_extraspace.h"
 #include "VM/include/lua.h"
 #include <cassert>
+#include <unordered_map>
+#include <algorithm>
 
 // Global set mirrors 2016's Intrusive::Set<RobloxExtraSpace>::Hook so
 // ScriptContext::eraseRefsFromAllNodes + forEachThread work.
@@ -14,7 +16,7 @@ namespace RobloxExtraSpaceImpl {
 
 void onNewState(lua_State* L) {
     auto* es = new RobloxExtraSpace();
-    es->identity = 0;          // Anonymous
+    es->identity = 0;
     es->yieldCaptured = 0;
     es->script.reset();
     es->continuations.reset();
@@ -27,9 +29,8 @@ void onNewState(lua_State* L) {
 }
 
 void onCloseState(lua_State* L) {
-    auto* es = getRobloxExtraSpace(L);
+    auto* es = RobloxExtraSpace::get(L);
     if (es) {
-        // Erase children entries that point back to us
         for (auto* child : es->children) {
             if (child) child->parent = nullptr;
         }
@@ -41,14 +42,12 @@ void onCloseState(lua_State* L) {
 }
 
 void onNewThread(lua_State* L) {
-    // 2016: constructChild copies shared (threadCount, context, allThreads)
-    // and inserts into AllThreads.
-    auto* parent_es = getRobloxExtraSpace(L);  // parent thread
+    auto* parent_es = RobloxExtraSpace::get(L);
     auto* es = new RobloxExtraSpace();
     es->identity = parent_es ? parent_es->identity : 0;
     es->yieldCaptured = 0;
     es->script = parent_es ? parent_es->script : boost::weak_ptr<RBX::BaseScript>();
-    es->continuations.reset();  // child has its own continuations
+    es->continuations.reset();
     es->node = parent_es ? parent_es->node : boost::intrusive_ptr<class WeakThreadRef::Node>();
     es->context = parent_es ? parent_es->context : nullptr;
     es->parent = parent_es;
@@ -59,8 +58,7 @@ void onNewThread(lua_State* L) {
 }
 
 void onFreeThread(lua_State* L) {
-    // 2016: destroyChild removes from AllThreads and decrements threadCount.
-    auto* es = getRobloxExtraSpace(L);
+    auto* es = RobloxExtraSpace::get(L);
     if (es) {
         if (es->parent) {
             auto& psib = es->parent->children;
@@ -77,13 +75,37 @@ void onFreeThread(lua_State* L) {
 }
 
 void onResume(lua_State* L) {
-    auto* es = getRobloxExtraSpace(L);
-    if (es) es->yieldCaptured = 0;  // 2016: luai_userstateresume sets yieldCaptured=false
+    auto* es = RobloxExtraSpace::get(L);
+    if (es) es->yieldCaptured = 0;
 }
 
 void onYield(lua_State* L) {
-    // 2016: luai_userstateyield does nothing; yieldCaptured set by callers
-    // (YieldingThreads::queueWaiter / EventBridge::wait). No-op here.
-    // Caller-side: use setRobloxExtraSpaceYieldCaptured(L, true) before lua_yield.
+    (void)L;
 }
 } // namespace RobloxExtraSpaceImpl
+
+// 2016: eraseRefsFromAllNodes -- called by ScriptContext destructor to
+// drop every thread's ref to the context before close. Iterates the
+// global intrusive set (mirrors 2016's AllThreads) and clears each
+// thread's context pointer whose context matches.
+void RobloxExtraSpace::eraseRefsFromAllNodes() {
+    if (!this->context) return;
+    for (auto* es : allExtraSpaces()) {
+        if (es && es->context == this->context) {
+            es->context = nullptr;
+            es->legacyShared = nullptr;
+            es->node.reset();
+        }
+    }
+}
+
+// 2016: getThreadCount -- per-state count of live threads. Per-state means
+// per-context: sum all side-table entries whose context matches this->context.
+int RobloxExtraSpace::getThreadCount() const {
+    if (!this->context) return 0;
+    int n = 0;
+    for (auto* es : allExtraSpaces()) {
+        if (es && es->context == this->context) n++;
+    }
+    return n;
+}
