@@ -2320,7 +2320,14 @@ cmd /c "exit /b 0"</Command>
     <ClCompile Include="tool\ResizeTool.cpp" />
     <ClCompile Include="Tool\RunDragger.cpp" />
     <ClCompile Include="Tool\ToolsArrow.cpp" />
+    <ClCompile Include="Lua-5.1.4\src
+oboxlua_extraspace.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="Lua-5.1.4\src\VM\src\lapi.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Lua-5.1.4\src\roboxlua_extraspace.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Lua-5.1.4\src\VM\src\laux.cpp">
@@ -2553,6 +2560,9 @@ cmd /c "exit /b 0"</Command>
     <ClInclude Include="Lua-5.1.4\src\VM\include\luaconf.h" />
     <ClInclude Include="Lua-5.1.4\src\VM\include\lualib.h" />
     <ClInclude Include="Lua-5.1.4\src\VM\src\lapi.h" />
+    <ClInclude Include="Lua-5.1.4\src\roboxlua_extraspace.h" />
+    <ClInclude Include="Lua-5.1.4\src
+oboxlua_extraspace.h" />
     <ClInclude Include="Lua-5.1.4\src\VM\src\lbuffer.h" />
     <ClInclude Include="Lua-5.1.4\src\VM\src\lbuiltins.h" />
     <ClInclude Include="Lua-5.1.4\src\VM\src\lbytecode.h" />

@@ -619,6 +619,7 @@ bool ScriptContext::openState(size_t idx)
 		allocator.reset(new RBX::LuaAllocator(FLog::UseLuaMemoryPool != 0));
 
 	lua_State* globalState = lua_newstate(LuaAllocator::alloc, allocator.get());
+	RobloxExtraSpaceImpl::onNewState(globalState);  // WS4-C3: real extraspace remap (replaces luai_userstateopen)
 	if (globalState==NULL)
 		throw std::runtime_error("Failed to create Lua state");
 
@@ -1347,6 +1348,7 @@ Reflection::Tuple ScriptContext::callInNewThread(Lua::WeakFunctionRef& function,
     
     // Create a child thread that will execute the callback
     ThreadRef callbackThread = lua_newthread(functionThread);
+    RobloxExtraSpaceImpl::onNewThread(callbackThread.getRawState());
     lua_pop(functionThread, 1);
 
     // Execute the function; we don't care about the results/error
@@ -1477,6 +1479,7 @@ void ScriptContext::executeInNewThread(RBX::Security::Identities identity, const
 			
 		owner = safeCommandlineSandbox;
 		thread = lua_newthread(owner);
+		RobloxExtraSpaceImpl::onNewThread(thread);
 	}
 	else
 	{
@@ -1610,6 +1613,7 @@ int ScriptContext::spawn(lua_State *thread)
 
 	// Create a callback thread
 	WeakThreadRef functor(::lua_newthread(thread));
+	RobloxExtraSpaceImpl::onNewThread(functor.getRawState());
 	ThreadRef safeFunctor = functor.lock();
 	RBXASSERT(safeFunctor);
 
@@ -1665,6 +1669,7 @@ int ScriptContext::delay(lua_State *thread)
 
 	// Create a callback thread
 	WeakThreadRef functor(::lua_newthread(thread));
+	RobloxExtraSpaceImpl::onNewThread(functor.getRawState());
 	ThreadRef safeFunctor = functor.lock();
 	RBXASSERT(safeFunctor);
 
@@ -1743,6 +1748,7 @@ int ScriptContext::ypcall(lua_State *thread)
 
 	// Create a callback thread
 	WeakThreadRef functor(::lua_newthread(thread));
+	RobloxExtraSpaceImpl::onNewThread(functor.getRawState());
 	ThreadRef safeFunctor = functor.lock();
 	RBXASSERT(safeFunctor);
 
@@ -2074,7 +2080,8 @@ void ScriptContext::reloadModuleScriptInternal(lua_State* globalState, shared_pt
     moduleScript->resetState();
         
     lua_State* reloadThread = lua_newthread(globalState);
-    
+    RobloxExtraSpaceImpl::onNewThread(reloadThread);
+
     // The reload will require the current module script and patch the old result with a newly
 	// required result.
     const std::string reloadCode =
@@ -2224,6 +2231,7 @@ void ScriptContext::startRunningModuleScript(Security::Identities identity, lua_
 	loadedModules.insert(moduleScript);
 
 	ThreadRef thread = lua_newthread(rootGlobalState);
+	RobloxExtraSpaceImpl::onNewThread(thread.getRawState());
 	lua_pop(rootGlobalState, 1);
 	ModuleScript::PerVMState& vmState = moduleScript->vmState(rootGlobalState);
 	vmState.setRunning(WeakThreadRef::Node::create(thread));
@@ -3201,6 +3209,7 @@ void ScriptContext::startScript(ScriptStart scriptStart)
 		RBXASSERT_BALLANCED_LUA_STACK(globalState);
 
 		lua_State* thread = lua_newthread(globalState);
+		RobloxExtraSpaceImpl::onNewThread(thread);
 		if (thread==NULL)
 			throw RBX::runtime_error("Unable to create a new thread for %s", script->getName().c_str());
 
@@ -3316,6 +3325,7 @@ StackBalanceCheck::~StackBalanceCheck()
 void ScriptContext::initializeLuaStateSandbox(Lua::WeakThreadRef& threadRef, lua_State* parentState, Security::Identities identity)
 {
     threadRef = lua_newthread(parentState);
+    RobloxExtraSpaceImpl::onNewThread(threadRef.getRawState());
     ThreadRef safeThread = threadRef.lock();
 	RBXASSERT(safeThread);
 
