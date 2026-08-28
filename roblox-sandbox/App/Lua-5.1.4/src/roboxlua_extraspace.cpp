@@ -20,7 +20,6 @@ void onNewState(lua_State* L) {
     es->yieldCaptured = 0;
     es->script.reset();
     es->continuations.reset();
-    es->node.reset();
     es->context = nullptr;
     es->parent = nullptr;
     es->legacyShared = nullptr;
@@ -48,7 +47,6 @@ void onNewThread(lua_State* L) {
     es->yieldCaptured = 0;
     es->script = parent_es ? parent_es->script : boost::weak_ptr<RBX::BaseScript>();
     es->continuations.reset();
-    es->node = parent_es ? parent_es->node : boost::intrusive_ptr<class WeakThreadRef::Node>();
     es->context = parent_es ? parent_es->context : nullptr;
     es->parent = parent_es;
     es->legacyShared = parent_es ? parent_es->legacyShared : nullptr;
@@ -94,7 +92,6 @@ void RobloxExtraSpace::eraseRefsFromAllNodes() {
         if (es && es->context == this->context) {
             es->context = nullptr;
             es->legacyShared = nullptr;
-            es->node.reset();
         }
     }
 }

@@ -8,8 +8,14 @@
 #include "util/ProtectedString.h"
 
 #include "lua/lua.hpp"
-#include "lstate.h"
-#include "ltable.h"
+// Luau 0.735 removed Luau 5.1.4 internal headers (lstate.h, ltable.h).
+// Forward-declare just enough to keep the file compiling; a full port
+// of DebuggerManager's debug API is part of WS4-C6.
+struct Table;
+struct Node;
+struct TValue;
+typedef TValue* StkId;
+static inline int isLfunction(const TValue* o) { (void)o; return 0; }
 
 #include "v8datamodel/DataModel.h"
 #include "boost/tokenizer.hpp"
@@ -1212,25 +1218,27 @@ shared_ptr<Reflection::ValueMap> ScriptDebugger::readUpvalues(int stackIndex, lu
 	return arguments;
 }
 
-static const char *traverseGlobals(lua_State *L, const TValue *o) 
+// WS4-C3 placeholder: Luau 0.735 removed the 5.1.4 internal types
+// (Table/Node/TValue/StkId) that this function depends on. The
+// public-API replacement is part of WS4-C6 (debug API rewrite).
+// For now this is a no-op: best-effort global-name lookup is
+// disabled; the function still returns a valid C string (NULL) and
+// the debugger continues to work, just without named top-of-stack
+// functions. Real implementation in C6.
+static const char *traverseGlobals(lua_State *L, const TValue *o)
 {
-  Table *globalTable = hvalue(gt(L));
-  if (globalTable)
-  {
-	  int tableSize = sizenode(globalTable);
-	  while (tableSize--) 
-	  {
-		  Node *node = gnode(globalTable, tableSize);
-		  if (luaO_rawequalObj(o, gval(node)) && ttisstring(gkey(node)))
-			  return getstr(tsvalue(gkey(node)));
-	  }
-  }
+  (void)L; (void)o;
   return NULL;
 }
 
 static void populateFunctionName(lua_State *L, ScriptDebugger::FunctionInfo& funcInfo)
 {
-	StkId func = L->top - 1;
+	// WS4-C3: 5.1.4 internals (StkId, L->top, isLfunction) removed. Body
+	// of the function is gated off; the function-name best-effort is
+	// disabled until WS4-C6 ports the debug API. Real implementation in
+	// C6.
+	(void)L; (void)funcInfo;
+	StkId func = NULL;  // placeholder; will be reimplemented in WS4-C6
 	if (func && isLfunction(func))
 	{
 		const char* globalName = traverseGlobals(L, func);

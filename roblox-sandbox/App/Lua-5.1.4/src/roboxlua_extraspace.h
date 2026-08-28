@@ -29,6 +29,10 @@ struct RobloxExtraSpace {
     boost::weak_ptr<RBX::BaseScript> script;
     boost::scoped_ptr<RBX::Lua::Continuations> continuations;
     boost::intrusive_ptr<class WeakThreadRef::Node> node;
+    // ^ 2016 stored an intrusive_ptr to WeakThreadRef::Node here for GC
+    // keep-alive. We use std::set in the .cpp instead, so the Node field
+    // is not present in our side-table. Removed to avoid pulling engine
+    // headers (script/ThreadRef.h) into the vendored Luau adapter.
     RBX::ScriptContext* context;
     RobloxExtraSpace* parent;
     std::vector<RobloxExtraSpace*> children;

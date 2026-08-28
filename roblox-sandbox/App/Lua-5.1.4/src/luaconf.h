@@ -14,10 +14,10 @@
 #define LUAI_GCMUL 200
 #endif
 
-// LUA_QS was a 5.1.4 "quoted string" macro. Luau doesn't use it. Provide a
-// 2016-equivalent so engine code that uses LUA_QS("text") still compiles.
+// LUA_QS in 5.1.4 was a bare literal-quote: #define LUA_QS LUA_QL("%s") i.e. `'%s'`.
+// Used in code as `LUA_QS "missing"`, so it must be a bare token, not a macro.
 #ifndef LUA_QS
-#define LUA_QS(x) "'" x "'"
+#define LUA_QS "'%s'"
 #endif
 
 // Real per-thread lifecycle hooks. Luau's luaconf.h has no userstate
@@ -25,3 +25,10 @@
 // App code that defines luai_userstate* needs the prototype here, plus
 // a way to reach our impl. The simplest path: include the header.
 #include "roboxlua_extraspace.h"
+
+// 2016's luaconf.h included "Script/LuaVM.h" which declared the namespace
+// LuaVM (compile/load/canCompileScripts/etc). Many engine TUs call
+// `LuaVM::canCompileScripts()` and `LuaVM::load(...)` directly without
+// including LuaVM.h themselves — they relied on the transitive include.
+// Re-establish that here so the existing call sites work unchanged.
+#include "script/LuaVM.h"
