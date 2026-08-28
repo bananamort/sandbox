@@ -1822,8 +1822,8 @@ int ScriptContext::ypcall(lua_State *thread)
 			continuations.success = boost::bind(&ScriptContext::on_ypcall_success, &sc, WeakThreadRef(thread), _1);
 			continuations.error = boost::bind(&ScriptContext::on_ypcall_failure, &sc, WeakThreadRef(thread), _1);
 
-			RBXASSERT(RobloxExtraSpace::get(safeFunctor)->continuations.get() == NULL);
-			RobloxExtraSpace::get(safeFunctor)->continuations.reset(new Lua::Continuations(continuations));
+			RBXASSERT(RobloxExtraSpace::get(safeFunctor)->continuations == NULL);
+			RobloxExtraSpace::get(safeFunctor)->continuations = (void*)new Lua::Continuations(continuations));
 
 			//Capture the yield
 			RobloxExtraSpace::get(thread)->yieldCaptured = true;
@@ -2129,7 +2129,7 @@ void ScriptContext::reloadModuleScriptInternal(lua_State* globalState, shared_pt
         continuations.success = boost::bind(&ScriptContext::reloadModuleScriptSuccessContinuation, moduleScript, _1, oldResultIndex);
         continuations.error = boost::bind(&ScriptContext::reloadModuleScriptErrorContinuation,
                                           moduleScript, _1);
-        RobloxExtraSpace::get(reloadThread)->continuations.reset(new Lua::Continuations(continuations));
+        RobloxExtraSpace::get(reloadThread)->continuations = (void*)new Lua::Continuations(continuations));
         return;
     }
     else if (reloadResult != 0)
@@ -2294,7 +2294,7 @@ void ScriptContext::startRunningModuleScript(Security::Identities identity, lua_
 		continuations.success = boost::bind(&requireModuleScriptSuccessContinuation, moduleScript, _1);
 		continuations.error = boost::bind(&ScriptContext::requireModuleScriptErrorContinuation,
 			moduleScript, _1);
-		RobloxExtraSpace::get(thread)->continuations.reset(new Lua::Continuations(continuations));
+		RobloxExtraSpace::get(thread)->continuations = (void*)new Lua::Continuations(continuations));
 	}
 	else
 	{
@@ -3117,7 +3117,7 @@ ScriptContext::Result ScriptContext::resume(ThreadRef thread, int narg)
 			result = resumeImpl(thread, narg);
         }
 			
-		Continuations* continuations = RobloxExtraSpace::get(thread)->continuations.get();
+		Lua::Continuations* continuations = (Lua::Continuations*)RobloxExtraSpace::get(thread)->continuations;
 		if (continuations)
         {
 			if (result == Error)
@@ -3280,14 +3280,14 @@ void ScriptContext::startScript(ScriptStart scriptStart)
 			}
 
 			if (!scriptStart.options.continuations.empty())
-				RobloxExtraSpace::get(thread)->continuations.reset(new Lua::Continuations(scriptStart.options.continuations));
+				RobloxExtraSpace::get(thread)->continuations = (void*)new Lua::Continuations(scriptStart.options.continuations));
 
 			bool luaFailedLoad = LuaVM::load(thread, *protectedSource, name.c_str()) != 0;
 
 			if (luaFailedLoad)
 			{
 				reportError(thread);
-				Continuations* continuations = RobloxExtraSpace::get(thread)->continuations.get();
+				Lua::Continuations* continuations = (Lua::Continuations*)RobloxExtraSpace::get(thread)->continuations;
 				if (continuations && continuations->error)
 					(continuations->error)(thread);
 				lua_pop(thread, 1);		// pop the message

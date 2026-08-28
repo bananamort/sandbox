@@ -887,7 +887,7 @@ void callAsyncCallback(Lua::WeakFunctionRef function, shared_ptr<const Tuple> ar
             continuations.error = boost::bind(callAsyncCallbackError, errorFunction, _1);
 
             RBXASSERT(RobloxExtraSpace::get(callbackThread.get())->continuations == NULL);
-            RobloxExtraSpace::get(callbackThread.get())->continuations.reset(new Lua::Continuations(continuations));
+            RobloxExtraSpace::get(callbackThread.get())->continuations = (void*)new Lua::Continuations(continuations));
 
             break;
         }
@@ -1061,7 +1061,7 @@ protected:
 	{
 		if (ThreadRef thread = threadRef->lock())
 		{
-			if (Continuations* continuations = RobloxExtraSpace::get(thread)->continuations.get()) {
+			if (Lua::Continuations* continuations = (Lua::Continuations*)RobloxExtraSpace::get(thread)->continuations) {
 				if (continuations->error)
 				{
 					lua_pushstring(thread, message);
