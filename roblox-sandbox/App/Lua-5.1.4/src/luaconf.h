@@ -13,6 +13,34 @@
 #ifndef LUAI_GCMUL
 #define LUAI_GCMUL 200
 #endif
+// 5.1.4 macro: LUA_NUMBER is the number type. Luau defines it as lua_Number
+// (a typedef, not a macro). Provide the 5.1.4 macro for old code.
+#include "VM/include/lua.h"
+#ifndef LUA_NUMBER
+#define LUA_NUMBER lua_Number
+#endif
+// 5.1.4 hook mask constants removed in Luau (the new debug API uses
+// different names: lua_callhook/lua_singlestep/lua_breakpoint, not the
+// old LUA_HOOKCALL/LUA_HOOKRET etc).
+#ifndef LUA_HOOKCALL
+#define LUA_HOOKCALL 0
+#endif
+#ifndef LUA_HOOKRET
+#define LUA_HOOKRET 1
+#endif
+#ifndef LUA_HOOKLINE
+#define LUA_HOOKLINE 2
+#endif
+#ifndef LUA_HOOKCOUNT
+#define LUA_HOOKCOUNT 3
+#endif
+#ifndef LUA_HOOKTAILRET
+#define LUA_HOOKTAILRET 4
+#endif
+// LUA_MASKERROR was an old 5.1.4 hook mask bit. Provide as 0.
+#ifndef LUA_MASKERROR
+#define LUA_MASKERROR 0
+#endif
 
 // LUA_QS in 5.1.4 was a bare literal-quote: #define LUA_QS LUA_QL("%s") i.e. `'%s'`.
 // Used in code as `LUA_QS "missing"`, so it must be a bare token, not a macro.

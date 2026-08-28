@@ -513,6 +513,9 @@ LUA_API int lua_unref(lua_State* L, int ref);
 
 #define lua_pushliteral(L, s) lua_pushlstring(L, "" s, (sizeof(s) / sizeof(char)) - 1)
 #define lua_pushcfunction(L, fn, debugname) lua_pushcclosurek(L, fn, debugname, 0, NULL)
+// 5.1.4 lua_pushcclosure was 3-arg (L, fn, nup). Luau's macro is 4-arg.
+// Add a 3-arg overload that synthesizes an empty debugname.
+#define lua_pushcclosure_3(L, fn, nup) lua_pushcclosurek(L, fn, "", nup, NULL)
 #define lua_pushcclosure(L, fn, debugname, nup) lua_pushcclosurek(L, fn, debugname, nup, NULL)
 #define lua_pushlightuserdata(L, p) lua_pushlightuserdatatagged(L, p, 0)
 

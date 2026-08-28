@@ -1767,63 +1767,63 @@ int Bridge<G3D::CoordinateFrame>::on_index(const G3D::CoordinateFrame& object, c
 	if (strcmp(name,"inverse")==0)		// inverse() is a function
 	{
 		lua_pushvalue(L, -1);
-		lua_pushcclosure(L, CoordinateFrameBridge::on_inverse, 1);
+		lua_pushcclosure_3(L, CoordinateFrameBridge::on_inverse, 1);
 		return 1;
 	}
 
 	if (strcmp(name,"lerp")==0)
 	{
 		lua_pushvalue(L, -1);
-		lua_pushcclosure(L, CoordinateFrameBridge::on_lerp, 1);
+		lua_pushcclosure_3(L, CoordinateFrameBridge::on_lerp, 1);
 		return 1;
 	} 
 
 	if (strcmp(name,"toWorldSpace")==0)
 	{
 		lua_pushvalue(L, -1);
-		lua_pushcclosure(L, CoordinateFrameBridge::on_toWorldSpace, 1);
+		lua_pushcclosure_3(L, CoordinateFrameBridge::on_toWorldSpace, 1);
 		return 1;
 	}
 	if (strcmp(name,"toObjectSpace")==0)
 	{
 		lua_pushvalue(L, -1);
-		lua_pushcclosure(L, CoordinateFrameBridge::on_toObjectSpace, 1);
+		lua_pushcclosure_3(L, CoordinateFrameBridge::on_toObjectSpace, 1);
 		return 1;
 	}
 	if (strcmp(name,"pointToWorldSpace")==0)
 	{
 		lua_pushvalue(L, -1);
-		lua_pushcclosure(L, CoordinateFrameBridge::on_pointToWorldSpace, 1);
+		lua_pushcclosure_3(L, CoordinateFrameBridge::on_pointToWorldSpace, 1);
 		return 1;
 	}
 	if (strcmp(name,"pointToObjectSpace")==0)
 	{
 		lua_pushvalue(L, -1);
-		lua_pushcclosure(L, CoordinateFrameBridge::on_pointToObjectSpace, 1);
+		lua_pushcclosure_3(L, CoordinateFrameBridge::on_pointToObjectSpace, 1);
 		return 1;
 	}
 	if (strcmp(name,"vectorToWorldSpace")==0)
 	{
 		lua_pushvalue(L, -1);
-		lua_pushcclosure(L, CoordinateFrameBridge::on_vectorToWorldSpace, 1);
+		lua_pushcclosure_3(L, CoordinateFrameBridge::on_vectorToWorldSpace, 1);
 		return 1;
 	}
 	if (strcmp(name,"vectorToObjectSpace")==0)
 	{
 		lua_pushvalue(L, -1);
-		lua_pushcclosure(L, CoordinateFrameBridge::on_vectorToObjectSpace, 1);
+		lua_pushcclosure_3(L, CoordinateFrameBridge::on_vectorToObjectSpace, 1);
 		return 1;
 	}
 	if (strcmp(name,"toEulerAnglesXYZ")==0)
 	{
 		lua_pushvalue(L, -1);
-		lua_pushcclosure(L, CoordinateFrameBridge::on_toEulerAnglesXYZ, 1);
+		lua_pushcclosure_3(L, CoordinateFrameBridge::on_toEulerAnglesXYZ, 1);
 		return 1;
 	}
 	if (strcmp(name,"components")==0)
 	{
 		lua_pushvalue(L, -1);
-		lua_pushcclosure(L, CoordinateFrameBridge::on_components, 1);
+		lua_pushcclosure_3(L, CoordinateFrameBridge::on_components, 1);
 		return 1;
 	}
 

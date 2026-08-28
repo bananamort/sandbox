@@ -383,7 +383,7 @@ namespace RBX { namespace Lua {
 
 				// push "FunctionDescriptor*" onto the stack as an up-value
 				lua_pushlightuserdata(L, desc);     // Stack:   desc
-				lua_pushcclosure(L, ObjectBridge::callMemberYieldFunction, 1);
+				lua_pushcclosure_3(L, ObjectBridge::callMemberYieldFunction, 1);
 				// Stack:   closure
 				lua_pushlightuserdata(L, desc);     // Stack:   closure, desc
 				lua_pushvalue(L, -2);               // Stack:   closure, desc, closure
@@ -411,7 +411,7 @@ namespace RBX { namespace Lua {
 
 				// push "FunctionDescriptor*" onto the stack as an up-value
 				lua_pushlightuserdata(L, desc);     // Stack:   desc
-				lua_pushcclosure(L, ObjectBridge::callMemberFunction, 1);
+				lua_pushcclosure_3(L, ObjectBridge::callMemberFunction, 1);
 				// Stack:   closure
 				lua_pushlightuserdata(L, desc);     // Stack:   closure, desc
 				lua_pushvalue(L, -2);               // Stack:   closure, desc, closure

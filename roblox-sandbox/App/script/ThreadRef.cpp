@@ -273,7 +273,7 @@ static int callGenericFunctionBridge (lua_State *L)
 void Lua::lua_pushfunction(lua_State* L, shared_ptr<GenericFunction> function)
 {
 	GenericFunctionBridge::pushNewObject(L, function);
-	lua_pushcclosure(L, callGenericFunctionBridge, 1);
+	lua_pushcclosure_3(L, callGenericFunctionBridge, 1);
 }
 
 static void onAsyncResult(ThreadRef thread, weak_ptr<ScriptContext> context, IAsyncResult* result)
@@ -317,7 +317,7 @@ static int callGenericAsyncFunctionBridge (lua_State *L)
 void Lua::lua_pushfunction(lua_State* L, shared_ptr<GenericAsyncFunction> function)
 {
 	GenericAsyncFunctionBridge::pushNewObject(L, function);
-	lua_pushcclosure(L, callGenericAsyncFunctionBridge, 1);
+	lua_pushcclosure_3(L, callGenericAsyncFunctionBridge, 1);
 }
 
 
