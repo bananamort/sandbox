@@ -728,8 +728,8 @@ LUA_API lua_Callbacks* lua_callbacks(lua_State* L);
 // changed the signature to void(*)(lua_State*, int). We shim with a
 // per-coroutine 5.1.4 panic function pointer (declared extern in
 // this header, defined in roboxlua_extraspace.cpp).
-static inline void rbx_set_panic_51(lua_State* L, int (*panic51)(lua_State*));
-static inline int (*rbx_get_panic_51(lua_State*))(lua_State*);
+extern "C" void rbx_set_panic_51(lua_State* L, int (*panic51)(lua_State*));
+extern "C" int (*rbx_get_panic_51(lua_State*))(lua_State*);
 static inline int (*lua_atpanic(lua_State* L, int (*panicf)(lua_State*)))(lua_State*) {
     int (*old)(lua_State*) = rbx_get_panic_51(L);
     rbx_set_panic_51(L, panicf);
