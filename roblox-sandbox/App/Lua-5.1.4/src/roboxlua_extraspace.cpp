@@ -33,7 +33,7 @@ void onNewState(lua_State* L) {
     es->identity = 0;
     es->yieldCaptured = 0;
     es->script.reset();
-    es->continuations.reset();
+    es->continuations = nullptr;
     es->scriptContext = nullptr;
     es->parent = nullptr;
     es->legacyShared = nullptr;
@@ -62,7 +62,7 @@ void onNewThread(lua_State* L) {
     es->identity = parent_es ? parent_es->identity : 0;
     es->yieldCaptured = 0;
     es->script = parent_es ? parent_es->script : boost::weak_ptr<RBX::BaseScript>();
-    es->continuations.reset();
+    es->continuations = nullptr;
     es->scriptContext = parent_es ? parent_es->scriptContext : nullptr;
     es->parent = parent_es;
     es->legacyShared = parent_es ? parent_es->legacyShared : nullptr;

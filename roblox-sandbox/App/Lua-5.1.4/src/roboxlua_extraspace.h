@@ -15,7 +15,7 @@
 #include <set>
 #include <vector>
 
-namespace RBX { class BaseScript; class ScriptContext; namespace Lua { class Continuations; } }
+namespace RBX { class BaseScript; class ScriptContext; }
 
 // Per-thread state. Engine code does `RobloxExtraSpace::get(L)->identity = X`,
 // so the namespace struct must have identity/yieldCaptured as accessible
@@ -27,7 +27,13 @@ struct RobloxExtraSpace {
     int yieldCaptured : 1;            // set before lua_yield, cleared on resume
     int reserved : 26;                // padding
     boost::weak_ptr<RBX::BaseScript> script;
-    boost::scoped_ptr<RBX::Lua::Continuations> continuations;
+    // continuations: 2016 stored boost::scoped_ptr<RBX::Lua::Continuations>
+    // which requires the full type. We store an opaque void* here;
+    // the engine's RBX::Lua::Continuations is defined in ScriptContext.cpp
+    // and the engine already manages the lifetime through its own state
+    // (Lua::Continuations continuations; in startScript etc.). The side
+    // table just holds a reference. C7 wires the actual integration.
+    void* continuations;
     // node: 2016 stored boost::intrusive_ptr<WeakThreadRef::Node> here for
     // GC keep-alive. We use std::set in the .cpp instead, so the Node
     // field is not present in our side-table (avoids pulling the
