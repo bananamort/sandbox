@@ -1530,7 +1530,7 @@ void ScriptContext::executeInNewThread(RBX::Security::Identities identity, const
 		}
 
 		RBXASSERT(continuations.empty());
-		RobloxExtraSpace::get(safeThread)->continuations.reset(new Lua::Continuations(continuations));
+		RobloxExtraSpace::get(safeThread)->continuations = new Lua::Continuations(continuations);
 
 		// Check for somebody using CheatEngine to inject a direct call.
 		// They probably haven't used a scoped_write_request
