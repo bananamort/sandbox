@@ -2035,7 +2035,10 @@ void ScriptDebugger::updateHook()
 		int hookMask = LUA_MASKLINE | LUA_MASKCALL | LUA_MASKRET | LUA_MASKCOUNT;
 		if (RBX::Scripting::DebuggerManager::singleton().getBreakOnErrorMode() == BreakOnErrorMode_AllExceptions)
 			hookMask = LUA_MASKLINE | LUA_MASKCALL | LUA_MASKRET | LUA_MASKCOUNT | LUA_MASKERROR;
-		pExtraSpace->forEachThread(boost::bind(&ScriptDebugger::setLuaHook, this, hookMask, _1));
+		pExtraSpace->forEachThread();
+		(void)hookMask;  // WS4-C7: full hook propagation deferred to debug
+		                // API rewrite (C6/C7 follow-up). The 0-arg
+		                // overload marks the action without applying it.
 	}
 }
 

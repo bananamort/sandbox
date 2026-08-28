@@ -57,6 +57,9 @@ namespace RBX {
 		lua_State* get() const {
 			return liveThreadRef ? liveThreadRef->thread() : NULL;
 		}
+		// WS4-C7: 5.1.4 accessor alias. ThreadRef -> lua_State* via
+		// get(); 5.1.4 named this getRawState on the engine.
+		lua_State* getRawState() const { return get(); }
 		operator lua_State*() const
 		{
 			return get();
