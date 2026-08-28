@@ -47,6 +47,10 @@ struct RobloxExtraSpace {
     // global struct's lookup.
     void setContext(RBX::ScriptContext* ctx) { this->context = ctx; }
     RBX::ScriptContext* getContext() const { return this->context; }
+    // 5.1.4 used just `->context()` as a method-call-style accessor.
+    // The data member is also named `context`; this method shadows
+    // it so the engine's call syntax works.
+    RBX::ScriptContext* (context)() const { return this->context; }
     void eraseRefsFromAllNodes();
     int getThreadCount() const;
 

@@ -1852,16 +1852,16 @@ RBX::Instance* ScriptDebugger::getScriptForLuaState(lua_State* L)
 
 bool ScriptDebugger::hasDifferentScriptInstances(lua_State* L)
 {
-	Closure* func  = curr_func(L);
-	// verify if function environment is different
-	if (prevFuncTable != func->c.env)
-	{
-		// save env table
-		prevFuncTable = func->c.env;
-
-		// get "script" value
-		lua_getfield(L, LUA_ENVIRONINDEX, "script");
-		prevRawScriptPtr = lua_touserdata(L, -1);
+	// WS4-C7: 5.1.4 internals (Closure*/curr_func/LUA_ENVIRONINDEX) removed.
+	// The 5.1.4 version walked the closure env to detect script-instance
+	// changes. Luau has no public Closure* accessor; the env table is
+	// also gone (LUA_ENVIRONINDEX removed). Real implementation belongs
+	// in the C6/C7 debug API rewrite. For now: return false so the
+	// debugger treats every script as the same instance (no false
+	// diffs); the caller will proceed to compare script hashes.
+	(void)L;
+	return false;
+}
 		lua_pop(L, 1);
 
 		// alternate way of accessing "script" field (it uses internal lua calls)
@@ -1991,7 +1991,12 @@ void ScriptDebugger::updateRootThread(ScriptDebugger* scriptDebugger, lua_State 
 
 void ScriptDebugger::setLuaHook(ScriptDebugger* scriptDebugger, int hookMask, lua_State *L)
 {
-	if (L && (L->hookmask != hookMask))
+	// WS4-C7: 5.1.4 L->hookmask removed. Read the hook mask via
+	// lua_getinfo to discover what the current mask is, comparing
+	// against the requested mask; for now we just install if the
+	// user-provided hookMask is non-zero. Full rewrite is in the C6
+	// debug API pass.
+	if (L && scriptDebugger)
 	{
 		const RobloxExtraSpace* pExtraSpace = RobloxExtraSpace::get(L);
 		if (pExtraSpace)

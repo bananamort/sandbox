@@ -1044,9 +1044,7 @@ namespace RBX
             ASTRTTI(AstExprLocal)
             
             AstExprLocal(const Location& location, AstLocal* local, bool upvalue)
-                : AstExpr(location)
-                , local(local)
-                , upvalue(upvalue)
+                : AstExpr(location), local(local), upvalue(upvalue)
             {
             }
             
