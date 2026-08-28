@@ -32,7 +32,7 @@ struct RobloxExtraSpace {
     // GC keep-alive. We use std::set in the .cpp instead, so the Node
     // field is not present in our side-table (avoids pulling the
     // engine's script/ThreadRef.h into the vendored Luau adapter).
-    RBX::ScriptContext* context;
+    RBX::ScriptContext* scriptContext;
     RobloxExtraSpace* parent;
     std::vector<RobloxExtraSpace*> children;
     void* legacyShared;
@@ -45,12 +45,13 @@ struct RobloxExtraSpace {
     // 2016 instance methods — inline so the engine call pattern
     // `RobloxExtraSpace::get(L)->method()` resolves to these via the
     // global struct's lookup.
-    void setContext(RBX::ScriptContext* ctx) { this->context = ctx; }
-    RBX::ScriptContext* getContext() const { return this->context; }
+    void setContext(RBX::ScriptContext* ctx) { this->scriptContext = ctx; }
+    RBX::ScriptContext* getContext() const { return this->scriptContext; }
     // 5.1.4 used just `->context()` as a method-call-style accessor.
-    // The data member is also named `context`; this method shadows
-    // it so the engine's call syntax works.
-    RBX::ScriptContext* (context)() const { return this->context; }
+    // Provide a real method named `context` that returns the underlying
+    // ScriptContext* so the engine's call pattern works. The data
+    // member is `scriptContext` so there is no name collision.
+    RBX::ScriptContext* context() const { return this->scriptContext; }
     void eraseRefsFromAllNodes();
     int getThreadCount() const;
 
@@ -62,7 +63,7 @@ struct RobloxExtraSpace {
     template <typename Func>
     void forEachThread(Func func) {
         for (auto* es : allExtraSpaces()) {
-            if (es && es->context == this->context) {
+            if (es && es->scriptContext == this->scriptContext) {
                 func(es);
             }
         }
@@ -97,7 +98,7 @@ namespace RobloxExtraSpaceImpl {
 extern std::set<RobloxExtraSpace*>& allExtraSpaces();
 
 inline void setRobloxExtraSpaceContext(lua_State* L, RBX::ScriptContext* ctx) {
-    if (auto* es = RobloxExtraSpace::get(L)) es->context = ctx;
+    if (auto* es = RobloxExtraSpace::get(L)) es->scriptContext = ctx;
 }
 inline void setRobloxExtraSpaceIdentity(lua_State* L, int identity) {
     if (auto* es = RobloxExtraSpace::get(L)) es->identity = identity & 0x1F;

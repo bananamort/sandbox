@@ -34,7 +34,7 @@ void onNewState(lua_State* L) {
     es->yieldCaptured = 0;
     es->script.reset();
     es->continuations.reset();
-    es->context = nullptr;
+    es->scriptContext = nullptr;
     es->parent = nullptr;
     es->legacyShared = nullptr;
     es->ckey = 0;
@@ -63,7 +63,7 @@ void onNewThread(lua_State* L) {
     es->yieldCaptured = 0;
     es->script = parent_es ? parent_es->script : boost::weak_ptr<RBX::BaseScript>();
     es->continuations.reset();
-    es->context = parent_es ? parent_es->context : nullptr;
+    es->scriptContext = parent_es ? parent_es->scriptContext : nullptr;
     es->parent = parent_es;
     es->legacyShared = parent_es ? parent_es->legacyShared : nullptr;
     if (parent_es) parent_es->children.push_back(es);
@@ -103,22 +103,22 @@ void onYield(lua_State* L) {
 // global intrusive set (mirrors 2016's AllThreads) and clears each
 // thread's context pointer whose context matches.
 void RobloxExtraSpace::eraseRefsFromAllNodes() {
-    if (!this->context) return;
+    if (!this->scriptContext) return;
     for (auto* es : allExtraSpaces()) {
-        if (es && es->context == this->context) {
-            es->context = nullptr;
+        if (es && es->scriptContext == this->scriptContext) {
+            es->scriptContext = nullptr;
             es->legacyShared = nullptr;
         }
     }
 }
 
 // 2016: getThreadCount -- per-state count of live threads. Per-state means
-// per-context: sum all side-table entries whose context matches this->context.
+// per-context: sum all side-table entries whose context matches this->scriptContext.
 int RobloxExtraSpace::getThreadCount() const {
-    if (!this->context) return 0;
+    if (!this->scriptContext) return 0;
     int n = 0;
     for (auto* es : allExtraSpaces()) {
-        if (es && es->context == this->context) n++;
+        if (es && es->scriptContext == this->scriptContext) n++;
     }
     return n;
 }
@@ -142,9 +142,9 @@ void RobloxExtraSpace::createNewNode() {
 // encapsulated this. We provide a free-function helper above that
 // callers can use directly.
 void RobloxExtraSpace::forEachThread() {
-    if (!this->context) return;
+    if (!this->scriptContext) return;
     for (auto* es : allExtraSpaces()) {
-        if (es && es->context == this->context && es != this) {
+        if (es && es->scriptContext == this->scriptContext && es != this) {
             // Caller-supplied iteration is the free-function forEachExtraSpace.
             // This instance method exists only for API compatibility
             // with the 2016 engine; the actual visit happens via the
