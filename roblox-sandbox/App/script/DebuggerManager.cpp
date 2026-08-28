@@ -1863,9 +1863,6 @@ bool ScriptDebugger::hasDifferentScriptInstances(lua_State* L)
 	return false;
 }
 
-	return (globalRawScriptPtr != prevRawScriptPtr);
-}
-
 static std::string getHashString(RBX::Instance* pInstance)
 {
 	if (Script* scriptPtr = Instance::fastDynamicCast<Script>(pInstance))
