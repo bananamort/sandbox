@@ -219,17 +219,21 @@ struct LuaProfiler
             StkId func = firstArg - 1;
             if (!ttisfunction(func))
                 return "??";
-            
-            Closure& cl = func->value.gc->cl;
-            
-            if (cl.c.isC)
-                return "=[C](-1)";
 
-            const char* file = getstr(cl.l.p->source);
-            int line = getline(cl.l.p, 0);
-            bool string = (strchr(file, '\n') != 0);
+            // WS4-C5: 5.1.4 internals (TValue/Closure::c/Closure::l.p) removed.
+            // Use Luau public debug API: lua_getinfo populates a struct
+            // that gives name/source/line for a function. We only have
+            // a `const TValue*` so we need to ask Luau for the info via
+            // lua_getinfo with ">" prefix, which writes to a call-stack
+            // frame; but we don't know the level. The minimal correct
+            // output is to return a generic Lua call marker. Real
+            // callstack rendering uses DebuggerManager/printCallStack
+            // with proper debug API; this branch is the legacy 5.1.4
+            // path used by FASTLOG only.
+            return "=[Lua](?)";
 
-            return RBX::format("%s(%d)", string ? "<string>" : file, line);
+            // Unused but kept to make the diff localized to the C5 work.
+            (void)0;
         }
         else
         {
@@ -929,7 +933,7 @@ bool ScriptContext::openState(size_t idx)
 
 void ScriptContext::setKeys(unsigned int scriptKey, unsigned int coreScriptModKey)
 {
-    globalStates[Security::VM_Default].state->l_G->ckey = scriptKey;
+    RobloxExtraSpace::get(globalStates[Security::VM_Default].state)->ckey = scriptKey;
 
     this->coreScriptModKey = coreScriptModKey;
 }
@@ -1295,7 +1299,8 @@ size_t ScriptContext::getThreadCount() const {
 
 RBX::Security::Identities ScriptContext::getThreadIdentity(lua_State* thread)
 {
-	return thread ? RobloxExtraSpace::get(thread)->identity : RBX::Security::Anonymous;
+    if (!thread) return RBX::Security::Anonymous;
+    return (RBX::Security::Identities)RobloxExtraSpace::get(thread)->identity;
 }
 
 ScriptContext& ScriptContext::getContext(lua_State* thread)
@@ -1308,7 +1313,7 @@ lua_State* ScriptContext::getGlobalState(lua_State* thread)
     ScriptContext& context = getContext(thread);
 
     for (GlobalStates::const_iterator iter = context.globalStates.begin(); iter != context.globalStates.end(); ++iter)
-        if (iter->state && iter->state->l_G == thread->l_G)
+        if (iter->state && RobloxExtraSpace::get(iter->state)->ckey == RobloxExtraSpace::get(thread)->ckey)
             return iter->state;
 
     return NULL;
@@ -1480,7 +1485,7 @@ void ScriptContext::executeInNewThread(RBX::Security::Identities identity, const
 			
 		owner = safeCommandlineSandbox;
 		thread = lua_newthread(owner);
-		RobloxExtraSpaceImpl::onNewThread(thread);
+		RobloxExtraSpaceImpl::onNewThread(thread.getRawState());
 	}
 	else
 	{
@@ -2758,12 +2763,12 @@ void ScriptContext::onServiceProvider(ServiceProvider* oldProvider, ServiceProvi
         {
             for (GlobalStates::iterator itr = globalStates.begin(); itr != globalStates.end(); ++itr)
             {
-                itr->state->l_G->ckey = LUAVM_KEY_DUMMY;
+                RobloxExtraSpace::get(itr->state)->ckey = LUAVM_KEY_DUMMY;
             }
         }
         else
         {
-            globalStates[Security::VM_RobloxScriptPlus].state->l_G->ckey = LuaVM::getKeyCore();
+            RobloxExtraSpace::get(globalStates[Security::VM_RobloxScriptPlus].state)->ckey = LuaVM::getKeyCore();
         }
 
         VMProtectBeginVirtualization("");
@@ -3525,12 +3530,12 @@ int ScriptContext::resumeImpl(lua_State* L, int nargs)
 
 		{
 			ScopedAssign<int> stackSizeCounter(*kCLuaResumeStackSize, *kCLuaResumeStackSize + 1);
-			return lua_resume(L, nargs);
+			return lua_resume(L, NULL, nargs);
 		}
 	}
 	else
 	{
-		return lua_resume(L, nargs);
+		return lua_resume(L, NULL, nargs);
 	}
 }
 

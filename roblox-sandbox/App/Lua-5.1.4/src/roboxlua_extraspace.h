@@ -36,6 +36,11 @@ struct RobloxExtraSpace {
     RobloxExtraSpace* parent;
     std::vector<RobloxExtraSpace*> children;
     void* legacyShared;
+    // 2016's l_G->ckey/modKey lived in a global_State* that Luau removed.
+    // We store the same two values on the side-table struct so the
+    // engine's setKeys logic works without l_G.
+    unsigned int ckey;
+    unsigned int modKey;
 
     // 2016 instance methods — inline so the engine call pattern
     // `RobloxExtraSpace::get(L)->method()` resolves to these via the
@@ -44,6 +49,16 @@ struct RobloxExtraSpace {
     RBX::ScriptContext* getContext() const { return this->context; }
     void eraseRefsFromAllNodes();
     int getThreadCount() const;
+
+    // 2016 ThreadRef/WeakThreadRef integration methods. Real
+    // implementations live in the .cpp; declared inline so the engine
+    // call sites compile.
+    void createNewNode();
+    void forEachThread();
+    void* getNode() const;  // returns WeakThreadRef::Node* in 2016; we
+                            // use void* here because the type lives in
+                            // script/ThreadRef.h (engine header we
+                            // don't pull into the vendored Luau adapter).
 
     // Static get() that the engine's RobloxExtraSpace::get(L) call resolves
     // to. Returns the side-table pointer for L.

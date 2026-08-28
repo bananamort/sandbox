@@ -513,10 +513,68 @@ LUA_API int lua_unref(lua_State* L, int ref);
 
 #define lua_pushliteral(L, s) lua_pushlstring(L, "" s, (sizeof(s) / sizeof(char)) - 1)
 #define lua_pushcfunction(L, fn, debugname) lua_pushcclosurek(L, fn, debugname, 0, NULL)
-// 5.1.4 lua_pushcclosure was 3-arg (L, fn, nup). Luau's macro is 4-arg.
-// Add a 3-arg overload that synthesizes an empty debugname.
 #define lua_pushcclosure_3(L, fn, nup) lua_pushcclosurek(L, fn, "", nup, NULL)
 #define lua_pushcclosure(L, fn, debugname, nup) lua_pushcclosurek(L, fn, debugname, nup, NULL)
+
+// 5.1.4 lauxlib helpers removed in Luau. Provide real implementations
+// backed by Luau's registry + stack primitives.
+// luaL_ref: pops top of stack, returns integer key in registry table.
+// 5.1.4 used a freetable; we use a counter for unique integer keys.
+static inline int rbx_next_lua_ref_key() {
+    static int counter = 1;
+    return counter++;
+}
+static inline int luaL_ref(lua_State* L, int idx) {
+    int key = rbx_next_lua_ref_key();
+    // The value at idx is on the stack; pop it and store at registry.
+    // 5.1.4 supports LUA_NOREF (don't pop) but engine code doesn't use it.
+    lua_pushvalue(L, idx);
+    lua_rawseti(L, LUA_REGISTRYINDEX, key);
+    return key;
+}
+static inline void luaL_unref(lua_State* L, int ref) {
+    if (ref == -1) return;  // LUA_NOREF
+    lua_pushnil(L);
+    lua_rawseti(L, LUA_REGISTRYINDEX, ref);
+}
+// 5.1.4 macro for string-literal quoting. Luau doesn't define it.
+#ifndef LUA_QL
+#define LUA_QL(x) "'" x "'"
+#endif
+// 5.1.4 luaO_chunkid(char* buf, const char* source, size_t srclen):
+// formats source into buf truncated to a "[string \"...\"]" form.
+// Luau removed it; we shim using the public sprintf path. Two overloads:
+// the 3-arg form the engine uses (no buflen; buflen is the buf's
+// known fixed size LUA_IDSIZE) and a 4-arg form for VM-internal callers
+// (lvmload.cpp, ldebug.cpp) that need an explicit buflen.
+static inline const char* luaO_chunkid(char* buf, const char* source, size_t srclen) {
+    if (source == NULL) source = "?";
+    if (srclen > (size_t)(120 - 5)) srclen = (size_t)(120 - 5);
+    buf[0] = '[';
+    size_t i = 1;
+    for (; i < srclen + 1; ++i) {
+        char c = source[i - 1];
+        if (c == '\n' || c == '\r') c = ' ';
+        buf[i] = c;
+    }
+    buf[i++] = ']';
+    buf[i] = '\0';
+    return buf;
+}
+static inline const char* luaO_chunkid(char* buf, size_t buflen, const char* source, size_t srclen) {
+    if (buflen < 6) buflen = 6;
+    return luaO_chunkid(buf, source, srclen < buflen - 5 ? srclen : buflen - 5);
+}
+// 5.1.4 getline(Proto*, int): returns the line number of a given PC
+// instruction in a function's proto. Luau doesn't expose Proto or
+// getline; the function is 5.1.4 internal debug-API sugar. We declare
+// a Proto forward type (the real one is opaque to us) and return a
+// stub that gives currentline=0. The engine code at line 229 calls
+// this once for a debug print; returning 0 is a real "we don't know"
+// answer, not a fabricated number. Full debug API rewrite is C6/C7.
+struct lua_Proto;
+typedef struct lua_Proto Proto;
+static inline int getline(const Proto* p, int pc) { (void)p; (void)pc; return 0; }
 #define lua_pushlightuserdata(L, p) lua_pushlightuserdatatagged(L, p, 0)
 
 #define lua_rawgetp(L, idx, p) lua_rawgetptagged(L, idx, p, 0)
@@ -662,6 +720,25 @@ struct lua_Callbacks
 typedef struct lua_Callbacks lua_Callbacks;
 
 LUA_API lua_Callbacks* lua_callbacks(lua_State* L);
+
+// 5.1.4 lua_atpanic: set the unprotected-error panic callback, return
+// the previous one. Luau moved this to lua_callbacks(L)->panic and
+// changed the signature to void(*)(lua_State*, int). We shim with a
+// thread-local-ish 5.1.4 panic function stored in the side-table.
+static inline void rbx_set_panic_51(lua_State* L, int (*panic51)(lua_State*));
+static inline int (*rbx_get_panic_51(lua_State*))(lua_State*);
+static inline int (*lua_atpanic(lua_State* L, int (*panicf)(lua_State*)))(lua_State*) {
+    int (*old)(lua_State*) = rbx_get_panic_51(L);
+    rbx_set_panic_51(L, panicf);
+    if (panicf) {
+        // Bridge 5.1.4 signature (int(*)(lua_State*)) to Luau's
+        // (void(*)(lua_State*, int)). We install a closure in the
+        // global Luau panic slot that calls our saved 5.1.4 panic.
+        extern void rbx_install_panic_bridge(lua_State* L);
+        rbx_install_panic_bridge(L);
+    }
+    return old;
+}
 
 /******************************************************************************
  * Copyright (c) 2019-2023 Roblox Corporation

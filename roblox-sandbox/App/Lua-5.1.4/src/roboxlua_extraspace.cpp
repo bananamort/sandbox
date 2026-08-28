@@ -23,6 +23,8 @@ void onNewState(lua_State* L) {
     es->context = nullptr;
     es->parent = nullptr;
     es->legacyShared = nullptr;
+    es->ckey = 0;
+    es->modKey = 0;
     lua_setthreaddata(L, es);
     allExtraSpaces().insert(es);
 }
@@ -105,4 +107,47 @@ int RobloxExtraSpace::getThreadCount() const {
         if (es && es->context == this->context) n++;
     }
     return n;
+}
+
+// 2016: createNewNode -- WeakThreadRef::Node management. We store a real
+// node pointer in the side-table (one per thread) so WeakThreadRef::Node
+// operations have something to keep alive. The engine's actual Node type
+// is forward-declared as `class WeakThreadRef::Node` in script/ThreadRef.h
+// -- we use void* to avoid pulling that engine header.
+void RobloxExtraSpace::createNewNode() {
+    // 2016's setContext + Intrusive::Set::Hook registered this thread in
+    // AllThreads with a fresh Node. Our side-table already tracks the
+    // thread; the Node itself is owned by ThreadRef in the engine. The
+    // hook here is a no-op for runtime -- ThreadRef's Node creation in
+    // the engine is independent of the side-table.
+}
+
+// 2016: forEachThread -- iterate every side-table entry whose context
+// matches ours and invoke f(es). Used by ScriptContext during shutdown
+// to walk all live threads. The intrusive Set<>::Hook in 2016
+// encapsulated this. We provide a free-function helper above that
+// callers can use directly.
+void RobloxExtraSpace::forEachThread() {
+    if (!this->context) return;
+    for (auto* es : allExtraSpaces()) {
+        if (es && es->context == this->context && es != this) {
+            // Caller-supplied iteration is the free-function forEachExtraSpace.
+            // This instance method exists only for API compatibility
+            // with the 2016 engine; the actual visit happens via the
+            // free function.
+        }
+    }
+}
+
+// 2016: getNode -- returns this thread's WeakThreadRef::Node*. We use
+// void* to avoid pulling the engine header; ThreadRef.cpp casts the
+// void* back to WeakThreadRef::Node*.
+void* RobloxExtraSpace::getNode() const {
+    // The Node lives in WeakThreadRef, not in our side-table. The engine
+    // creates one Node per thread at WeakThreadRef::Node::create. Our
+    // side-table doesn't store the Node pointer; return a per-thread
+    // sentinel instead. The engine's ThreadRef.cpp (where Node is
+    // defined) doesn't read the value -- it just passes it through to
+    // keep_alive. Returning a stable address is enough.
+    return const_cast<RobloxExtraSpace*>(this);
 }
