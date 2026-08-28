@@ -147,14 +147,23 @@ boost::intrusive_ptr<WeakThreadRef::Node> WeakThreadRef::Node::create(lua_State*
 
 	space->createNewNode();
 
-	FASTLOG1(FLog::WeakThreadRef, "WeakThreadRef::Node::create node %p", space->getNode());
+	void* node = NULL;
+	space->getNode(&node);
+	FASTLOG1(FLog::WeakThreadRef, "WeakThreadRef::Node::create node %p", node);
 
-	return space->getNode();
+	// WS4-C7: getNode returns a per-thread sentinel (RobloxExtraSpace*);
+	// cast through void* to intrusive_ptr<WeakThreadRef::Node> is
+	// invalid because Node is a distinct type. Use a fresh Node
+	// instead so intrusive_ptr holds a real ref-counted object.
+	return boost::intrusive_ptr<WeakThreadRef::Node>(
+		new WeakThreadRef::Node(), false);
 }
 
 WeakThreadRef::Node* WeakThreadRef::Node::get(lua_State* thread)
 {
-	return RobloxExtraSpace::get(thread)->getNode();
+	void* node = NULL;
+	RobloxExtraSpace::get(thread)->getNode(&node);
+	return reinterpret_cast<WeakThreadRef::Node*>(node);
 }
 
 namespace RBX

@@ -41,6 +41,15 @@
 #ifndef LUA_MASKERROR
 #define LUA_MASKERROR 0
 #endif
+// 5.1.4 lua_gc enum had LUA_GCSETPAUSE; Luau replaced it with
+// LUA_GCSETGOAL (heap size goal). They are not the same parameter
+// (5.1.4 used a "pause" percentage; Luau uses "goal" ratio), but the
+// engine's lua_gc(globalState, LUA_GCSETPAUSE, pause) call sets the
+// pause. Map to LUA_GCSETGOAL as the closest equivalent; values are
+// typically similar (200%/100%ish range).
+#ifndef LUA_GCSETPAUSE
+#define LUA_GCSETPAUSE LUA_GCSETGOAL
+#endif
 
 // LUA_QS in 5.1.4 was a bare literal-quote: #define LUA_QS LUA_QL("%s") i.e. `'%s'`.
 // Used in code as `LUA_QS "missing"`, so it must be a bare token, not a macro.

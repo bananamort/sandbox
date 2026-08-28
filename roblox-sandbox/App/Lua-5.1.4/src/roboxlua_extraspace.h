@@ -54,11 +54,17 @@ struct RobloxExtraSpace {
     // implementations live in the .cpp; declared inline so the engine
     // call sites compile.
     void createNewNode();
+    void getNode(void** outNode) const;  // returns typed pointer
+    template <typename Func>
+    void forEachThread(Func func) {
+        for (auto* es : allExtraSpaces()) {
+            if (es && es->context == this->context) {
+                func(es);
+            }
+        }
+    }
+    // 0-arg overload (compat with call sites that don't pass a func).
     void forEachThread();
-    void* getNode() const;  // returns WeakThreadRef::Node* in 2016; we
-                            // use void* here because the type lives in
-                            // script/ThreadRef.h (engine header we
-                            // don't pull into the vendored Luau adapter).
 
     // Static get() that the engine's RobloxExtraSpace::get(L) call resolves
     // to. Returns the side-table pointer for L.

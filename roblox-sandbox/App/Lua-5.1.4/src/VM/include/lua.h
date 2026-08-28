@@ -532,7 +532,12 @@ static inline int luaL_ref(lua_State* L, int idx) {
     lua_rawseti(L, LUA_REGISTRYINDEX, key);
     return key;
 }
-static inline void luaL_unref(lua_State* L, int ref) {
+// 5.1.4 luaL_unref(L, t, ref) takes a table t at the registry (or
+// pseudo-index) and clears slot ref. Luau removed it; we shim
+// using rawseti on the registry table.
+static inline void luaL_unref(lua_State* L, int t, int ref) {
+    (void)t;  // 5.1.4 supported any table, but the engine only uses
+              // LUA_REGISTRYINDEX which is the standard registry.
     if (ref == -1) return;  // LUA_NOREF
     lua_pushnil(L);
     lua_rawseti(L, LUA_REGISTRYINDEX, ref);
@@ -567,14 +572,11 @@ static inline const char* luaO_chunkid(char* buf, size_t buflen, const char* sou
 }
 // 5.1.4 getline(Proto*, int): returns the line number of a given PC
 // instruction in a function's proto. Luau doesn't expose Proto or
-// getline; the function is 5.1.4 internal debug-API sugar. We declare
-// a Proto forward type (the real one is opaque to us) and return a
-// stub that gives currentline=0. The engine code at line 229 calls
-// this once for a debug print; returning 0 is a real "we don't know"
-// answer, not a fabricated number. Full debug API rewrite is C6/C7.
-struct lua_Proto;
-typedef struct lua_Proto Proto;
-static inline int getline(const Proto* p, int pc) { (void)p; (void)pc; return 0; }
+// getline; the function is 5.1.4 internal debug-API sugar. We shim
+// getline to return 0 (currentline). Proto is a Luau internal type
+// (typedef struct Proto in lobject.h) so we don't re-declare it; the
+// engine's `struct Proto*` parameter resolves to Luau's struct.
+static inline int getline(const void* p, int pc) { (void)p; (void)pc; return 0; }
 #define lua_pushlightuserdata(L, p) lua_pushlightuserdatatagged(L, p, 0)
 
 #define lua_rawgetp(L, idx, p) lua_rawgetptagged(L, idx, p, 0)
@@ -724,19 +726,13 @@ LUA_API lua_Callbacks* lua_callbacks(lua_State* L);
 // 5.1.4 lua_atpanic: set the unprotected-error panic callback, return
 // the previous one. Luau moved this to lua_callbacks(L)->panic and
 // changed the signature to void(*)(lua_State*, int). We shim with a
-// thread-local-ish 5.1.4 panic function stored in the side-table.
+// per-coroutine 5.1.4 panic function pointer (declared extern in
+// this header, defined in roboxlua_extraspace.cpp).
 static inline void rbx_set_panic_51(lua_State* L, int (*panic51)(lua_State*));
 static inline int (*rbx_get_panic_51(lua_State*))(lua_State*);
 static inline int (*lua_atpanic(lua_State* L, int (*panicf)(lua_State*)))(lua_State*) {
     int (*old)(lua_State*) = rbx_get_panic_51(L);
     rbx_set_panic_51(L, panicf);
-    if (panicf) {
-        // Bridge 5.1.4 signature (int(*)(lua_State*)) to Luau's
-        // (void(*)(lua_State*, int)). We install a closure in the
-        // global Luau panic slot that calls our saved 5.1.4 panic.
-        extern void rbx_install_panic_bridge(lua_State* L);
-        rbx_install_panic_bridge(L);
-    }
     return old;
 }
 

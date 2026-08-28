@@ -5,6 +5,20 @@
 #include <unordered_map>
 #include <algorithm>
 
+// 5.1.4 lua_atpanic compatibility: store the 5.1.4-style panic
+// callback per-coroutine so that when Luau's panic (which takes
+// a different signature) fires, we can route to the engine's
+// 5.1.4 callback.
+static std::unordered_map<lua_State*, int (*)(lua_State*)> g_panic_51;
+void rbx_set_panic_51(lua_State* L, int (*panic51)(lua_State*)) {
+    if (panic51) g_panic_51[L] = panic51;
+    else g_panic_51.erase(L);
+}
+int (*rbx_get_panic_51(lua_State* L))(lua_State*) {
+    auto it = g_panic_51.find(L);
+    return (it == g_panic_51.end()) ? NULL : it->second;
+}
+
 // Global set mirrors 2016's Intrusive::Set<RobloxExtraSpace>::Hook so
 // ScriptContext::eraseRefsFromAllNodes + forEachThread work.
 std::set<RobloxExtraSpace*>& allExtraSpaces() {
@@ -139,15 +153,11 @@ void RobloxExtraSpace::forEachThread() {
     }
 }
 
-// 2016: getNode -- returns this thread's WeakThreadRef::Node*. We use
-// void* to avoid pulling the engine header; ThreadRef.cpp casts the
-// void* back to WeakThreadRef::Node*.
-void* RobloxExtraSpace::getNode() const {
-    // The Node lives in WeakThreadRef, not in our side-table. The engine
-    // creates one Node per thread at WeakThreadRef::Node::create. Our
-    // side-table doesn't store the Node pointer; return a per-thread
-    // sentinel instead. The engine's ThreadRef.cpp (where Node is
-    // defined) doesn't read the value -- it just passes it through to
-    // keep_alive. Returning a stable address is enough.
-    return const_cast<RobloxExtraSpace*>(this);
+// 2016: getNode -- returns this thread's WeakThreadRef::Node* via the
+// out parameter. We use void** because the Node type lives in
+// script/ThreadRef.h (engine header). The engine's Node uses the
+// address as an opaque handle; the address of the side-table struct
+// is unique per thread, so it's a valid handle.
+void RobloxExtraSpace::getNode(void** outNode) const {
+    if (outNode) *outNode = const_cast<RobloxExtraSpace*>(this);
 }

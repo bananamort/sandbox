@@ -134,6 +134,10 @@ namespace RBX {
 		lua_State* threadDangerous() const {
 			return liveThreadRef ? liveThreadRef->thread() : NULL;
 		}
+		// WS4-C7: 5.1.4 accessor alias for the raw lua_State*.
+		// Luau removed the underlying global_State pointer; getRawState
+		// maps to threadDangerous() which is the same lua_State*.
+		lua_State* getRawState() const { return threadDangerous(); }
 
 	};
 
