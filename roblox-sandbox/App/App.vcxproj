@@ -2326,7 +2326,6 @@ cmd /c "exit /b 0"</Command>
     <ClCompile Include="Lua-5.1.4\src\VM\src\lapi.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
-    </ClCompile>
     <ClCompile Include="Lua-5.1.4\src\VM\src\laux.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
