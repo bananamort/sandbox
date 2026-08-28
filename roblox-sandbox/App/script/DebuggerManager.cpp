@@ -849,11 +849,11 @@ static void setEvalThreadEnvironment(lua_State * parentThread, lua_State* evalTh
 	int metatableIndex = lua_gettop(evalThread);
 
 	lua_pushstring(evalThread, "__index");
-	lua_pushcfunction(evalThread, &getIndexInfo);
+	lua_pushcfunction(evalThread, &getIndexInfo, "DebuggerManager");
 	lua_settable(evalThread, metatableIndex);
 
 	lua_pushstring(evalThread, "__newindex");
-	lua_pushcfunction(evalThread, &setIndexInfo);
+	lua_pushcfunction(evalThread, &setIndexInfo, "DebuggerManager");
 	lua_settable(evalThread, metatableIndex);
 
 	// Store the stack index

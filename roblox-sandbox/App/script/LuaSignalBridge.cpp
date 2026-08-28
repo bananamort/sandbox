@@ -29,7 +29,7 @@ int Bridge<EventInstance>::on_index(const EventInstance& object, const char* nam
 	// The pre-defined "connect()" method
 	if (strcmp(name, "connect") == 0 || strcmp(name, "Connect") == 0)
 	{
-		lua_pushcfunction(L, EventBridge::connect);
+		lua_pushcfunction(L, EventBridge::connect, "LuaSignalBridge");
 		return 1;
 	}
 
@@ -38,7 +38,7 @@ int Bridge<EventInstance>::on_index(const EventInstance& object, const char* nam
 	{
 		RBX::Security::Context::current().requirePermission(RBX::Security::LocalUser, "connectFirst");
 		StandardOut::singleton()->print(MESSAGE_WARNING, "connectFirst is deprecated");
-		lua_pushcfunction(L, EventBridge::connect);
+		lua_pushcfunction(L, EventBridge::connect, "LuaSignalBridge");
 		return 1;
 	}
 
@@ -47,14 +47,14 @@ int Bridge<EventInstance>::on_index(const EventInstance& object, const char* nam
 	{
 		RBX::Security::Context::current().requirePermission(RBX::Security::LocalUser, "connectLast");
 		StandardOut::singleton()->print(MESSAGE_WARNING, "connectLast is deprecated");
-		lua_pushcfunction(L, EventBridge::connect);
+		lua_pushcfunction(L, EventBridge::connect, "LuaSignalBridge");
 		return 1;
 	}
 
 	// The pre-defined "wait()" method
 	if (strcmp(name, "wait")==0 || strcmp(name, "Wait") == 0)
 	{
-		lua_pushcfunction(L, EventBridge::wait);
+		lua_pushcfunction(L, EventBridge::wait, "LuaSignalBridge");
 		return 1;
 	}
 
@@ -397,7 +397,7 @@ int Bridge< rbx::signals::connection >::on_index(const rbx::signals::connection&
 	// The pre-defined "disconnect()" method
 	if (strcmp(name, "disconnect")==0)
 	{
-		lua_pushcfunction(L, SignalConnectionBridge::disconnect);
+		lua_pushcfunction(L, SignalConnectionBridge::disconnect, "LuaSignalBridge");
 		return 1;
 	}
 

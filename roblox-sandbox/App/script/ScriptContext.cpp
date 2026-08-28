@@ -587,7 +587,7 @@ static int luaopen_math_rbx(lua_State* L)
 {
 	luaopen_math(L);
 
-	lua_pushcfunction(L, LuaMathExtension::noise);
+	lua_pushcfunction(L, LuaMathExtension::noise, "ScriptContext");
 	lua_setfield(L, -2, "noise");
 
 	return 1;
@@ -769,136 +769,136 @@ bool ScriptContext::openState(size_t idx)
 		lua_setglobal(globalState, "shared");
 
 		// Declare the print() global function
-		lua_pushcfunction(globalState, print);
+		lua_pushcfunction(globalState, print, "ScriptContext");
 		lua_setglobal(globalState, "print");
 
 		if (FFlag::DebugCrashEnabled)
 		{
 			// Declare the crash__() global function for debugging
-			lua_pushcfunction(globalState, crash);
+			lua_pushcfunction(globalState, crash, "ScriptContext");
 			lua_setglobal(globalState, "crash__");
 		}
 
 		// Declare the tick() global function
-		lua_pushcfunction(globalState, tick);
+		lua_pushcfunction(globalState, tick, "ScriptContext");
 		lua_setglobal(globalState, "tick");
 
 		// Declare the time() global function
-		lua_pushcfunction(globalState, time);
+		lua_pushcfunction(globalState, time, "ScriptContext");
 		lua_setglobal(globalState, "time");
 
         // Declare the elapsedTime() global function
-        lua_pushcfunction(globalState, rbxTime);
+        lua_pushcfunction(globalState, rbxTime, "ScriptContext");
         lua_setglobal(globalState, "elapsedTime");
 
         // LEGACY
 		// Declare the ElapsedTime() global function
-		lua_pushcfunction(globalState, rbxTime);
+		lua_pushcfunction(globalState, rbxTime, "ScriptContext");
 		lua_setglobal(globalState, "ElapsedTime");
 
 		// Declare the wait() global function
-		lua_pushcfunction(globalState, wait);
+		lua_pushcfunction(globalState, wait, "ScriptContext");
 		lua_setglobal(globalState, "wait");
 
         // LEGACY
 		// Declare the Wait() global function
-		lua_pushcfunction(globalState, wait);
+		lua_pushcfunction(globalState, wait, "ScriptContext");
 		lua_setglobal(globalState, "Wait");
 
 		// Declare the delay() global function
-		lua_pushcfunction(globalState, delay);
+		lua_pushcfunction(globalState, delay, "ScriptContext");
 		lua_setglobal(globalState, "delay");
 
 		// LEGACY
 		// Declare the Delay() global function
-		lua_pushcfunction(globalState, delay);
+		lua_pushcfunction(globalState, delay, "ScriptContext");
 		lua_setglobal(globalState, "Delay");
 
 		// Declare the ypcall() global function
-		lua_pushcfunction(globalState, ypcall);
+		lua_pushcfunction(globalState, ypcall, "ScriptContext");
 		lua_setglobal(globalState, "ypcall");
 
 		// Replace Lua pcall() global function with ypcall to handle yielding transparently
-		lua_pushcfunction(globalState, ypcall);
+		lua_pushcfunction(globalState, ypcall, "ScriptContext");
 		lua_setglobal(globalState, "pcall");
 
         // Declare the spawn() global function
-        lua_pushcfunction(globalState, spawn);
+        lua_pushcfunction(globalState, spawn, "ScriptContext");
         lua_setglobal(globalState, "spawn");
 
         // LEGACY
 		// Declare the Spawn() global function
-		lua_pushcfunction(globalState, spawn);
+		lua_pushcfunction(globalState, spawn, "ScriptContext");
 		lua_setglobal(globalState, "Spawn");
 
 		// Declare the printidentity() global function
-		lua_pushcfunction(globalState, printidentity);
+		lua_pushcfunction(globalState, printidentity, "ScriptContext");
 		lua_setglobal(globalState, "printidentity");
 
 		// Replace the definition of dofile
 		// TODO: Security: Does this truly replace the Lua's version of dofile?
-		lua_pushcfunction(globalState, dofile);
+		lua_pushcfunction(globalState, dofile, "ScriptContext");
 		lua_setglobal(globalState, "dofile");
 
 		// Replace the definition of loadfile
 		// TODO: Security: Does this truly replace the Lua's version of loadfile?
-		lua_pushcfunction(globalState, loadfile);
+		lua_pushcfunction(globalState, loadfile, "ScriptContext");
 		lua_setglobal(globalState, "loadfile");
 
         // Replace the definition of loadstring
-		lua_pushcfunction(globalState, loadstring);
+		lua_pushcfunction(globalState, loadstring, "ScriptContext");
 		lua_setglobal(globalState, "loadstring");
 
 		// Replace the definition of load
 		// TODO: Security: Does this truly replace the Lua's version of the function?
 		// TODO: insert a security check into the regular implementation
-		lua_pushcfunction(globalState, notImplemented);
+		lua_pushcfunction(globalState, notImplemented, "ScriptContext");
 		lua_setglobal(globalState, "load");
 
 		// Declare the settings() global function
-		lua_pushcfunction(globalState, settings);
+		lua_pushcfunction(globalState, settings, "ScriptContext");
 		lua_setglobal(globalState, "settings");
 
 		// Declare the UserSettings() global function
-		lua_pushcfunction(globalState, usersettings);
+		lua_pushcfunction(globalState, usersettings, "ScriptContext");
 		lua_setglobal(globalState, "UserSettings");
 
 		// Declare the PluginManager() global function
-		lua_pushcfunction(globalState, pluginmanager);
+		lua_pushcfunction(globalState, pluginmanager, "ScriptContext");
 		lua_setglobal(globalState, "PluginManager");
 
 		// Declare the loadlibrary(string) global function
-		lua_pushcfunction(globalState, loadLibrary);
+		lua_pushcfunction(globalState, loadLibrary, "ScriptContext");
 		lua_setglobal(globalState, "LoadLibrary");
 
         // Declare the warn(string) global function
-        lua_pushcfunction(globalState, warn);
+        lua_pushcfunction(globalState, warn, "ScriptContext");
         lua_setglobal(globalState, "warn");
 
-		lua_pushcfunction(globalState, requireModuleScript);
+		lua_pushcfunction(globalState, requireModuleScript, "ScriptContext");
 		lua_setglobal(globalState, "require");
 
 		if (FFlag::LuaDebugger)
 		{
 			// Declare the DebuggerManager() global function
-			lua_pushcfunction(globalState, debuggermanager);
+			lua_pushcfunction(globalState, debuggermanager, "ScriptContext");
 			lua_setglobal(globalState, "DebuggerManager");
 		}
 
 		// LEGACY
-		lua_pushcfunction(globalState, stats);
+		lua_pushcfunction(globalState, stats, "ScriptContext");
 		lua_setglobal(globalState, "stats");
 
 		// LEGACY
-		lua_pushcfunction(globalState, stats);
+		lua_pushcfunction(globalState, stats, "ScriptContext");
 		lua_setglobal(globalState, "Stats");
 
 		// LEGACY
-		lua_pushcfunction(globalState, version);
+		lua_pushcfunction(globalState, version, "ScriptContext");
 		lua_setglobal(globalState, "version");
 
 		// LEGACY
-		lua_pushcfunction(globalState, version);
+		lua_pushcfunction(globalState, version, "ScriptContext");
 		lua_setglobal(globalState, "Version");
 
         loadLibraryProtected(globalState, luaopen_os_rbx);

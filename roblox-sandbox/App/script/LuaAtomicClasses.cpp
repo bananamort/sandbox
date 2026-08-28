@@ -235,12 +235,12 @@ int Bridge<RBX::RbxRay>::on_index(const RBX::RbxRay& object, const char* name, l
 	}
 	if (strcmp(name,"ClosestPoint")==0)
 	{
-		lua_pushcfunction(L, closestPointVector3);
+		lua_pushcfunction(L, closestPointVector3, "LuaAtomicClasses");
 		return 1;
 	}
 	if (strcmp(name,"Distance")==0)
 	{
-		lua_pushcfunction(L, distanceVector3);
+		lua_pushcfunction(L, distanceVector3, "LuaAtomicClasses");
 		return 1;
 	}
 
@@ -324,7 +324,7 @@ int Bridge<RBX::Region3>::on_index(const RBX::Region3& object, const char* name,
 	}
 	if (strcmp(name,"ExpandToGrid")==0)
 	{
-		lua_pushcfunction(L, Region3Bridge::expandToGrid);
+		lua_pushcfunction(L, Region3Bridge::expandToGrid, "LuaAtomicClasses");
 		return 1;
 	}
 
@@ -798,22 +798,22 @@ int Bridge<G3D::Vector3>::on_index(const G3D::Vector3& object, const char* name,
 	}
 	if (strcmp(name,"lerp")==0 || strcmp(name,"Lerp")==0)
 	{
-		lua_pushcfunction(L, lerpVector3);
+		lua_pushcfunction(L, lerpVector3, "LuaAtomicClasses");
 		return 1;
 	}
 	if (strcmp(name,"Cross")==0)
 	{
-		lua_pushcfunction(L, crossVector3);
+		lua_pushcfunction(L, crossVector3, "LuaAtomicClasses");
 		return 1;
 	}
 	if (strcmp(name,"Dot")==0)
 	{
-		lua_pushcfunction(L, dotVector3);
+		lua_pushcfunction(L, dotVector3, "LuaAtomicClasses");
 		return 1;
 	}
 	if (strcmp(name,"isClose") == 0)
 	{
-		lua_pushcfunction(L, isCloseVector3);
+		lua_pushcfunction(L, isCloseVector3, "LuaAtomicClasses");
 		return 1;
 	}
 
@@ -1116,7 +1116,7 @@ int Bridge<RBX::Vector2int16>::on_index(const RBX::Vector2int16& object, const c
 	//}
 	//if (strcmp(name,"lerp")==0)
 	//{
-	//	lua_pushcfunction(L, lerpVector2);
+	//	lua_pushcfunction(L, lerpVector2, "LuaAtomicClasses");
 	//	return 1;
 	//}
 
@@ -1281,7 +1281,7 @@ int Bridge<RBX::Vector2>::on_index(const RBX::Vector2& object, const char* name,
 	}
 	if (strcmp(name,"lerp")==0)
 	{
-		lua_pushcfunction(L, lerpVector2);
+		lua_pushcfunction(L, lerpVector2, "LuaAtomicClasses");
 		return 1;
 	}
 
@@ -2659,39 +2659,39 @@ void Bridge<G3D::Vector3int16>::registerClass (lua_State *L)
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__index");
-	lua_pushcfunction(L, on_index);
+	lua_pushcfunction(L, on_index, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__newindex");
-	lua_pushcfunction(L, on_newindex);
+	lua_pushcfunction(L, on_newindex, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__eq");
-	lua_pushcfunction(L, on_eq);
+	lua_pushcfunction(L, on_eq, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__tostring");
-	lua_pushcfunction(L, on_tostring);
+	lua_pushcfunction(L, on_tostring, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__add");
-	lua_pushcfunction(L, Vector3int16Bridge::on_add);
+	lua_pushcfunction(L, Vector3int16Bridge::on_add, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__sub");
-	lua_pushcfunction(L, Vector3int16Bridge::on_sub);
+	lua_pushcfunction(L, Vector3int16Bridge::on_sub, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__mul");
-	lua_pushcfunction(L, Vector3int16Bridge::on_mul);
+	lua_pushcfunction(L, Vector3int16Bridge::on_mul, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__div");
-	lua_pushcfunction(L, Vector3int16Bridge::on_div);
+	lua_pushcfunction(L, Vector3int16Bridge::on_div, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__unm");
-	lua_pushcfunction(L, Vector3int16Bridge::on_unm);
+	lua_pushcfunction(L, Vector3int16Bridge::on_unm, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_setreadonly(L, -1, true);
@@ -2711,39 +2711,39 @@ void Bridge<G3D::Vector2int16>::registerClass (lua_State *L)
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__index");
-	lua_pushcfunction(L, on_index);
+	lua_pushcfunction(L, on_index, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__newindex");
-	lua_pushcfunction(L, on_newindex);
+	lua_pushcfunction(L, on_newindex, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__eq");
-	lua_pushcfunction(L, on_eq);
+	lua_pushcfunction(L, on_eq, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__tostring");
-	lua_pushcfunction(L, on_tostring);
+	lua_pushcfunction(L, on_tostring, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__add");
-	lua_pushcfunction(L, Vector2int16Bridge::on_add);
+	lua_pushcfunction(L, Vector2int16Bridge::on_add, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__sub");
-	lua_pushcfunction(L, Vector2int16Bridge::on_sub);
+	lua_pushcfunction(L, Vector2int16Bridge::on_sub, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__mul");
-	lua_pushcfunction(L, Vector2int16Bridge::on_mul);
+	lua_pushcfunction(L, Vector2int16Bridge::on_mul, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__div");
-	lua_pushcfunction(L, Vector2int16Bridge::on_div);
+	lua_pushcfunction(L, Vector2int16Bridge::on_div, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__unm");
-	lua_pushcfunction(L, Vector2int16Bridge::on_unm);
+	lua_pushcfunction(L, Vector2int16Bridge::on_unm, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_setreadonly(L, -1, true);
@@ -2763,39 +2763,39 @@ void Bridge<G3D::Vector3>::registerClass (lua_State *L)
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__index");
-	lua_pushcfunction(L, on_index);
+	lua_pushcfunction(L, on_index, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__newindex");
-	lua_pushcfunction(L, on_newindex);
+	lua_pushcfunction(L, on_newindex, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__eq");
-	lua_pushcfunction(L, on_eq);
+	lua_pushcfunction(L, on_eq, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__tostring");
-	lua_pushcfunction(L, on_tostring);
+	lua_pushcfunction(L, on_tostring, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__add");
-	lua_pushcfunction(L, Vector3Bridge::on_add);
+	lua_pushcfunction(L, Vector3Bridge::on_add, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__sub");
-	lua_pushcfunction(L, Vector3Bridge::on_sub);
+	lua_pushcfunction(L, Vector3Bridge::on_sub, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__mul");
-	lua_pushcfunction(L, Vector3Bridge::on_mul);
+	lua_pushcfunction(L, Vector3Bridge::on_mul, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__div");
-	lua_pushcfunction(L, Vector3Bridge::on_div);
+	lua_pushcfunction(L, Vector3Bridge::on_div, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__unm");
-	lua_pushcfunction(L, Vector3Bridge::on_unm);
+	lua_pushcfunction(L, Vector3Bridge::on_unm, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_setreadonly(L, -1, true);
@@ -2815,39 +2815,39 @@ void Bridge<RBX::Vector2>::registerClass (lua_State *L)
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__index");
-	lua_pushcfunction(L, on_index);
+	lua_pushcfunction(L, on_index, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__newindex");
-	lua_pushcfunction(L, on_newindex);
+	lua_pushcfunction(L, on_newindex, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__eq");
-	lua_pushcfunction(L, on_eq);
+	lua_pushcfunction(L, on_eq, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__tostring");
-	lua_pushcfunction(L, on_tostring);
+	lua_pushcfunction(L, on_tostring, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__add");
-	lua_pushcfunction(L, Vector2Bridge::on_add);
+	lua_pushcfunction(L, Vector2Bridge::on_add, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__sub");
-	lua_pushcfunction(L, Vector2Bridge::on_sub);
+	lua_pushcfunction(L, Vector2Bridge::on_sub, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__mul");
-	lua_pushcfunction(L, Vector2Bridge::on_mul);
+	lua_pushcfunction(L, Vector2Bridge::on_mul, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__div");
-	lua_pushcfunction(L, Vector2Bridge::on_div);
+	lua_pushcfunction(L, Vector2Bridge::on_div, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__unm");
-	lua_pushcfunction(L, Vector2Bridge::on_unm);
+	lua_pushcfunction(L, Vector2Bridge::on_unm, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_setreadonly(L, -1, true);
@@ -2867,35 +2867,35 @@ void Bridge<G3D::CoordinateFrame>::registerClass (lua_State *L)
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__index");
-	lua_pushcfunction(L, on_index);
+	lua_pushcfunction(L, on_index, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__newindex");
-	lua_pushcfunction(L, on_newindex);
+	lua_pushcfunction(L, on_newindex, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__eq");
-	lua_pushcfunction(L, on_eq);
+	lua_pushcfunction(L, on_eq, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__tostring");
-	lua_pushcfunction(L, on_tostring);
+	lua_pushcfunction(L, on_tostring, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__add");
-	lua_pushcfunction(L, CoordinateFrameBridge::on_add);
+	lua_pushcfunction(L, CoordinateFrameBridge::on_add, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__sub");
-	lua_pushcfunction(L, CoordinateFrameBridge::on_sub);
+	lua_pushcfunction(L, CoordinateFrameBridge::on_sub, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__mul");
-	lua_pushcfunction(L, CoordinateFrameBridge::on_mul);
+	lua_pushcfunction(L, CoordinateFrameBridge::on_mul, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "inverse");
-	lua_pushcfunction(L, CoordinateFrameBridge::on_inverse);
+	lua_pushcfunction(L, CoordinateFrameBridge::on_inverse, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_setreadonly(L, -1, true);
@@ -2915,23 +2915,23 @@ void Bridge<RBX::Rect2D>::registerClass(lua_State *L)
 	lua_settable(L, -3);
 
     lua_pushstring(L, "__index");
-    lua_pushcfunction(L, on_index);
+    lua_pushcfunction(L, on_index, "LuaAtomicClasses");
     lua_settable(L, -3);
             
     lua_pushstring(L, "__newindex");
-    lua_pushcfunction(L, on_newindex);
+    lua_pushcfunction(L, on_newindex, "LuaAtomicClasses");
     lua_settable(L, -3);
             
     lua_pushstring(L, "__gc");
-    lua_pushcfunction(L, on_gc);
+    lua_pushcfunction(L, on_gc, "LuaAtomicClasses");
     lua_settable(L, -3);
             
     lua_pushstring(L, "__eq");
-    lua_pushcfunction(L, on_eq);
+    lua_pushcfunction(L, on_eq, "LuaAtomicClasses");
     lua_settable(L, -3);
             
     lua_pushstring(L, "__tostring");
-    lua_pushcfunction(L, on_tostring);
+    lua_pushcfunction(L, on_tostring, "LuaAtomicClasses");
     lua_settable(L, -3);
             
     lua_setreadonly(L, -1, true);
@@ -2950,19 +2950,19 @@ void Bridge<PhysicalProperties>::registerClass(lua_State *L)
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__index");
-	lua_pushcfunction(L, on_index);
+	lua_pushcfunction(L, on_index, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__newindex");
-	lua_pushcfunction(L, on_newindex);
+	lua_pushcfunction(L, on_newindex, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__eq");
-	lua_pushcfunction(L, on_eq);
+	lua_pushcfunction(L, on_eq, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__tostring");
-	lua_pushcfunction(L, on_tostring);
+	lua_pushcfunction(L, on_tostring, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_setreadonly(L, -1, true);
@@ -2982,31 +2982,31 @@ void Bridge<RBX::UDim>::registerClass (lua_State *L)
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__index");
-	lua_pushcfunction(L, on_index);
+	lua_pushcfunction(L, on_index, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__newindex");
-	lua_pushcfunction(L, on_newindex);
+	lua_pushcfunction(L, on_newindex, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__eq");
-	lua_pushcfunction(L, on_eq);
+	lua_pushcfunction(L, on_eq, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__tostring");
-	lua_pushcfunction(L, on_tostring);
+	lua_pushcfunction(L, on_tostring, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__add");
-	lua_pushcfunction(L, UDimBridge::on_add);
+	lua_pushcfunction(L, UDimBridge::on_add, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__sub");
-	lua_pushcfunction(L, UDimBridge::on_sub);
+	lua_pushcfunction(L, UDimBridge::on_sub, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__unm");
-	lua_pushcfunction(L, UDimBridge::on_unm);
+	lua_pushcfunction(L, UDimBridge::on_unm, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_setreadonly(L, -1, true);
@@ -3026,31 +3026,31 @@ void Bridge<RBX::UDim2>::registerClass (lua_State *L)
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__index");
-	lua_pushcfunction(L, on_index);
+	lua_pushcfunction(L, on_index, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__newindex");
-	lua_pushcfunction(L, on_newindex);
+	lua_pushcfunction(L, on_newindex, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__eq");
-	lua_pushcfunction(L, on_eq);
+	lua_pushcfunction(L, on_eq, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__tostring");
-	lua_pushcfunction(L, on_tostring);
+	lua_pushcfunction(L, on_tostring, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__add");
-	lua_pushcfunction(L, UDim2Bridge::on_add);
+	lua_pushcfunction(L, UDim2Bridge::on_add, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__sub");
-	lua_pushcfunction(L, UDim2Bridge::on_sub);
+	lua_pushcfunction(L, UDim2Bridge::on_sub, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_pushstring(L, "__unm");
-	lua_pushcfunction(L, UDim2Bridge::on_unm);
+	lua_pushcfunction(L, UDim2Bridge::on_unm, "LuaAtomicClasses");
 	lua_settable(L, -3);
 
 	lua_setreadonly(L, -1, true);
