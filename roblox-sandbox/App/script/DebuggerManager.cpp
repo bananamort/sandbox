@@ -1862,11 +1862,6 @@ bool ScriptDebugger::hasDifferentScriptInstances(lua_State* L)
 	(void)L;
 	return false;
 }
-		lua_pop(L, 1);
-
-		// alternate way of accessing "script" field (it uses internal lua calls)
-		//prevRawScriptPtr = rawuvalue(luaH_getstr(prevFuncTable, luaS_new(L, "script"))) + 1;
-	}
 
 	return (globalRawScriptPtr != prevRawScriptPtr);
 }
