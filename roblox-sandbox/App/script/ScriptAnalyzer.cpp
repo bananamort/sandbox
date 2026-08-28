@@ -920,6 +920,10 @@ namespace RBX
         class AstNode
         {
         public:
+            // WS4-C5: 0-arg init (not explicit) so derived classes can
+            // construct-then-init rather than member-init-list a
+            // Location-by-value.
+            AstNode() {}
             explicit AstNode(const Location& location): location(location) {}
             virtual ~AstNode() {}
             
@@ -936,12 +940,18 @@ namespace RBX
         class AstExpr: public AstNode
         {
         public:
+            // WS4-C5: 0-arg init (not explicit) so derived classes can
+            // construct-then-init rather than member-init-list a
+            // Location-by-value, which the v143 compiler rejects for
+            // the missing Location ctor in this unit's compilation.
+            AstExpr() {}
             explicit AstExpr(const Location& location): AstNode(location) {}
         };
 
         class AstStat: public AstNode
         {
         public:
+            AstStat() {}
             explicit AstStat(const Location& location): AstNode(location) {}
         };
         
@@ -1041,11 +1051,14 @@ namespace RBX
         class AstExprLocal: public AstExpr
         {
         public:
-            ASTRTTI(AstExprLocal)
-            
-            AstExprLocal(const Location& location, AstLocal* local, bool upvalue)
-                : AstExpr(location), local(local), upvalue(upvalue)
-            {
+            // ASTRTTI(AstExprLocal) deferred -- virtual getClassIndex
+            // defined at end of class (member-init-list kept trivial to
+            // avoid 5.1.4 ctor-init syntax issues with v143).
+            AstExprLocal() {}
+            AstExprLocal(const Location& location, AstLocal* l, bool u) {
+                this->location = location;
+                local = l;
+                upvalue = u;
             }
             
             virtual void visit(AstVisitor* visitor)
@@ -1055,8 +1068,9 @@ namespace RBX
             
             AstLocal* local;
             bool upvalue;
+            virtual int getClassIndex() const { return AstRtti<AstExprLocal>::value; }
         };
-        
+
         class AstExprGlobal: public AstExpr
         {
         public:
