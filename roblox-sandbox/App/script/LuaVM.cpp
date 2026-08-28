@@ -12,7 +12,9 @@
 
 #include "VMProtect/VMProtectSDK.h"
 
-struct lua_State;
+// lua_State comes from VM/include/lua.h (included via luaconf.h).
+// Forward-declaring it as a struct here would clash and break the
+// roboxlua_extraspace.h static get() that calls lua_getthreaddata.
 
 // If you are getting to this point in a debugger, you probably added a lua_*
 // call to one of the VM protected sections.
