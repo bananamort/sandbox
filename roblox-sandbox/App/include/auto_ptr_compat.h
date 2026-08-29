@@ -21,20 +21,20 @@ template <typename T>
 class auto_ptr {
     T* p_;
 public:
-    explicit auto_ptr(T* p = nullptr) LUA_NOEXCEPT : p_(p) {}
+    explicit auto_ptr(T* p = nullptr) noexcept : p_(p) {}
     ~auto_ptr() { delete p_; }
 
     // 5.1.4 copy semantics: source loses ownership on copy.
-    auto_ptr(auto_ptr& other) LUA_NOEXCEPT : p_(other.release()) {}
+    auto_ptr(auto_ptr& other) noexcept : p_(other.release()) {}
     template <typename U>
-    auto_ptr(auto_ptr<U>& other) LUA_NOEXCEPT : p_(other.release()) {}
+    auto_ptr(auto_ptr<U>& other) noexcept : p_(other.release()) {}
 
-    auto_ptr& operator=(auto_ptr& other) LUA_NOEXCEPT {
+    auto_ptr& operator=(auto_ptr& other) noexcept {
         if (this != &other) reset(other.release());
         return *this;
     }
     template <typename U>
-    auto_ptr& operator=(auto_ptr<U>& other) LUA_NOEXCEPT {
+    auto_ptr& operator=(auto_ptr<U>& other) noexcept {
         reset(other.release());
         return *this;
     }
@@ -42,20 +42,20 @@ public:
     // 5.1.4 supported move construction/assignment in C++11 mode;
     // std::auto_ptr has implicit move via the copy ctor (C++11
     // deprecation made this OK).
-    auto_ptr(auto_ptr&&) LUA_NOEXCEPT = default;
-    auto_ptr& operator=(auto_ptr&&) LUA_NOEXCEPT = default;
+    auto_ptr(auto_ptr&&) noexcept = default;
+    auto_ptr& operator=(auto_ptr&&) noexcept = default;
 
     T& operator*() const { return *p_; }
     T* operator->() const { return p_; }
-    T* get() const LUA_NOEXCEPT { return p_; }
-    explicit operator bool() const LUA_NOEXCEPT { return p_ != nullptr; }
+    T* get() const noexcept { return p_; }
+    explicit operator bool() const noexcept { return p_ != nullptr; }
 
-    T* release() LUA_NOEXCEPT {
+    T* release() noexcept {
         T* old = p_;
         p_ = nullptr;
         return old;
     }
-    void reset(T* p = nullptr) LUA_NOEXCEPT {
+    void reset(T* p = nullptr) noexcept {
         if (p_ != p) {
             delete p_;
             p_ = p;
