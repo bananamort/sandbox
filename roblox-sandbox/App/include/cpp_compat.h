@@ -12,14 +12,14 @@
 // bind1st, bind2nd, mem_fun) that the engine still uses.
 
 namespace std {
-        typedef Arg argument_type;
-        typedef Result result_type;
+        using argument_type = Arg;
+        using result_type = Result;
     };
     template <typename Arg1, typename Arg2, typename Result>
     struct binary_function {
-        typedef Arg1 first_argument_type;
-        typedef Arg2 second_argument_type;
-        typedef Result result_type;
+        using first_argument_type = Arg1;
+        using second_argument_type = Arg2;
+        using result_type = Result;
     };
 
     // C++11 deprecated std::bind1st/std::bind2nd; gone in C++17. Provide
