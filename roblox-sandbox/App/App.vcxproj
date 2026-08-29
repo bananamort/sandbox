@@ -450,7 +450,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>..\Library\SDL2\include;..\Library\boost\include;..\Library\cpp-netlib;..\Library\curl\include;..\Library\VMProtect\include;..\Library\w3c-libwww\Library\src;.\include;..\Base\include;..\fmod\include;.\lua-5.1.4\src;.\Lua-5.1.4\src\VM\include;.\Lua-5.1.4\src\Compiler\include;.\Lua-5.1.4\src\Ast\include;.\Lua-5.1.4\src\Common\include;.\Lua-5.1.4\src\Bytecode\include;.\Lua-5.1.4\src\Config\include;..\Rendering;..\Rendering\g3d\include;..\Rendering\g3d\zlib;..\Rendering\RbxG3D\include;..\Rendering\AppDraw\include;..\Rendering\GfxBase\include;..\Network\include;..\RBXCookies;..\Log\Include;..\ClientShared;..\App.BulletPhysics;..\Win;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;CURL_STATICLIB;WWW_MSWINDOWS;_DEBUG;_LIB;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;CURL_STATICLIB;WWW_MSWINDOWS;_DEBUG;_LIB;_SCL_SECURE_NO_WARNINGS;_ENFORCE_MATCHING_ALLOCATORS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -470,7 +470,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>..\Library\SDL2\include;..\Library\boost\include;..\Library\cpp-netlib;..\Library\curl\include;..\Library\VMProtect\include;..\Library\w3c-libwww\Library\src;.\include;..\Base\include;..\fmod\include;.\lua-5.1.4\src;.\Lua-5.1.4\src\VM\include;.\Lua-5.1.4\src\Compiler\include;.\Lua-5.1.4\src\Ast\include;.\Lua-5.1.4\src\Common\include;.\Lua-5.1.4\src\Bytecode\include;.\Lua-5.1.4\src\Config\include;..\Rendering;..\Rendering\g3d\include;..\Rendering\g3d\zlib;..\Rendering\RbxG3D\include;..\Rendering\AppDraw\include;..\Rendering\GfxBase\include;..\Network\include;..\RBXCookies;..\Log\Include;..\ClientShared;..\App.BulletPhysics;..\Win;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;CURL_STATICLIB;WWW_MSWINDOWS;_DEBUG;_LIB;_SCL_SECURE_NO_WARNINGS;RBX_RCC_SECURITY;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;CURL_STATICLIB;WWW_MSWINDOWS;_DEBUG;_LIB;_SCL_SECURE_NO_WARNINGS;RBX_RCC_SECURITY;_ENFORCE_MATCHING_ALLOCATORS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -490,7 +490,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>..\Library\SDL2\include;..\Library\boost\include;..\Library\cpp-netlib;..\Library\curl\include;..\Library\VMProtect\include;..\Library\w3c-libwww\Library\src;.\include;..\fmod\xbox\include;..\Base\include;.\lua-5.1.4\src;.\Lua-5.1.4\src\VM\include;.\Lua-5.1.4\src\Compiler\include;.\Lua-5.1.4\src\Ast\include;.\Lua-5.1.4\src\Common\include;.\Lua-5.1.4\src\Bytecode\include;.\Lua-5.1.4\src\Config\include;..\Rendering;..\Rendering\g3d\include;..\Rendering\g3d\zlib;..\Rendering\RbxG3D\include;..\Rendering\AppDraw\include;..\Rendering\GfxBase\include;..\Network\include;..\RBXCookies;..\Log\Include;..\ClientShared;..\App.BulletPhysics;..\Win;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>RBX_PLATFORM_DURANGO;BOOST_ASIO_WINDOWS_RUNTIME;WIN32;CURL_STATICLIB;WWW_MSWINDOWS;_DEBUG;_LIB;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>RBX_PLATFORM_DURANGO;BOOST_ASIO_WINDOWS_RUNTIME;WIN32;CURL_STATICLIB;WWW_MSWINDOWS;_DEBUG;_LIB;_SCL_SECURE_NO_WARNINGS;_ENFORCE_MATCHING_ALLOCATORS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -511,7 +511,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>..\Library\SDL2\include;..\Library\boost\include;..\Library\cpp-netlib;..\Library\curl\include;..\Library\VMProtect\include;..\Library\w3c-libwww\Library\src;.\include;..\fmod\xbox\include;..\Base\include;.\lua-5.1.4\src;.\Lua-5.1.4\src\VM\include;.\Lua-5.1.4\src\Compiler\include;.\Lua-5.1.4\src\Ast\include;.\Lua-5.1.4\src\Common\include;.\Lua-5.1.4\src\Bytecode\include;.\Lua-5.1.4\src\Config\include;..\Rendering;..\Rendering\g3d\include;..\Rendering\g3d\zlib;..\Rendering\RbxG3D\include;..\Rendering\AppDraw\include;..\Rendering\GfxBase\include;..\Network\include;..\RBXCookies;..\Log\Include;..\ClientShared;..\App.BulletPhysics;..\Win;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>RBX_PLATFORM_DURANGO;BOOST_ASIO_WINDOWS_RUNTIME;WIN32;CURL_STATICLIB;WWW_MSWINDOWS;_DEBUG;_LIB;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>RBX_PLATFORM_DURANGO;BOOST_ASIO_WINDOWS_RUNTIME;WIN32;CURL_STATICLIB;WWW_MSWINDOWS;_DEBUG;_LIB;_SCL_SECURE_NO_WARNINGS;_ENFORCE_MATCHING_ALLOCATORS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -532,7 +532,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>..\Library\SDL2\include;..\Library\boost\include;..\Library\cpp-netlib;..\Library\curl\include;..\Library\VMProtect\include;..\Library\w3c-libwww\Library\src;.\include;..\Base\include;..\fmod\include;.\lua-5.1.4\src;.\Lua-5.1.4\src\VM\include;.\Lua-5.1.4\src\Compiler\include;.\Lua-5.1.4\src\Ast\include;.\Lua-5.1.4\src\Common\include;.\Lua-5.1.4\src\Bytecode\include;.\Lua-5.1.4\src\Config\include;..\Rendering;..\Rendering\g3d\include;..\Rendering\g3d\zlib;..\Rendering\RbxG3D\include;..\Rendering\AppDraw\include;..\Rendering\GfxBase\include;..\Network\include;..\RBXCookies;..\Log\Include;..\ClientShared;..\App.BulletPhysics;..\Win;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;CURL_STATICLIB;WWW_MSWINDOWS;_DEBUG;_LIB;_SCL_SECURE_NO_WARNINGS;RBX_STUDIO_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;CURL_STATICLIB;WWW_MSWINDOWS;_DEBUG;_LIB;_SCL_SECURE_NO_WARNINGS;RBX_STUDIO_BUILD;_ENFORCE_MATCHING_ALLOCATORS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -552,7 +552,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>..\Library\SDL2\include;..\Library\boost\include;..\Library\cpp-netlib;..\Library\curl\include;..\Library\VMProtect\include;..\Library\w3c-libwww\Library\src;.\include;..\fmod\xbox\include;..\Base\include;.\lua-5.1.4\src;.\Lua-5.1.4\src\VM\include;.\Lua-5.1.4\src\Compiler\include;.\Lua-5.1.4\src\Ast\include;.\Lua-5.1.4\src\Common\include;.\Lua-5.1.4\src\Bytecode\include;.\Lua-5.1.4\src\Config\include;..\Rendering;..\Rendering\g3d\include;..\Rendering\g3d\zlib;..\Rendering\RbxG3D\include;..\Rendering\AppDraw\include;..\Rendering\GfxBase\include;..\Network\include;..\RBXCookies;..\Log\Include;..\ClientShared;..\App.BulletPhysics;..\Win;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>RBX_PLATFORM_DURANGO;BOOST_ASIO_WINDOWS_RUNTIME;WIN32;CURL_STATICLIB;WWW_MSWINDOWS;_DEBUG;_LIB;_SCL_SECURE_NO_WARNINGS;RBX_STUDIO_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>RBX_PLATFORM_DURANGO;BOOST_ASIO_WINDOWS_RUNTIME;WIN32;CURL_STATICLIB;WWW_MSWINDOWS;_DEBUG;_LIB;_SCL_SECURE_NO_WARNINGS;RBX_STUDIO_BUILD;_ENFORCE_MATCHING_ALLOCATORS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -577,7 +577,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <OmitFramePointers>false</OmitFramePointers>
       <AdditionalIncludeDirectories>..\Library\SDL2\include;..\Library\boost\include;..\Library\cpp-netlib;..\Library\curl\include;..\Library\VMProtect\include;..\Library\w3c-libwww\Library\src;.\include;..\Base\include;..\fmod\include;.\lua-5.1.4\src;.\Lua-5.1.4\src\VM\include;.\Lua-5.1.4\src\Compiler\include;.\Lua-5.1.4\src\Ast\include;.\Lua-5.1.4\src\Common\include;.\Lua-5.1.4\src\Bytecode\include;.\Lua-5.1.4\src\Config\include;..\Rendering;..\Rendering\g3d\include;..\Rendering\g3d\zlib;..\Rendering\RbxG3D\include;..\Rendering\AppDraw\include;..\Rendering\GfxBase\include;..\Network\include;..\RBXCookies;..\Log\Include;..\ClientShared;..\App.BulletPhysics;..\Win;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;CURL_STATICLIB;WWW_MSWINDOWS;NDEBUG;_LIB;_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;CURL_STATICLIB;WWW_MSWINDOWS;NDEBUG;_LIB;_RELEASE;_ENFORCE_MATCHING_ALLOCATORS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
@@ -618,7 +618,7 @@ cmd /c "exit /b 0"</Command>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <OmitFramePointers>false</OmitFramePointers>
       <AdditionalIncludeDirectories>..\Library\SDL2\include;..\Library\boost\include;..\Library\cpp-netlib;..\Library\curl\include;..\Library\VMProtect\include;..\Library\w3c-libwww\Library\src;.\include;..\Base\include;..\fmod\include;.\lua-5.1.4\src;.\Lua-5.1.4\src\VM\include;.\Lua-5.1.4\src\Compiler\include;.\Lua-5.1.4\src\Ast\include;.\Lua-5.1.4\src\Common\include;.\Lua-5.1.4\src\Bytecode\include;.\Lua-5.1.4\src\Config\include;..\Rendering;..\Rendering\g3d\include;..\Rendering\g3d\zlib;..\Rendering\RbxG3D\include;..\Rendering\AppDraw\include;..\Rendering\GfxBase\include;..\Network\include;..\RBXCookies;..\Log\Include;..\ClientShared;..\App.BulletPhysics;..\Win;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;CURL_STATICLIB;WWW_MSWINDOWS;NDEBUG;_LIB;_RELEASE;RBX_RCC_SECURITY;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;CURL_STATICLIB;WWW_MSWINDOWS;NDEBUG;_LIB;_RELEASE;RBX_RCC_SECURITY;_ENFORCE_MATCHING_ALLOCATORS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
@@ -658,7 +658,7 @@ cmd /c "exit /b 0"</Command>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <OmitFramePointers>false</OmitFramePointers>
       <AdditionalIncludeDirectories>..\Library\SDL2\include;..\Library\boost\include;..\Library\cpp-netlib;..\Library\curl\include;..\Library\VMProtect\include;..\Library\w3c-libwww\Library\src;.\include;..\fmod\xbox\include;..\Base\include;.\lua-5.1.4\src;.\Lua-5.1.4\src\VM\include;.\Lua-5.1.4\src\Compiler\include;.\Lua-5.1.4\src\Ast\include;.\Lua-5.1.4\src\Common\include;.\Lua-5.1.4\src\Bytecode\include;.\Lua-5.1.4\src\Config\include;..\Rendering;..\Rendering\g3d\include;..\Rendering\g3d\zlib;..\Rendering\RbxG3D\include;..\Rendering\AppDraw\include;..\Rendering\GfxBase\include;..\Network\include;..\RBXCookies;..\Log\Include;..\ClientShared;..\App.BulletPhysics;..\Win;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>RBX_PLATFORM_DURANGO;BOOST_ASIO_WINDOWS_RUNTIME=1;WIN32;CURL_STATICLIB;NDEBUG;_LIB;_RELEASE;WWW_MSWINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>RBX_PLATFORM_DURANGO;BOOST_ASIO_WINDOWS_RUNTIME=1;WIN32;CURL_STATICLIB;NDEBUG;_LIB;_RELEASE;WWW_MSWINDOWS;_ENFORCE_MATCHING_ALLOCATORS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions</EnableEnhancedInstructionSet>
@@ -684,7 +684,7 @@ cmd /c "exit /b 0"</Command>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <OmitFramePointers>false</OmitFramePointers>
       <AdditionalIncludeDirectories>..\Library\SDL2\include;..\Library\boost\include;..\Library\cpp-netlib;..\Library\curl\include;..\Library\VMProtect\include;..\Library\w3c-libwww\Library\src;.\include;..\fmod\xbox\include;..\Base\include;.\lua-5.1.4\src;.\Lua-5.1.4\src\VM\include;.\Lua-5.1.4\src\Compiler\include;.\Lua-5.1.4\src\Ast\include;.\Lua-5.1.4\src\Common\include;.\Lua-5.1.4\src\Bytecode\include;.\Lua-5.1.4\src\Config\include;..\Rendering;..\Rendering\g3d\include;..\Rendering\g3d\zlib;..\Rendering\RbxG3D\include;..\Rendering\AppDraw\include;..\Rendering\GfxBase\include;..\Network\include;..\RBXCookies;..\Log\Include;..\ClientShared;..\App.BulletPhysics;..\Win;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>RBX_PLATFORM_DURANGO;BOOST_ASIO_WINDOWS_RUNTIME=1;WIN32;CURL_STATICLIB;NDEBUG;_LIB;_RELEASE;WWW_MSWINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>RBX_PLATFORM_DURANGO;BOOST_ASIO_WINDOWS_RUNTIME=1;WIN32;CURL_STATICLIB;NDEBUG;_LIB;_RELEASE;WWW_MSWINDOWS;_ENFORCE_MATCHING_ALLOCATORS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions</EnableEnhancedInstructionSet>
@@ -710,7 +710,7 @@ cmd /c "exit /b 0"</Command>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <OmitFramePointers>false</OmitFramePointers>
       <AdditionalIncludeDirectories>..\Library\SDL2\include;..\Library\boost\include;..\Library\cpp-netlib;..\Library\curl\include;..\Library\VMProtect\include;..\Library\w3c-libwww\Library\src;.\include;..\Base\include;..\fmod\include;.\lua-5.1.4\src;.\Lua-5.1.4\src\VM\include;.\Lua-5.1.4\src\Compiler\include;.\Lua-5.1.4\src\Ast\include;.\Lua-5.1.4\src\Common\include;.\Lua-5.1.4\src\Bytecode\include;.\Lua-5.1.4\src\Config\include;..\Rendering;..\Rendering\g3d\include;..\Rendering\g3d\zlib;..\Rendering\RbxG3D\include;..\Rendering\AppDraw\include;..\Rendering\GfxBase\include;..\Network\include;..\RBXCookies;..\Log\Include;..\ClientShared;..\App.BulletPhysics;..\Win;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;CURL_STATICLIB;WWW_MSWINDOWS;NDEBUG;_LIB;_RELEASE;RBX_STUDIO_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;CURL_STATICLIB;WWW_MSWINDOWS;NDEBUG;_LIB;_RELEASE;RBX_STUDIO_BUILD;_ENFORCE_MATCHING_ALLOCATORS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
@@ -731,7 +731,7 @@ cmd /c "exit /b 0"</Command>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <OmitFramePointers>false</OmitFramePointers>
       <AdditionalIncludeDirectories>..\Library\SDL2\include;..\Library\boost\include;..\Library\cpp-netlib;..\Library\curl\include;..\Library\VMProtect\include;..\Library\w3c-libwww\Library\src;.\include;..\fmod\xbox\include;..\Base\include;.\lua-5.1.4\src;.\Lua-5.1.4\src\VM\include;.\Lua-5.1.4\src\Compiler\include;.\Lua-5.1.4\src\Ast\include;.\Lua-5.1.4\src\Common\include;.\Lua-5.1.4\src\Bytecode\include;.\Lua-5.1.4\src\Config\include;..\Rendering;..\Rendering\g3d\include;..\Rendering\g3d\zlib;..\Rendering\RbxG3D\include;..\Rendering\AppDraw\include;..\Rendering\GfxBase\include;..\Network\include;..\RBXCookies;..\Log\Include;..\ClientShared;..\App.BulletPhysics;..\Win;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>RBX_PLATFORM_DURANGO;BOOST_ASIO_WINDOWS_RUNTIME;WIN32;CURL_STATICLIB;WWW_MSWINDOWS;NDEBUG;_LIB;_RELEASE;RBX_STUDIO_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>RBX_PLATFORM_DURANGO;BOOST_ASIO_WINDOWS_RUNTIME;WIN32;CURL_STATICLIB;WWW_MSWINDOWS;NDEBUG;_LIB;_RELEASE;RBX_STUDIO_BUILD;_ENFORCE_MATCHING_ALLOCATORS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions</EnableEnhancedInstructionSet>
@@ -753,7 +753,7 @@ cmd /c "exit /b 0"</Command>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <OmitFramePointers>false</OmitFramePointers>
       <AdditionalIncludeDirectories>..\Library\SDL2\include;..\Library\boost\include;..\Library\cpp-netlib;..\Library\curl\include;..\Library\VMProtect\include;..\Library\w3c-libwww\Library\src;.\include;..\Base\include;..\fmod\include;.\lua-5.1.4\src;.\Lua-5.1.4\src\VM\include;.\Lua-5.1.4\src\Compiler\include;.\Lua-5.1.4\src\Ast\include;.\Lua-5.1.4\src\Common\include;.\Lua-5.1.4\src\Bytecode\include;.\Lua-5.1.4\src\Config\include;..\Rendering;..\Rendering\g3d\include;..\Rendering\g3d\zlib;..\Rendering\RbxG3D\include;..\Rendering\AppDraw\include;..\Rendering\GfxBase\include;..\Network\include;..\RBXCookies;..\Log\Include;..\ClientShared;..\App.BulletPhysics;..\Win;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;CURL_STATICLIB;WWW_MSWINDOWS;NDEBUG;_LIB;_RELEASE;RBX_TEST_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;CURL_STATICLIB;WWW_MSWINDOWS;NDEBUG;_LIB;_RELEASE;RBX_TEST_BUILD;_ENFORCE_MATCHING_ALLOCATORS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
@@ -774,7 +774,7 @@ cmd /c "exit /b 0"</Command>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <OmitFramePointers>false</OmitFramePointers>
       <AdditionalIncludeDirectories>..\Library\SDL2\include;..\Library\boost\include;..\Library\cpp-netlib;..\Library\curl\include;..\Library\VMProtect\include;..\Library\w3c-libwww\Library\src;.\include;..\fmod\xbox\include;..\Base\include;.\lua-5.1.4\src;.\Lua-5.1.4\src\VM\include;.\Lua-5.1.4\src\Compiler\include;.\Lua-5.1.4\src\Ast\include;.\Lua-5.1.4\src\Common\include;.\Lua-5.1.4\src\Bytecode\include;.\Lua-5.1.4\src\Config\include;..\Rendering;..\Rendering\g3d\include;..\Rendering\g3d\zlib;..\Rendering\RbxG3D\include;..\Rendering\AppDraw\include;..\Rendering\GfxBase\include;..\Network\include;..\RBXCookies;..\Log\Include;..\ClientShared;..\App.BulletPhysics;..\Win;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>RBX_PLATFORM_DURANGO;BOOST_ASIO_WINDOWS_RUNTIME;WIN32;CURL_STATICLIB;WWW_MSWINDOWS;NDEBUG;_LIB;_RELEASE;RBX_TEST_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>RBX_PLATFORM_DURANGO;BOOST_ASIO_WINDOWS_RUNTIME;WIN32;CURL_STATICLIB;WWW_MSWINDOWS;NDEBUG;_LIB;_RELEASE;RBX_TEST_BUILD;_ENFORCE_MATCHING_ALLOCATORS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions</EnableEnhancedInstructionSet>
@@ -796,7 +796,7 @@ cmd /c "exit /b 0"</Command>
       <IntrinsicFunctions>false</IntrinsicFunctions>
       <OmitFramePointers>false</OmitFramePointers>
       <AdditionalIncludeDirectories>..\Library\SDL2\include;..\Library\boost\include;..\Library\cpp-netlib;..\Library\curl\include;..\Library\VMProtect\include;..\Library\w3c-libwww\Library\src;.\include;..\Base\include;..\fmod\include;.\lua-5.1.4\src;.\Lua-5.1.4\src\VM\include;.\Lua-5.1.4\src\Compiler\include;.\Lua-5.1.4\src\Ast\include;.\Lua-5.1.4\src\Common\include;.\Lua-5.1.4\src\Bytecode\include;.\Lua-5.1.4\src\Config\include;..\Rendering;..\Rendering\g3d\include;..\Rendering\g3d\zlib;..\Rendering\RbxG3D\include;..\Rendering\AppDraw\include;..\Rendering\GfxBase\include;..\Network\include;..\RBXCookies;..\Log\Include;..\ClientShared;..\App.BulletPhysics;..\Win;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;CURL_STATICLIB;WWW_MSWINDOWS;NDEBUG;_LIB;_RELEASE;_NOOPT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;CURL_STATICLIB;WWW_MSWINDOWS;NDEBUG;_LIB;_RELEASE;_NOOPT;_ENFORCE_MATCHING_ALLOCATORS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <BufferSecurityCheck>true</BufferSecurityCheck>
       <FloatingPointModel>Fast</FloatingPointModel>
@@ -817,7 +817,7 @@ cmd /c "exit /b 0"</Command>
       <IntrinsicFunctions>false</IntrinsicFunctions>
       <OmitFramePointers>false</OmitFramePointers>
       <AdditionalIncludeDirectories>..\Library\SDL2\include;..\Library\boost\include;..\Library\cpp-netlib;..\Library\curl\include;..\Library\VMProtect\include;..\Library\w3c-libwww\Library\src;.\include;..\Base\include;..\fmod\include;.\lua-5.1.4\src;.\Lua-5.1.4\src\VM\include;.\Lua-5.1.4\src\Compiler\include;.\Lua-5.1.4\src\Ast\include;.\Lua-5.1.4\src\Common\include;.\Lua-5.1.4\src\Bytecode\include;.\Lua-5.1.4\src\Config\include;..\Rendering;..\Rendering\g3d\include;..\Rendering\g3d\zlib;..\Rendering\RbxG3D\include;..\Rendering\AppDraw\include;..\Rendering\GfxBase\include;..\Network\include;..\RBXCookies;..\Log\Include;..\ClientShared;..\App.BulletPhysics;..\Win;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;CURL_STATICLIB;WWW_MSWINDOWS;NDEBUG;_LIB;_RELEASE;_NOOPT;RBX_RCC_SECURITY;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;CURL_STATICLIB;WWW_MSWINDOWS;NDEBUG;_LIB;_RELEASE;_NOOPT;RBX_RCC_SECURITY;_ENFORCE_MATCHING_ALLOCATORS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <BufferSecurityCheck>true</BufferSecurityCheck>
       <FloatingPointModel>Fast</FloatingPointModel>
@@ -838,7 +838,7 @@ cmd /c "exit /b 0"</Command>
       <IntrinsicFunctions>false</IntrinsicFunctions>
       <OmitFramePointers>false</OmitFramePointers>
       <AdditionalIncludeDirectories>..\Library\SDL2\include;..\Library\boost\include;..\Library\cpp-netlib;..\Library\curl\include;..\Library\VMProtect\include;..\Library\w3c-libwww\Library\src;.\include;..\fmod\xbox\include;..\Base\include;.\lua-5.1.4\src;.\Lua-5.1.4\src\VM\include;.\Lua-5.1.4\src\Compiler\include;.\Lua-5.1.4\src\Ast\include;.\Lua-5.1.4\src\Common\include;.\Lua-5.1.4\src\Bytecode\include;.\Lua-5.1.4\src\Config\include;..\Rendering;..\Rendering\g3d\include;..\Rendering\g3d\zlib;..\Rendering\RbxG3D\include;..\Rendering\AppDraw\include;..\Rendering\GfxBase\include;..\Network\include;..\RBXCookies;..\Log\Include;..\ClientShared;..\App.BulletPhysics;..\Win;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>RBX_PLATFORM_DURANGO;BOOST_ASIO_WINDOWS_RUNTIME=1;WIN32;CURL_STATICLIB;WWW_MSWINDOWS;NDEBUG;_LIB;_RELEASE;_NOOPT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>RBX_PLATFORM_DURANGO;BOOST_ASIO_WINDOWS_RUNTIME=1;WIN32;CURL_STATICLIB;WWW_MSWINDOWS;NDEBUG;_LIB;_RELEASE;_NOOPT;_ENFORCE_MATCHING_ALLOCATORS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <BufferSecurityCheck>true</BufferSecurityCheck>
       <FloatingPointModel>Fast</FloatingPointModel>
@@ -860,7 +860,7 @@ cmd /c "exit /b 0"</Command>
       <IntrinsicFunctions>false</IntrinsicFunctions>
       <OmitFramePointers>false</OmitFramePointers>
       <AdditionalIncludeDirectories>..\Library\SDL2\include;..\Library\boost\include;..\Library\cpp-netlib;..\Library\curl\include;..\Library\VMProtect\include;..\Library\w3c-libwww\Library\src;.\include;..\fmod\xbox\include;..\Base\include;.\lua-5.1.4\src;.\Lua-5.1.4\src\VM\include;.\Lua-5.1.4\src\Compiler\include;.\Lua-5.1.4\src\Ast\include;.\Lua-5.1.4\src\Common\include;.\Lua-5.1.4\src\Bytecode\include;.\Lua-5.1.4\src\Config\include;..\Rendering;..\Rendering\g3d\include;..\Rendering\g3d\zlib;..\Rendering\RbxG3D\include;..\Rendering\AppDraw\include;..\Rendering\GfxBase\include;..\Network\include;..\RBXCookies;..\Log\Include;..\ClientShared;..\App.BulletPhysics;..\Win;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>RBX_PLATFORM_DURANGO;BOOST_ASIO_WINDOWS_RUNTIME=1;WIN32;CURL_STATICLIB;WWW_MSWINDOWS;NDEBUG;_LIB;_RELEASE;_NOOPT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>RBX_PLATFORM_DURANGO;BOOST_ASIO_WINDOWS_RUNTIME=1;WIN32;CURL_STATICLIB;WWW_MSWINDOWS;NDEBUG;_LIB;_RELEASE;_NOOPT;_ENFORCE_MATCHING_ALLOCATORS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <BufferSecurityCheck>true</BufferSecurityCheck>
       <FloatingPointModel>Fast</FloatingPointModel>
@@ -882,7 +882,7 @@ cmd /c "exit /b 0"</Command>
       <IntrinsicFunctions>false</IntrinsicFunctions>
       <OmitFramePointers>false</OmitFramePointers>
       <AdditionalIncludeDirectories>..\Library\SDL2\include;..\Library\boost\include;..\Library\cpp-netlib;..\Library\curl\include;..\Library\VMProtect\include;..\Library\w3c-libwww\Library\src;.\include;..\Base\include;..\fmod\include;.\lua-5.1.4\src;.\Lua-5.1.4\src\VM\include;.\Lua-5.1.4\src\Compiler\include;.\Lua-5.1.4\src\Ast\include;.\Lua-5.1.4\src\Common\include;.\Lua-5.1.4\src\Bytecode\include;.\Lua-5.1.4\src\Config\include;..\Rendering;..\Rendering\g3d\include;..\Rendering\g3d\zlib;..\Rendering\RbxG3D\include;..\Rendering\AppDraw\include;..\Rendering\GfxBase\include;..\Network\include;..\RBXCookies;..\Log\Include;..\ClientShared;..\App.BulletPhysics;..\Win;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;CURL_STATICLIB;WWW_MSWINDOWS;NDEBUG;_LIB;_RELEASE;_NOOPT;RBX_STUDIO_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;CURL_STATICLIB;WWW_MSWINDOWS;NDEBUG;_LIB;_RELEASE;_NOOPT;RBX_STUDIO_BUILD;_ENFORCE_MATCHING_ALLOCATORS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <BufferSecurityCheck>true</BufferSecurityCheck>
       <FloatingPointModel>Fast</FloatingPointModel>
@@ -903,7 +903,7 @@ cmd /c "exit /b 0"</Command>
       <IntrinsicFunctions>false</IntrinsicFunctions>
       <OmitFramePointers>false</OmitFramePointers>
       <AdditionalIncludeDirectories>..\Library\SDL2\include;..\Library\boost\include;..\Library\cpp-netlib;..\Library\curl\include;..\Library\VMProtect\include;..\Library\w3c-libwww\Library\src;.\include;..\fmod\xbox\include;..\Base\include;.\lua-5.1.4\src;.\Lua-5.1.4\src\VM\include;.\Lua-5.1.4\src\Compiler\include;.\Lua-5.1.4\src\Ast\include;.\Lua-5.1.4\src\Common\include;.\Lua-5.1.4\src\Bytecode\include;.\Lua-5.1.4\src\Config\include;..\Rendering;..\Rendering\g3d\include;..\Rendering\g3d\zlib;..\Rendering\RbxG3D\include;..\Rendering\AppDraw\include;..\Rendering\GfxBase\include;..\Network\include;..\RBXCookies;..\Log\Include;..\ClientShared;..\App.BulletPhysics;..\Win;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>RBX_PLATFORM_DURANGO;BOOST_ASIO_WINDOWS_RUNTIME;WIN32;CURL_STATICLIB;WWW_MSWINDOWS;NDEBUG;_LIB;_RELEASE;_NOOPT;RBX_STUDIO_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>RBX_PLATFORM_DURANGO;BOOST_ASIO_WINDOWS_RUNTIME;WIN32;CURL_STATICLIB;WWW_MSWINDOWS;NDEBUG;_LIB;_RELEASE;_NOOPT;RBX_STUDIO_BUILD;_ENFORCE_MATCHING_ALLOCATORS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <BufferSecurityCheck>true</BufferSecurityCheck>
       <FloatingPointModel>Fast</FloatingPointModel>
