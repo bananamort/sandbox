@@ -7,15 +7,11 @@
 
 #if defined(_MSC_VER) && _MSVC_LANG >= 201703L
 
-namespace std {
-    // C++17 removed std::auto_ptr; alias to std::unique_ptr (same semantics).
-    template <typename T>
-    using auto_ptr = std::unique_ptr<T>;
+// Note: std::auto_ptr shim lives in auto_ptr_compat.h. cpp_compat.h
+// provides the OTHER C++17 removals (unary_function, binary_function,
+// bind1st, bind2nd, mem_fun) that the engine still uses.
 
-    // C++11 deprecated these base classes; they're gone in C++17. Provide
-    // a minimal template shim so 2016 hash/equal functors compile.
-    template <typename Arg, typename Result>
-    struct unary_function {
+namespace std {
         typedef Arg argument_type;
         typedef Result result_type;
     };
