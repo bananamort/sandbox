@@ -12,6 +12,8 @@
 // bind1st, bind2nd, mem_fun) that the engine still uses.
 
 namespace std {
+    template <typename Arg, typename Result>
+    struct unary_function {
         using argument_type = Arg;
         using result_type = Result;
     };
