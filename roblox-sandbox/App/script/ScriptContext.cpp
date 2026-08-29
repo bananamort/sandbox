@@ -1536,7 +1536,7 @@ void ScriptContext::executeInNewThread(RBX::Security::Identities identity, const
 		// They probably haven't used a scoped_write_request
 #if !defined(RBX_STUDIO_BUILD)
         VMProtectBeginMutation("4");
-		if (DataModel* dataModel = DataModel::get(this))
+		if (DataModel* dataModel = DataModel::get(this);
 		{
 			if (!dataModel->currentThreadHasWriteLock())
 				dataModel->addHackFlag(HATE_ILLEGAL_SCRIPTS);
@@ -3280,7 +3280,7 @@ void ScriptContext::startScript(ScriptStart scriptStart)
 			}
 
 			if (!scriptStart.options.continuations.empty())
-				RobloxExtraSpace::get(thread)->continuations = (void*)new Lua::Continuations(scriptStart.options.continuations));
+				RobloxExtraSpace::get(thread)->continuations = (void*)new Lua::Continuations(scriptStart.options.continuations);
 
 			bool luaFailedLoad = LuaVM::load(thread, *protectedSource, name.c_str()) != 0;
 
