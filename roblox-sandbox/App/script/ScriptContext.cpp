@@ -1530,7 +1530,7 @@ void ScriptContext::executeInNewThread(RBX::Security::Identities identity, const
 		}
 
 		RBXASSERT(continuations.empty());
-		RobloxExtraSpace::get(safeThread)->continuations = new Lua::Continuations(continuations);
+		RobloxExtraSpace::get(safeThread.getRawState())->continuations = (void*)new Lua::Continuations(continuations);
 
 		// Check for somebody using CheatEngine to inject a direct call.
 		// They probably haven't used a scoped_write_request
@@ -1822,8 +1822,8 @@ int ScriptContext::ypcall(lua_State *thread)
 			continuations.success = boost::bind(&ScriptContext::on_ypcall_success, &sc, WeakThreadRef(thread), _1);
 			continuations.error = boost::bind(&ScriptContext::on_ypcall_failure, &sc, WeakThreadRef(thread), _1);
 
-			RBXASSERT(RobloxExtraSpace::get(safeFunctor)->continuations == NULL);
-			RobloxExtraSpace::get(safeFunctor)->continuations = (void*)new Lua::Continuations(continuations));
+			RBXASSERT(RobloxExtraSpace::get(safeFunctor.getRawState())->continuations == NULL);
+			RobloxExtraSpace::get(safeFunctor.getRawState())->continuations = (void*)new Lua::Continuations(continuations));
 
 			//Capture the yield
 			RobloxExtraSpace::get(thread)->yieldCaptured = true;
