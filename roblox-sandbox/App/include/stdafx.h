@@ -7,6 +7,7 @@
 // headers continue to compile. The shim is in ../../include so the
 // path resolves from any App/* sub-project.
 #include "auto_ptr_compat.h"
+#include "cpp_compat.h"
 
 #include <vector>
 #include <map>
