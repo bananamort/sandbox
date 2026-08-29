@@ -462,7 +462,7 @@
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <AdditionalOptions>/D "_SECURE_SCL=0" /std:c++17 /Zm130 /FI"/Users/jasonhuang/Desktop/sandbox/roblox-sandbox/include/auto_ptr_compat.h" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/FI"/Users/jasonhuang/Desktop/sandbox/roblox-sandbox/include/auto_ptr_compat.h" /D "_SECURE_SCL=0" /std:c++17 /Zm130 %(AdditionalOptions)</AdditionalOptions>
       <TreatWarningAsError>false</TreatWarningAsError>
     </ClCompile>
   </ItemDefinitionGroup>
@@ -482,7 +482,7 @@
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <AdditionalOptions>/D "_SECURE_SCL=0" /std:c++17 /Zm130 /FI"/Users/jasonhuang/Desktop/sandbox/roblox-sandbox/include/auto_ptr_compat.h" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/FI"/Users/jasonhuang/Desktop/sandbox/roblox-sandbox/include/auto_ptr_compat.h" /D "_SECURE_SCL=0" /std:c++17 /Zm130 %(AdditionalOptions)</AdditionalOptions>
       <TreatWarningAsError>false</TreatWarningAsError>
     </ClCompile>
   </ItemDefinitionGroup>
@@ -544,7 +544,7 @@
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <AdditionalOptions>/D "_SECURE_SCL=0" /std:c++17 /Zm130 /FI"/Users/jasonhuang/Desktop/sandbox/roblox-sandbox/include/auto_ptr_compat.h" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/FI"/Users/jasonhuang/Desktop/sandbox/roblox-sandbox/include/auto_ptr_compat.h" /D "_SECURE_SCL=0" /std:c++17 /Zm130 %(AdditionalOptions)</AdditionalOptions>
       <TreatWarningAsError>false</TreatWarningAsError>
     </ClCompile>
   </ItemDefinitionGroup>
@@ -571,7 +571,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <AdditionalOptions>/D "_SECURE_SCL=0" /std:c++17 /Zm130 /FI"/Users/jasonhuang/Desktop/sandbox/roblox-sandbox/include/auto_ptr_compat.h" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/FI"/Users/jasonhuang/Desktop/sandbox/roblox-sandbox/include/auto_ptr_compat.h" /D "_SECURE_SCL=0" /std:c++17 /Zm130 %(AdditionalOptions)</AdditionalOptions>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -612,7 +612,7 @@ cmd /c "exit /b 0"</Command>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseRcc|Win32'">
     <ClCompile>
-      <AdditionalOptions>/D "_SECURE_SCL=0" /std:c++17 /Zm130 /FI"/Users/jasonhuang/Desktop/sandbox/roblox-sandbox/include/auto_ptr_compat.h" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/FI"/Users/jasonhuang/Desktop/sandbox/roblox-sandbox/include/auto_ptr_compat.h" /D "_SECURE_SCL=0" /std:c++17 /Zm130 %(AdditionalOptions)</AdditionalOptions>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -704,7 +704,7 @@ cmd /c "exit /b 0"</Command>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseStudio|Win32'">
     <ClCompile>
-      <AdditionalOptions>/D "_SECURE_SCL=0" /std:c++17 /Zm130 /FI"/Users/jasonhuang/Desktop/sandbox/roblox-sandbox/include/auto_ptr_compat.h" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/FI"/Users/jasonhuang/Desktop/sandbox/roblox-sandbox/include/auto_ptr_compat.h" /D "_SECURE_SCL=0" /std:c++17 /Zm130 %(AdditionalOptions)</AdditionalOptions>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -747,7 +747,7 @@ cmd /c "exit /b 0"</Command>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseTest|Win32'">
     <ClCompile>
-      <AdditionalOptions>/D "_SECURE_SCL=0" /std:c++17 /Zm130 /FI"/Users/jasonhuang/Desktop/sandbox/roblox-sandbox/include/auto_ptr_compat.h" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/FI"/Users/jasonhuang/Desktop/sandbox/roblox-sandbox/include/auto_ptr_compat.h" /D "_SECURE_SCL=0" /std:c++17 /Zm130 %(AdditionalOptions)</AdditionalOptions>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -790,7 +790,7 @@ cmd /c "exit /b 0"</Command>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='NoOpt|Win32'">
     <ClCompile>
-      <AdditionalOptions>/D "_SECURE_SCL=0" /std:c++17 /Zm130 /FI"/Users/jasonhuang/Desktop/sandbox/roblox-sandbox/include/auto_ptr_compat.h" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/FI"/Users/jasonhuang/Desktop/sandbox/roblox-sandbox/include/auto_ptr_compat.h" /D "_SECURE_SCL=0" /std:c++17 /Zm130 %(AdditionalOptions)</AdditionalOptions>
       <Optimization>Disabled</Optimization>
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
       <IntrinsicFunctions>false</IntrinsicFunctions>
@@ -811,7 +811,7 @@ cmd /c "exit /b 0"</Command>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='NoOptRcc|Win32'">
     <ClCompile>
-      <AdditionalOptions>/D "_SECURE_SCL=0" /std:c++17 /Zm130 /FI"/Users/jasonhuang/Desktop/sandbox/roblox-sandbox/include/auto_ptr_compat.h" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/FI"/Users/jasonhuang/Desktop/sandbox/roblox-sandbox/include/auto_ptr_compat.h" /D "_SECURE_SCL=0" /std:c++17 /Zm130 %(AdditionalOptions)</AdditionalOptions>
       <Optimization>Disabled</Optimization>
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
       <IntrinsicFunctions>false</IntrinsicFunctions>
@@ -876,7 +876,7 @@ cmd /c "exit /b 0"</Command>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='NoOptStudio|Win32'">
     <ClCompile>
-      <AdditionalOptions>/D "_SECURE_SCL=0" /std:c++17 /Zm130 /FI"/Users/jasonhuang/Desktop/sandbox/roblox-sandbox/include/auto_ptr_compat.h" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/FI"/Users/jasonhuang/Desktop/sandbox/roblox-sandbox/include/auto_ptr_compat.h" /D "_SECURE_SCL=0" /std:c++17 /Zm130 %(AdditionalOptions)</AdditionalOptions>
       <Optimization>Disabled</Optimization>
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
       <IntrinsicFunctions>false</IntrinsicFunctions>
