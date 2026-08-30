@@ -298,10 +298,10 @@ namespace rbx
 	{
 		typedef safe_queue< implementation::timestamped_safe_queue_item<T> > Super;
         double headTimestamp;
-#ifndef _WIN32
-		// GCC won't inherit the mutex type defined in Super. Therefore we redeclare it here. Yuck!
+		// WS4-C5: typedef spin_mutex mutex; also on Windows (clang/v143
+		// don't find the inherited typedef through Super when accessed
+		// as the bare name 'mutex'). This was previously #ifndef _WIN32 only.
 		typedef spin_mutex mutex;
-#endif
 	public:
 		void clear()
 		{
