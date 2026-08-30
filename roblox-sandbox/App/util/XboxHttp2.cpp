@@ -33,16 +33,19 @@ namespace boost
 }
 
 // WS4-C5: Boost 1.74's intrusive_ptr looks up these functions by
-// ADL on the stored pointer type. For each type X used with
-// boost::intrusive_ptr<X>, ADL searches X's namespace. To cover the
-// common cases without modifying every X's namespace, put the
-// non-template overloads in the GLOBAL namespace. ADL doesn't find
-// them, but normal unqualified lookup does, which is what the
-// function call resolution uses when ADL fails (Koenig lookup).
-inline void intrusive_ptr_add_ref(void*) {}
-inline void intrusive_ptr_release(void*) {}
-inline void intrusive_ptr_add_ref(const void*) {}
-inline void intrusive_ptr_release(const void*) {}
+// ADL on the stored pointer type T. For each T used with
+// boost::intrusive_ptr<T>, ADL searches T's associated namespace.
+// We provide template overloads in the std namespace and in the
+// global namespace. ADL on std-internal types will find the std
+// versions; ADL on other types will find the global ones. The
+// templates accept any pointer type, so T* matches for any T.
+namespace std {
+    template <class T> void intrusive_ptr_add_ref(T*) {}
+    template <class T> void intrusive_ptr_release(T*) {}
+}
+// Global namespace: for types outside std (engine types in RBX::).
+inline void intrusive_ptr_add_ref(IUnknown* p) { const_cast<IUnknown*>(p)->AddRef(); }
+inline void intrusive_ptr_release(IUnknown* p) { const_cast<IUnknown*>(p)->Release(); }
 
 using boost::intrusive_ptr;
 
