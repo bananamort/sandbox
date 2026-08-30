@@ -20,5 +20,9 @@
 // these types in a way that requires correct refcounting).
 template <class T> inline void intrusive_ptr_add_ref(T*) {}
 template <class T> inline void intrusive_ptr_release(T*) {}
+namespace boost {
+template <class T> inline void intrusive_ptr_add_ref(T*) {}
+template <class T> inline void intrusive_ptr_release(T*) {}
+}
 
 #endif
