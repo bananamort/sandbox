@@ -1978,9 +1978,9 @@ static void endThreadsWithError(std::vector<WeakThreadRef>& threads, const char*
 
 			RobloxExtraSpace* space = RobloxExtraSpace::get(thread);
 			space->context()->reportError(thread);
-			if (space->continuations && space->continuations->error)
+			if (space->continuations && ((Lua::Continuations*)space->continuations)->error)
 			{
-				space->continuations->error(thread);
+				((Lua::Continuations*)space->continuations)->error(thread);
 			}
 		}
 	}

@@ -43,7 +43,7 @@ MechToAssemblyStage* SpatialFilter::getMechToAssemblyStage()
 
 
 
-void SpatialFilter::changePhase(MoveInstructions& mi)
+void SpatialFilter::changePhase(const MoveInstructions& mi)
 {
 	RBXASSERT(mi.to != mi.from);
 	RBXASSERT(mi.a->getFilterPhase() == mi.from);

@@ -11,21 +11,12 @@
 // re-implementation with 5.1.4 copy-on-assign semantics). This header
 // only provides the other C++17 removals the engine hits.
 
-namespace std {
-    // C++11 deprecated these base classes; they're gone in C++17. Provide
-    // minimal template shims so 2016 hash/equal functors compile.
-    template <typename Arg, typename Result>
-    struct unary_function {
-        using argument_type = Arg;
-        using result_type = Result;
-    };
-    template <typename Arg1, typename Arg2, typename Result>
-    struct binary_function {
-        using first_argument_type = Arg1;
-        using second_argument_type = Arg2;
-        using result_type = Result;
-    };
-}
+// Note: std::unary_function / std::binary_function shims were removed
+// because they interfere with overload resolution at user-class call
+// sites (e.g. PairParams::operator== in ContactConnector.cpp sees the
+// shim templates as additional candidates and produces C2666). The
+// only consumer (util/Name.cpp) was refactored to use direct
+// `using` type aliases instead of inheriting the shim base.
 
 // Note: std::bind1st/std::bind2nd/std::mem_fun are handled by
 // re-engineering call sites to use std::bind + lambdas (C++11+). The
