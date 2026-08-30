@@ -13,7 +13,10 @@
 #include <map>
 
 #ifdef _WIN32
-   using std::mem_fun;
+   // WS4-C5: removed `using std::mem_fun;` -- removed in C++17 and
+   // the new mem_fun<Result(C::*pmf)()> shim from cpp_compat.h
+   // only handles 0-arg member functions. The single call site that
+   // used mem_fun + bind1st was rewritten to use std::bind directly.
 #else
 #include <ext/functional>
    using __gnu_cxx::mem_fun;
@@ -94,11 +97,16 @@ public:
 	bool resolveRefs()
 	{
 		int count = 0;
-		
+
+		// WS4-C5: replaced std::bind1st + std::mem_fun (removed in C++17)
+		// with std::bind + std::placeholders. Equivalent semantics: call
+		// ArchiveBinder::resolveIDREF on each element with `this` as the
+		// first arg. count_if accepts the std::bind result as a
+		// UnaryPredicate without overload-resolution ambiguity.
 		count += count_if(
-			idrefBindings.begin(), 
-			idrefBindings.end(), 
-			std::bind1st(mem_fun(&ArchiveBinder::resolveIDREF),this)
+			idrefBindings.begin(),
+			idrefBindings.end(),
+			std::bind(&ArchiveBinder::resolveIDREF, this, std::placeholders::_1)
 		);
 
 		return Super::resolveRefs() && (count == idrefBindings.size());
