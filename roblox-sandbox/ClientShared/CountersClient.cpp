@@ -79,21 +79,24 @@ void CountersClient::reportEvents(std::set<std::wstring> &events)
 #else
 	HINTERNET session = InternetOpen("Roblox/WinInet", PRE_CONFIG_INTERNET_ACCESS, NULL, NULL, 0);
 #endif
-	if (!session) 
+	if (!session)
 	{
 		goto Error;
 	}
 
-	HINTERNET connection = ::InternetConnect(session, u.GetHostName(), u.GetPortNumber(), u.GetUserName(), u.GetPassword(), INTERNET_SERVICE_HTTP, 0, 0); 
-	if (!connection) 
+	// WS4-C5: C++17 disallows goto over init. Wrap each scope so the
+	// goto's are jumping over block-scoped variables, not function-scoped.
+	{
+	HINTERNET connection = ::InternetConnect(session, u.GetHostName(), u.GetPortNumber(), u.GetUserName(), u.GetPassword(), INTERNET_SERVICE_HTTP, 0, 0);
+	if (!connection)
 	{
 		goto Error;
 	}
 
 	s = u.GetUrlPath();
 	s += u.GetExtraInfo();
-	HINTERNET request = ::HttpOpenRequest(connection, _T("POST"), s, HTTP_VERSION, _T(""), NULL, isSecure ? INTERNET_FLAG_SECURE : 0, 0); 
-	if (!request) 
+	HINTERNET request = ::HttpOpenRequest(connection, _T("POST"), s, HTTP_VERSION, _T(""), NULL, isSecure ? INTERNET_FLAG_SECURE : 0, 0);
+	if (!request)
 	{
 		goto Error;
 	}
@@ -106,9 +109,10 @@ void CountersClient::reportEvents(std::set<std::wstring> &events)
 	InternetSetOption(request, INTERNET_OPTION_SEND_TIMEOUT, (void*)&timeout, sizeof(timeout));
 
 	DWORD httpSendResult = ::HttpSendRequest(request, NULL, 0, (LPVOID)postData.c_str(), postData.length());
-	if (!httpSendResult) 
+	if (!httpSendResult)
 	{
 		goto Error;
+	}
 	}
 
 Error:
