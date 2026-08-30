@@ -28,3 +28,4 @@
 
 
 #include "boost_intrusive_compat.h"
+#include "rbx_intrusive_compat.h"
