@@ -5,6 +5,8 @@
  * before you will see the effect of these things.
  **/
 
+#include "stdafx.h"  // WS4-C5: bring in auto_ptr_compat.h via PCH
+#include "auto_ptr_compat.h"  // WS4-C5: this TU doesn't use the PCH; pull in auto_ptr shim directly
 #include "util/HttpPlatformImpl.h"
 #include "util/Http.h"
 #include "FastLog.h"
