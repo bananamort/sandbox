@@ -68,7 +68,7 @@ __declspec(dllimport) int __stdcall SetDefaultDllDirectories(unsigned long Direc
 // WS4-C5: C++17 removed std::auto_ptr. The shim must be available to
 // every TU (including those that don't use the App PCH), so include
 // it here where the /FI path covers all builds.
-#include "auto_ptr_compat.h"
+#include "App/include/auto_ptr_compat.h"
 
 #endif // RBX_CI_ATL_LOADER_SHIM_H
 #endif // _WIN32
