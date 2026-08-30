@@ -15,6 +15,10 @@
 #include <set>
 #include <vector>
 
+// Forward declaration so forEachThread (declared above) can reference it
+// even when this header is included by TUs that haven't seen the .cpp.
+extern std::set<RobloxExtraSpace*>& allExtraSpaces();
+
 namespace RBX { class BaseScript; class ScriptContext; }
 
 // Per-thread state. Engine code does `RobloxExtraSpace::get(L)->identity = X`,
