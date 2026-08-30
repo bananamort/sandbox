@@ -226,19 +226,19 @@ namespace rbx
 	public:
 		void clear()
 		{
-			mutex::scoped_lock lock(m);
+			typename mutex::scoped_lock lock(m);
 			
 			while (!queue.empty())
 				queue.pop();
 		}
 		void push(const T& value)
 		{
-			mutex::scoped_lock lock(m);
+			typename mutex::scoped_lock lock(m);
 			queue.push(value);
 		}
 		bool pop_if_present(T& value)
 		{
-			mutex::scoped_lock lock(m);
+			typename mutex::scoped_lock lock(m);
 			if (!queue.empty())
 			{
 				value = queue.front();
@@ -251,7 +251,7 @@ namespace rbx
 
 		bool pop_if_present()
 		{
-			mutex::scoped_lock lock(m);
+			typename mutex::scoped_lock lock(m);
 			if (!queue.empty())
 			{
 				queue.pop();
@@ -264,7 +264,7 @@ namespace rbx
 		// WARNING: Peeking has side effects, if T has copy constructors and destructors
 		bool peek_if_present(T& value)
 		{
-			mutex::scoped_lock lock(m);
+			typename mutex::scoped_lock lock(m);
 			if (!queue.empty())
 			{
 				value = queue.front();
@@ -318,7 +318,7 @@ namespace rbx
 
 		bool pop_if_present(T& value)
 		{
-			mutex::scoped_lock lock(this->m);
+			typename mutex::scoped_lock lock(this->m);
 			if (!this->queue.empty())
 			{
                 value = this->queue.front().value;
@@ -340,7 +340,7 @@ namespace rbx
 		// pops the head item if it has been waiting at least waitTime
 		bool pop_if_waited(RBX::Time::Interval waitTime, T& value)
 		{
-			mutex::scoped_lock lock(this->m);
+			typename mutex::scoped_lock lock(this->m);
 			if (this->queue.empty())
 				return false;
 			if (RBX::Time::now<RBX::Time::Fast>() < this->queue.front().timestamp + waitTime)
@@ -384,18 +384,18 @@ namespace rbx
 	public:
 		void clear()
 		{
-			mutex::scoped_lock lock(m);
+			typename mutex::scoped_lock lock(m);
 			vector.clear();
 		}
 		void push_heap(const T& value)
 		{
-			mutex::scoped_lock lock(m);
+			typename mutex::scoped_lock lock(m);
 			vector.push_back(value);
 			std::push_heap(vector.begin(), vector.end());
 		}
 		bool pop_heap_if_present(T& value)
 		{
-			mutex::scoped_lock lock(m);
+			typename mutex::scoped_lock lock(m);
 			if (!vector.empty())
 			{
 				std::pop_heap(vector.begin(), vector.end());
@@ -409,7 +409,7 @@ namespace rbx
 
 		bool pop_heap_if_present()
 		{
-			mutex::scoped_lock lock(m);
+			typename mutex::scoped_lock lock(m);
 			if (!vector.empty())
 			{
 				std::pop_heap(vector.begin(), vector.end());
