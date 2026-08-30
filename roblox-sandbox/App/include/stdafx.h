@@ -27,3 +27,4 @@
 #include "V8DataModel/DataModel.h"
 
 
+#include "boost_intrusive_compat.h"
