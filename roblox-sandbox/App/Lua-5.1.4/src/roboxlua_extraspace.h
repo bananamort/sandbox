@@ -17,6 +17,12 @@
 
 namespace RBX { class BaseScript; class ScriptContext; }
 
+// Forward declare so the forEachThread template (line 70) can reference
+// allExtraSpaces() at template-definition time (non-dependent name lookup
+// uses only declarations visible at the point of template definition).
+struct RobloxExtraSpace;
+extern std::set<RobloxExtraSpace*>& allExtraSpaces();
+
 // Per-thread state. Engine code does `RobloxExtraSpace::get(L)->identity = X`,
 // so the namespace struct must have identity/yieldCaptured as accessible
 // bitfields and the methods the engine calls (setContext, context,
@@ -85,8 +91,6 @@ struct RobloxExtraSpace {
         return reinterpret_cast<RobloxExtraSpace*>(p);
     }
 };
-
-extern std::set<RobloxExtraSpace*>& allExtraSpaces();
 
 // The struct's static get(lua_State*) is the public API. The internal
 // lifecycle hooks (onNewState etc) use the side-table pointer directly.
