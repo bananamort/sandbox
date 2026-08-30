@@ -887,7 +887,7 @@ void callAsyncCallback(Lua::WeakFunctionRef function, shared_ptr<const Tuple> ar
             continuations.error = boost::bind(callAsyncCallbackError, errorFunction, _1);
 
             RBXASSERT(RobloxExtraSpace::get(callbackThread.getRawState())->continuations == NULL);
-            RobloxExtraSpace::get(callbackThread.getRawState())->continuations = (void*)new Lua::Continuations(continuations));
+            RobloxExtraSpace::get(callbackThread.getRawState())->continuations = (void*)new Lua::Continuations(continuations);
 
             break;
         }

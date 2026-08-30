@@ -1823,7 +1823,7 @@ int ScriptContext::ypcall(lua_State *thread)
 			continuations.error = boost::bind(&ScriptContext::on_ypcall_failure, &sc, WeakThreadRef(thread), _1);
 
 			RBXASSERT(RobloxExtraSpace::get(safeFunctor.getRawState())->continuations == NULL);
-			RobloxExtraSpace::get(safeFunctor.getRawState())->continuations = (void*)new Lua::Continuations(continuations));
+			RobloxExtraSpace::get(safeFunctor.getRawState())->continuations = (void*)new Lua::Continuations(continuations);
 
 			//Capture the yield
 			RobloxExtraSpace::get(thread)->yieldCaptured = true;
@@ -2129,7 +2129,7 @@ void ScriptContext::reloadModuleScriptInternal(lua_State* globalState, shared_pt
         continuations.success = boost::bind(&ScriptContext::reloadModuleScriptSuccessContinuation, moduleScript, _1, oldResultIndex);
         continuations.error = boost::bind(&ScriptContext::reloadModuleScriptErrorContinuation,
                                           moduleScript, _1);
-        RobloxExtraSpace::get(reloadThread)->continuations = (void*)new Lua::Continuations(continuations));
+        RobloxExtraSpace::get(reloadThread)->continuations = (void*)new Lua::Continuations(continuations);
         return;
     }
     else if (reloadResult != 0)
@@ -2294,7 +2294,7 @@ void ScriptContext::startRunningModuleScript(Security::Identities identity, lua_
 		continuations.success = boost::bind(&requireModuleScriptSuccessContinuation, moduleScript, _1);
 		continuations.error = boost::bind(&ScriptContext::requireModuleScriptErrorContinuation,
 			moduleScript, _1);
-		RobloxExtraSpace::get(thread)->continuations = (void*)new Lua::Continuations(continuations));
+		RobloxExtraSpace::get(thread)->continuations = (void*)new Lua::Continuations(continuations);
 	}
 	else
 	{
