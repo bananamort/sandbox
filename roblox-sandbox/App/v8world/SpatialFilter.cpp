@@ -70,7 +70,7 @@ void SpatialFilter::changePhase(const MoveInstructions& mi)
 // Sim_SendIfSim, Sim_SendAlwasy, NoSim_SendAlways, NoSim_NoSend, NUM_PHASES, NOT_IN_LISTS} Phase;
 
 
-void SpatialFilter::moveInto(MoveInstructions& mi)
+void SpatialFilter::moveInto(const MoveInstructions& mi)
 {
 	bool wasSending = sendingPhase(mi.from);
 	bool wasSimulating = simulatingPhase(mi.from);

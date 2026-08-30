@@ -1536,7 +1536,12 @@ void ScriptContext::executeInNewThread(RBX::Security::Identities identity, const
 		// They probably haven't used a scoped_write_request
 #if !defined(RBX_STUDIO_BUILD)
         VMProtectBeginMutation("4");
-		if (DataModel* dataModel = DataModel::get(this);
+		// WS4-C5: rewrite the 5.1.4 'if (T x = init); { body }' pattern
+		// (where the ; is the empty if body and the {} is a separate
+		// always-run block) into the C++11 form that is a single if.
+		// The semantics are identical: dataModel is in scope inside body,
+		// and body runs when dataModel != nullptr.
+		if (DataModel* dataModel = DataModel::get(this))
 		{
 			if (!dataModel->currentThreadHasWriteLock())
 				dataModel->addHackFlag(HATE_ILLEGAL_SCRIPTS);

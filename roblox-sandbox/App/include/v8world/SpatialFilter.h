@@ -65,7 +65,7 @@ Dphysics Server;	Address Match (null)		If Awake or Sim
 		bool isNotClientAddress(Assembly* a);
 
 		void changePhase(const MoveInstructions& mi);
-		void moveInto(MoveInstructions& mi);
+		void moveInto(const MoveInstructions& mi);
 		void removeFromPhase(Assembly* a);
 		void moveAll(Assembly::FilterPhase destination);
 
