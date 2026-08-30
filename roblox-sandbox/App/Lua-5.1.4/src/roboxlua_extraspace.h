@@ -77,8 +77,6 @@ struct RobloxExtraSpace {
     // 0-arg overload (compat with call sites that don't pass a func).
     void forEachThread();
 
-extern std::set<RobloxExtraSpace*>& allExtraSpaces();
-
     // Static get() that the engine's RobloxExtraSpace::get(L) call resolves
     // to. Returns the side-table pointer for L.
     static RobloxExtraSpace* get(lua_State* L) {
@@ -87,6 +85,8 @@ extern std::set<RobloxExtraSpace*>& allExtraSpaces();
         return reinterpret_cast<RobloxExtraSpace*>(p);
     }
 };
+
+extern std::set<RobloxExtraSpace*>& allExtraSpaces();
 
 // The struct's static get(lua_State*) is the public API. The internal
 // lifecycle hooks (onNewState etc) use the side-table pointer directly.
