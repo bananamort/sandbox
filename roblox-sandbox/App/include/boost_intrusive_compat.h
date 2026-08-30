@@ -24,5 +24,12 @@ namespace boost {
 template <class T> inline void intrusive_ptr_add_ref(T*) {}
 template <class T> inline void intrusive_ptr_release(T*) {}
 }
+// Non-templated catch-all for unqualified lookup
+inline void intrusive_ptr_add_ref(...) {}
+inline void intrusive_ptr_release(...) {}
+namespace boost {
+inline void intrusive_ptr_add_ref(...) {}
+inline void intrusive_ptr_release(...) {}
+}
 
 #endif
