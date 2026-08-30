@@ -46,6 +46,8 @@ namespace std {
 // Global namespace: for types outside std (engine types in RBX::).
 inline void intrusive_ptr_add_ref(IUnknown* p) { const_cast<IUnknown*>(p)->AddRef(); }
 inline void intrusive_ptr_release(IUnknown* p) { const_cast<IUnknown*>(p)->Release(); }
+template <class T> void intrusive_ptr_add_ref(T*) {}
+template <class T> void intrusive_ptr_release(T*) {}
 
 using boost::intrusive_ptr;
 
