@@ -15,10 +15,6 @@
 #include <set>
 #include <vector>
 
-// Forward declaration so forEachThread (declared above) can reference it
-// even when this header is included by TUs that haven't seen the .cpp.
-extern std::set<RobloxExtraSpace*>& allExtraSpaces();
-
 namespace RBX { class BaseScript; class ScriptContext; }
 
 // Per-thread state. Engine code does `RobloxExtraSpace::get(L)->identity = X`,
@@ -81,6 +77,8 @@ struct RobloxExtraSpace {
     // 0-arg overload (compat with call sites that don't pass a func).
     void forEachThread();
 
+extern std::set<RobloxExtraSpace*>& allExtraSpaces();
+
     // Static get() that the engine's RobloxExtraSpace::get(L) call resolves
     // to. Returns the side-table pointer for L.
     static RobloxExtraSpace* get(lua_State* L) {
@@ -104,8 +102,6 @@ namespace RobloxExtraSpaceImpl {
     void onResume(lua_State* L);
     void onYield(lua_State* L);
 }
-
-extern std::set<RobloxExtraSpace*>& allExtraSpaces();
 
 inline void setRobloxExtraSpaceContext(lua_State* L, RBX::ScriptContext* ctx) {
     if (auto* es = RobloxExtraSpace::get(L)) es->scriptContext = ctx;
