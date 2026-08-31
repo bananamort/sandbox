@@ -91,7 +91,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\ClientBase;..\Library\boost\include;..\Library\SDL2\include;..\Win;..\App.BulletPhysics;..\App\include;..\Base\include;..\Network\include;..\Log\include;..\TBB_4_1\include;..\Rendering\GfxBase\include;..\Rendering\g3d\include;..\Rendering\RbxG3D\include;..\Library\DSBaseClasses\Sources;..\Library\SDK\Include;..\ClientShared;..\Rendering\AppDraw\include;..\Library\VMProtect\include;..\fmod\include;.;..\Rendering\GfxCore\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ClientBase;..\Library\boost\include;..\Library\SDL2\include;..\Win;..\App.BulletPhysics;..\App\include;..\Base\include;..\Network\include;..\Log\include;..\App\Lua-5.1.4\src;..\App\Lua-5.1.4\src\Common\include;..\App\Lua-5.1.4\src\VM\include;..\App\Lua-5.1.4\src\Compiler\include;..\App\Lua-5.1.4\src\Ast\include;..\App\Lua-5.1.4\src\Bytecode\include;..\App\Lua-5.1.4\src\Config\include;..\TBB_4_1\include;..\Rendering\GfxBase\include;..\Rendering\g3d\include;..\Rendering\RbxG3D\include;..\Library\DSBaseClasses\Sources;..\Library\SDK\Include;..\ClientShared;..\Rendering\AppDraw\include;..\Library\VMProtect\include;..\fmod\include;.;..\Rendering\GfxCore\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>BOOST_THREAD_BUILD_LIB;WIN32;_DEBUG;_WINDOWS;_SECURE_SCL=0;WINVER=0x0501;_WIN32_WINNT=0x0501;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -125,7 +125,7 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>..\ClientBase;..\Library\boost\include;..\Library\SDL2\include;..\Win;..\App.BulletPhysics;..\App\include;..\Base\include;..\Network\include;..\Log\include;..\Rendering\GfxBase\include;..\Rendering\g3d\include;..\Rendering\RbxG3D\include;..\Library\DSBaseClasses\Sources;..\Library\SDK\Include;..\ClientShared;..\Rendering\AppDraw\include;..\Library\VMProtect\include;..\fmod\include;.;..\Rendering\GfxCore\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ClientBase;..\Library\boost\include;..\Library\SDL2\include;..\Win;..\App.BulletPhysics;..\App\include;..\Base\include;..\Network\include;..\Log\include;..\App\Lua-5.1.4\src;..\App\Lua-5.1.4\src\Common\include;..\App\Lua-5.1.4\src\VM\include;..\App\Lua-5.1.4\src\Compiler\include;..\App\Lua-5.1.4\src\Ast\include;..\App\Lua-5.1.4\src\Bytecode\include;..\App\Lua-5.1.4\src\Config\include;..\Rendering\GfxBase\include;..\Rendering\g3d\include;..\Rendering\RbxG3D\include;..\Library\DSBaseClasses\Sources;..\Library\SDK\Include;..\ClientShared;..\Rendering\AppDraw\include;..\Library\VMProtect\include;..\fmod\include;.;..\Rendering\GfxCore\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>BOOST_THREAD_BUILD_LIB;WIN32;NDEBUG;_WINDOWS;_SECURE_SCL=0;WINVER=0x0501;_WIN32_WINNT=0x0501;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -166,7 +166,7 @@
       <Optimization>Disabled</Optimization>
       <IntrinsicFunctions>false</IntrinsicFunctions>
       <WholeProgramOptimization>false</WholeProgramOptimization>
-      <AdditionalIncludeDirectories>..\ClientBase;..\Library\boost\include;..\Library\SDL2\include;..\Win;..\App.BulletPhysics;..\App\include;..\Base\include;..\Network\include;..\Log\include;..\TBB_4_1\include;..\Rendering\GfxBase\include;..\Rendering\g3d\include;..\Rendering\RbxG3D\include;..\Library\DSBaseClasses\Sources;..\Library\SDK\Include;..\ClientShared;..\Rendering\AppDraw\include;..\Library\VMProtect\include;..\fmod\include;.;..\Rendering\GfxCore\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ClientBase;..\Library\boost\include;..\Library\SDL2\include;..\Win;..\App.BulletPhysics;..\App\include;..\Base\include;..\Network\include;..\Log\include;..\App\Lua-5.1.4\src;..\App\Lua-5.1.4\src\Common\include;..\App\Lua-5.1.4\src\VM\include;..\App\Lua-5.1.4\src\Compiler\include;..\App\Lua-5.1.4\src\Ast\include;..\App\Lua-5.1.4\src\Bytecode\include;..\App\Lua-5.1.4\src\Config\include;..\TBB_4_1\include;..\Rendering\GfxBase\include;..\Rendering\g3d\include;..\Rendering\RbxG3D\include;..\Library\DSBaseClasses\Sources;..\Library\SDK\Include;..\ClientShared;..\Rendering\AppDraw\include;..\Library\VMProtect\include;..\fmod\include;.;..\Rendering\GfxCore\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>BOOST_THREAD_BUILD_LIB;WIN32;NDEBUG;_WINDOWS;_SECURE_SCL=0;_NOOPT;WINVER=0x0501;_WIN32_WINNT=0x0501;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FloatingPointModel>Fast</FloatingPointModel>
