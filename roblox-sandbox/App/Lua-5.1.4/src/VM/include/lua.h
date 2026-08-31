@@ -566,10 +566,8 @@ static inline const char* luaO_chunkid(char* buf, const char* source, size_t src
     buf[i] = '\0';
     return buf;
 }
-static inline const char* luaO_chunkid(char* buf, size_t buflen, const char* source, size_t srclen) {
-    if (buflen < 6) buflen = 6;
-    return luaO_chunkid(buf, source, srclen < buflen - 5 ? srclen : buflen - 5);
-}
+// 4-arg overload removed in WS4-C5: lobject.cpp provides the real
+// implementation; keeping this static inline caused C2084 duplicate body.
 // 5.1.4 getline(Proto*, int): returns the line number of a given PC
 // instruction in a function's proto. Luau doesn't expose Proto or
 // getline; the function is 5.1.4 internal debug-API sugar. We shim
