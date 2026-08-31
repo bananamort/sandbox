@@ -568,6 +568,20 @@ static inline const char* luaO_chunkid(char* buf, const char* source, size_t src
 }
 // 4-arg overload removed in WS4-C5: lobject.cpp provides the real
 // implementation; keeping this static inline caused C2084 duplicate body.
+// 5.1.4 lua_Reader: callback to feed chunks of source to lua_load.
+// Luau removed the reader-based load (luau_load takes (L, name, data, size, env)
+// directly). The engine uses a reader to avoid copying the source string.
+// The shim here uses a small static buffer and the caller's data pointer
+// (which is expected to be a struct { const char* s; size_t size; } or similar).
+typedef const char* (*lua_Reader)(lua_State *L, void *ud, size_t *sz);
+static inline int lua_load(lua_State* L, lua_Reader reader, void* data, const char* chunkname)
+{
+    size_t size;
+    const char* p = reader(L, data, &size);
+    if (!p) return LUA_ERRMEM;
+    return luau_load(L, chunkname, p, size, 0);
+}
+
 // 5.1.4 getline(Proto*, int): returns the line number of a given PC
 // instruction in a function's proto. Luau doesn't expose Proto or
 // getline; the function is 5.1.4 internal debug-API sugar. We shim
