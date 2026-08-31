@@ -5,8 +5,13 @@
 #include "util/ProtectedString.h"
 
 #define LUAVM_COMPILER
-#include "../Lua-5.1.4/src/lcode.c"
-#include "../Lua-5.1.4/src/lparser.c"
+// WS4-C5: the 5.1.4 lcode.c and lparser.c are 5.1.4 C source files
+// that no longer exist in the Luau graft (replaced by lcode.cpp and
+// lparser.cpp in Compiler/src/). Including them here was a 5.1.4
+// hack to provide luaY_parser / code generator stubs; with Luau,
+// the parser is in Luau::Parser and code gen is in CodeGen.
+// Remove the includes -- nothing in LuaVMServer.cpp references
+// their symbols directly.
 
 #define LUAVM_SERIALIZER
 #include "LuaSerializer.inl"
