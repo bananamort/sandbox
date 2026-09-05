@@ -80,10 +80,12 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force -Path artifacts | Out-Null
           Get-ChildItem -Recurse -Include RCCService.exe | ForEach-Object { Copy-Item $_.FullName artifacts/ }
+          Get-ChildItem -Recurse -Include RCCService.pdb | ForEach-Object { Copy-Item $_.FullName artifacts/ }
+          Get-ChildItem -Recurse -Include App.pdb | ForEach-Object { Copy-Item $_.FullName artifacts/ }
       - uses: actions/upload-artifact@v4
         with:
           name: rcc-exe
-          path: artifacts/RCCService.exe
+          path: artifacts/
           if-no-files-found: error
       - name: Save intermediates
         if: always()
