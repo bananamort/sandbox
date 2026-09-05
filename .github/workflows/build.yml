@@ -286,7 +286,8 @@ jobs:
             $dump = $dumps[0].FullName
             Push-Location bin
             try {
-              & "$cdb" -z "$dump" -c ".sympath+ $($PWD.Path);.reload;!analyze -v;q" 2>&1 |
+              $env:_NT_SYMBOL_PATH = "srv*;D:\a\sandbox\sandbox\bin"
+              & "$cdb" -z "$dump" -c "!analyze -v;q" 2>&1 |
                 ForEach-Object { Write-Host "stack| $_" }
             } catch { Write-Host "diag| cdb failed: $_" }
             Pop-Location
