@@ -1,166 +1,80 @@
 #include "stdafx.h"
 #include "script/LuaVM.h"
 
-#include "util/Guid.h"
 #include "util/ProtectedString.h"
 
-#define LUAVM_COMPILER
-// WS4-C5: the 5.1.4 lcode.c and lparser.c are 5.1.4 C source files
-// that no longer exist in the Luau graft (replaced by lcode.cpp and
-// lparser.cpp in Compiler/src/). Including them here was a 5.1.4
-// hack to provide luaY_parser / code generator stubs; with Luau,
-// the parser is in Luau::Parser and code gen is in CodeGen.
-// Remove the includes -- nothing in LuaVMServer.cpp references
-// their symbols directly.
+#include "../Lua-5.1.4/src/VM/include/lua.h"
+#include "../Lua-5.1.4/src/Compiler/include/luacode.h"
 
-#define LUAVM_SERIALIZER
-#include "LuaSerializer.inl"
-
-static long long multiplicativeInverse(long long a, long long n)
-{
-    long long t = 0;
-    long long newt = 1;
-    
-    long long r = n;
-    long long newr = a;
-    
-    while (newr != 0)
-    {
-        long long q = r / newr;
-        
-        long long curt = t;
-        t = newt;
-        newt = curt - q * newt;
-        
-        long long curr = r;
-        r = newr;
-        newr = curr - q * newr;
-    }
-    
-    RBXASSERT(r == 1);
-    
-    return (t < 0) ? t + n : t;
-}
-
-static uint32_t rbxDaxEncodeOp(uint32_t x, uint32_t mulEven, uint32_t addEven, uint32_t mulOdd, uint32_t addOdd)
-{
-    uint32_t result      = 0;
-    uint32_t mask        = 1;
-    for (size_t i = 0; i < 8*sizeof(uint32_t); ++i)
-    {
-        uint32_t bitDesired = mask & x;
-        uint32_t bitOdd     = mask & (result*mulOdd + addOdd);
-        uint32_t bitEven    = mask & (result*mulEven + addEven);
-        if ((bitEven ^ bitOdd) != bitDesired)
-        {
-            result |= mask;
-        }
-        mask <<= 1;
-    }
-    return result;
-}
-
-static std::pair<unsigned int, unsigned int> createLuaKeyPair()
-{
-    // encode key has to be a sufficiently random odd integer
-    std::string guid;
-    unsigned int encode = 1;
-    do
-    {
-        RBX::Guid::generateStandardGUID(guid);
-        encode = boost::hash_value(guid) * 2 + 1;
-    } while (encode == 1);
-    
-    // decode key has to be a multiplicative inverse mod 2^32
-    // note that the inverse has to exist because the encode key is odd
-    // encode * u + 2^32 * v = 1
-    unsigned int decode = multiplicativeInverse(encode, 1ll << 32);
-    
-    RBXASSERT(encode * decode == 1);
-
-    return std::make_pair(encode, decode);
-}
-
-struct LoadS
-{
-    const char *s;
-    size_t size;
-};
-
-static const char* getS(lua_State *L, void *ud, size_t *size)
-{
-    LoadS *ls = (LoadS *)ud;
-    (void)L;
-    if (ls->size == 0) return NULL;
-    *size = ls->size;
-    ls->size = 0;
-    return ls->s;
-}
+#include <cstdlib>
 
 namespace LuaVM
 {
-    static std::pair<unsigned int, unsigned int> gLuaKeyPair = createLuaKeyPair();
-    
+    // WS4 Option-1 graft: no RSB1 bytecode crypto. compile() is the
+    // identity (the wire carries source text while useSecureReplication()
+    // is false); load() compiles source with luau_compile and loads the
+    // result with luau_load. modkey/ckey are unused.
     std::string compile(const std::string& source)
     {
-        lua_State* L = luaL_newstate();
-        
-        std::string result = LuaSerializer::serialize(L, source, rbxDaxEncode, gLuaKeyPair.first);
-
-        lua_close(L);
-        
-        return result;
+        return source;
     }
 
     std::string compileLegacy(const std::string& source)
     {
-        lua_State* L = luaL_newstate();
-        
-        std::string result = LuaSerializer::serialize(L, source, rbxOldEncode, gLuaKeyPair.first);
-
-        lua_close(L);
-        
-        return result;
+        return source;
     }
 
     int load(lua_State* L, const RBX::ProtectedString& source, const char* chunkname, unsigned int modkey)
     {
+        (void)modkey;
+
         const std::string& code = source.getSource();
-            
-        LoadS ls = { code.c_str(), code.size() };
-            
-        return lua_load(L, getS, &ls, chunkname);
+        if (!code.empty())
+        {
+            lua_CompileOptions opts = {};
+            opts.optimizationLevel = 1;
+            opts.debugLevel = 1;
+
+            size_t outsize = 0;
+            char* bytecode = luau_compile(code.c_str(), code.size(), &opts, &outsize);
+            int status = luau_load(L, chunkname ? chunkname : "?", bytecode, outsize, 0);
+            free(bytecode);
+            return status;
+        }
+
+        if (!source.getBytecode().empty())
+        {
+            lua_pushstring(L, "unsupported bytecode payload in source-only graft");
+            return LUA_ERRSYNTAX;
+        }
+
+        lua_pushstring(L, "");
+        return LUA_ERRSYNTAX;
     }
-    
+
     unsigned int getKey()
     {
-        return gLuaKeyPair.second;
+        return LUAVM_KEY_DUMMY;
     }
 
     std::string compileCore(const std::string& source)
     {
-        lua_State* L = luaL_newstate();
-        
-        std::string result = LuaSerializer::serialize(L, source, rbxDaxEncode, LUAVM_INTERNAL_CORE_ENCODE_KEY);
-
-        lua_close(L);
-        
-        return result;
+        return source;
     }
 
     unsigned int getKeyCore()
     {
-		return gLuaKeyPair.second;
+        return LUAVM_KEY_DUMMY;
     }
 
     unsigned int getModKeyCore()
     {
-        return LUAVM_INTERNAL_CORE_DECODE_KEY * gLuaKeyPair.first;
+        return LUAVM_MODKEY_DUMMY;
     }
 
     bool useSecureReplication()
     {
-        return true;
+        return false;
     }
 
     bool canCompileScripts()
@@ -168,42 +82,29 @@ namespace LuaVM
         return true;
     }
 
-	std::string getBytecodeCore(const std::string& name)
+    std::string getBytecodeCore(const std::string& name)
     {
+        (void)name;
         return "";
     }
 
-	boost::unordered_map<std::string, std::string> getBytecodeCoreModules()
-	{
-		return boost::unordered_map<std::string, std::string>();
-	}
-
+    boost::unordered_map<std::string, std::string> getBytecodeCoreModules()
+    {
+        return boost::unordered_map<std::string, std::string>();
+    }
 
     unsigned int rbxOldEncode(unsigned int i, int pc, unsigned int key)
     {
-        (void)(pc);
-        return LUAVM_ENCODEINSN(i, key);
-    } 
+        (void)pc;
+        (void)key;
+        return i;
+    }
 
-    unsigned int rbxDaxEncode(unsigned int i, int pc, unsigned int key) 
+    unsigned int rbxDaxEncode(unsigned int i, int pc, unsigned int key)
     {
-        Instruction enc = i;
-        Instruction op = GET_OPCODE(i);
-        switch (op) {
-        case OP_CALL:
-        case OP_TAILCALL:
-        case OP_RETURN:
-        case OP_CLOSURE:
-            enc = rbxDaxEncodeOp(i, LUAVM_DAX_ME, pc, LUAVM_DAX_MO, LUAVM_DAX_AO);
-            SET_OPCODE(enc, op);
-            break;
-        case OP_MOVE:
-            SETARG_C(enc, (pc|1)); // non-zero
-            break;
-        default:
-            break;
-        }
-        return LUAVM_ENCODEINSN(enc, key);
+        (void)pc;
+        (void)key;
+        return i;
     }
 
 }
