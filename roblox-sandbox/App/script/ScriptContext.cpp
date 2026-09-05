@@ -195,15 +195,23 @@ void Lua::protect_metatable(lua_State* thread, int index)
 static void loadLibraryProtected(lua_State* L, lua_CFunction func)
 {
 	RBXASSERT_BALLANCED_LUA_STACK(L);
-    
+
     int count = func(L);
-    
+
+    if (func == luaopen_base)
+    {
+        // Luau's luaopen_base returns the globals table itself (count==1),
+        // not a separate lib table. The engine installs dozens of globals
+        // below, so it must stay mutable: skip the freeze and pop exactly
+        // what was pushed. (5.1.4 asserted count==2 here and the freeze was
+        // a metatable no-op for raw globals writes; under Luau it throws.)
+        lua_pop(L, count);
+        return;
+    }
+
     // Since we only protect one table, we expect one result
-    // Unfortunately, luaopen_base also leaves _G on the stack (why???)
-    RBXASSERT(count == (func == luaopen_base) ? 2 : 1);
-    
     lua_setreadonly(L, -1, true);
-    
+
     lua_pop(L, count);
 }
 
