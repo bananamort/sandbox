@@ -177,6 +177,8 @@ public:
 
 					slotThread = lua_newthread(functionThread);
 
+					RobloxExtraSpaceImpl::onNewThread(slotThread);
+
 					RBXASSERT(lua_isthread(functionThread, -1));
 
 					if (!slotThread)

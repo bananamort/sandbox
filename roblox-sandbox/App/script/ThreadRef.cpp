@@ -336,7 +336,8 @@ WeakFunctionRef::~WeakFunctionRef()
 	// remove the reference to the function
 	if (functionId!=0 && !empty())
     {
-		luaL_unref(ScriptContext::getGlobalState(thread()), LUA_REGISTRYINDEX, functionId);
+		if (lua_State* gs = ScriptContext::getGlobalState(thread()))
+			luaL_unref(gs, LUA_REGISTRYINDEX, functionId);
     }
 }
 
@@ -346,7 +347,8 @@ void WeakFunctionRef::removeRef()
 	{
 		FASTLOG1(FLog::WeakThreadRef, " WeakFunctionRef::removeRef() for node %p", node);
 
-		luaL_unref(ScriptContext::getGlobalState(thread()), LUA_REGISTRYINDEX, functionId);
+		if (lua_State* gs = ScriptContext::getGlobalState(thread()))
+			luaL_unref(gs, LUA_REGISTRYINDEX, functionId);
 
 		functionId = 0;
 	}
@@ -362,9 +364,14 @@ WeakFunctionRef::WeakFunctionRef(const WeakFunctionRef& other)
 	else
 	{
 		lua_State* L = ScriptContext::getGlobalState(thread());
-		lua_rawgeti(L, LUA_REGISTRYINDEX, other.functionId);
-		// pops the value from the stack, stores it into the registry with a fresh integer key, and returns that key
-		functionId = luaL_ref(L, LUA_REGISTRYINDEX);
+		if (!L)
+			functionId = 0;
+		else
+		{
+			lua_rawgeti(L, LUA_REGISTRYINDEX, other.functionId);
+			// pops the value from the stack, stores it into the registry with a fresh integer key, and returns that key
+			functionId = luaL_ref(L, LUA_REGISTRYINDEX);
+		}
 	}
 }
 
@@ -381,7 +388,8 @@ RBX::Lua::detail::LiveThreadRef::LiveThreadRef (lua_State* thread)
 
 RBX::Lua::detail::LiveThreadRef::~LiveThreadRef()
 {
-	luaL_unref(ScriptContext::getGlobalState(L), LUA_REGISTRYINDEX, threadId);
+	if (lua_State* gs = ScriptContext::getGlobalState(L))
+		luaL_unref(gs, LUA_REGISTRYINDEX, threadId);
 }
 
 bool WeakThreadRef::operator==(const WeakThreadRef& other) const
@@ -405,7 +413,8 @@ bool WeakFunctionRef::operator!=(const WeakFunctionRef& other) const
 WeakFunctionRef& WeakFunctionRef::operator=(const WeakFunctionRef& other)
 {
 	if (!empty())
-		luaL_unref(ScriptContext::getGlobalState(thread()), LUA_REGISTRYINDEX, functionId);
+		if (lua_State* gs = ScriptContext::getGlobalState(thread()))
+			luaL_unref(gs, LUA_REGISTRYINDEX, functionId);
 
 	// Call inherited operator
 	WeakThreadRef& t = *this;
@@ -416,9 +425,14 @@ WeakFunctionRef& WeakFunctionRef::operator=(const WeakFunctionRef& other)
 	else
 	{
 		lua_State* L = ScriptContext::getGlobalState(thread());
-		lua_rawgeti(L, LUA_REGISTRYINDEX, other.functionId);
-		// pops the value from the stack, stores it into the registry with a fresh integer key, and returns that key
-		functionId = luaL_ref(L, LUA_REGISTRYINDEX);
+		if (!L)
+			functionId = 0;
+		else
+		{
+			lua_rawgeti(L, LUA_REGISTRYINDEX, other.functionId);
+			// pops the value from the stack, stores it into the registry with a fresh integer key, and returns that key
+			functionId = luaL_ref(L, LUA_REGISTRYINDEX);
+		}
 	}
 
 	return *this;

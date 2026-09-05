@@ -3959,6 +3959,7 @@ namespace RBX
         RBXASSERT_BALLANCED_LUA_STACK(globalState);
 
         Lua::ThreadRef thread = lua_newthread(globalState);
+        RobloxExtraSpaceImpl::onNewThread(thread.getRawState());
 
         // Pop the thread from the stack when we leave
         Lua::ScopedPopper popper(globalState, 1);

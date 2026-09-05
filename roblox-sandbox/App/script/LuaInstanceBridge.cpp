@@ -732,6 +732,7 @@ shared_ptr<Tuple> callCallback(Lua::WeakFunctionRef function, shared_ptr<const T
 		int top = lua_gettop(functionThread);
 
 		callbackThread = lua_newthread(functionThread);
+		RobloxExtraSpaceImpl::onNewThread(callbackThread);
 		RBXASSERT(lua_isthread(functionThread, -1));
 
 		while (lua_gettop(functionThread)>top+1)				//oldTop, ???, slotThread
@@ -848,6 +849,8 @@ void callAsyncCallback(Lua::WeakFunctionRef function, shared_ptr<const Tuple> ar
 	else
 	{	
 		callbackThread = lua_newthread(functionThread);
+
+		RobloxExtraSpaceImpl::onNewThread(callbackThread);
 
         lua_pop(functionThread, 1);
 

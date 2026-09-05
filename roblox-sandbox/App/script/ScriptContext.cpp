@@ -1318,11 +1318,21 @@ ScriptContext& ScriptContext::getContext(lua_State* thread)
 
 lua_State* ScriptContext::getGlobalState(lua_State* thread)
 {
-    ScriptContext& context = getContext(thread);
+    // WS4: side-table entries can be absent (threads created on paths
+    // that predate the onNewThread hook, or states already closed).
+    // 5.1.4 kept space inline in the state so lookup never failed;
+    // here a missing entry means "no usable global state".
+    RobloxExtraSpace* space = RobloxExtraSpace::get(thread);
+    if (!space || !space->context())
+        return NULL;
+    ScriptContext& context = *space->context();
 
     for (GlobalStates::const_iterator iter = context.globalStates.begin(); iter != context.globalStates.end(); ++iter)
-        if (iter->state && RobloxExtraSpace::get(iter->state)->ckey == RobloxExtraSpace::get(thread)->ckey)
+    {
+        RobloxExtraSpace* ispace = iter->state ? RobloxExtraSpace::get(iter->state) : NULL;
+        if (ispace && ispace->ckey == space->ckey)
             return iter->state;
+    }
 
     return NULL;
 }

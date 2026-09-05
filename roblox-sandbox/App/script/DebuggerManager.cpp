@@ -906,6 +906,7 @@ Reflection::Variant DebuggerManager::readWatchValue(std::string expression, int 
 	RBXASSERT_BALLANCED_LUA_STACK(L);
 
 	lua_State* evalThread = lua_newthread(L);
+	RobloxExtraSpaceImpl::onNewThread(evalThread);
 	lua_sethook(evalThread, NULL, 0, 0);	// Prevent re-entrancy
 
 	Lua::ScopedPopper pop(L, 1);
@@ -1334,6 +1335,7 @@ bool ScriptDebugger::shouldBreak(DebuggerBreakpoint* bp, lua_State* L)
 	RBXASSERT_BALLANCED_LUA_STACK(L);
 
 	lua_State* evalThread = lua_newthread(L);
+	RobloxExtraSpaceImpl::onNewThread(evalThread);
 	RBXASSERT_BALLANCED_LUA_STACK2(evalThread);
 
 	std::string condition = "return " + bp->getCondition();
