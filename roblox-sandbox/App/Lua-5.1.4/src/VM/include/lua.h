@@ -525,10 +525,14 @@ static inline int rbx_next_lua_ref_key() {
     return counter++;
 }
 static inline int luaL_ref(lua_State* L, int idx) {
+    (void)idx;  // 5.1.4 allowed any table; the engine only uses
+                // LUA_REGISTRYINDEX, and Luau's registry is shared
+                // process-wide anyway.
+    // 5.1.4 pops the TOP of stack into the table — idx only selects
+    // the table, it is NOT pushed. (Pushing idx first would anchor the
+    // table into itself, leak a stack slot, and leave the intended
+    // value — e.g. LiveThreadRef's coroutine — unrooted for GC.)
     int key = rbx_next_lua_ref_key();
-    // The value at idx is on the stack; pop it and store at registry.
-    // 5.1.4 supports LUA_NOREF (don't pop) but engine code doesn't use it.
-    lua_pushvalue(L, idx);
     lua_rawseti(L, LUA_REGISTRYINDEX, key);
     return key;
 }
