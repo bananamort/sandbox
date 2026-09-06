@@ -3229,7 +3229,6 @@ cmd /c "exit /b 0"</Command>
     <None Include="include\voxel\Region.iterator.inl" />
     <None Include="include\voxel\Region.xline_iterator.inl" />
     <None Include="include\voxel\Water.inl" />
-    <None Include="script\LuaGenCS.inl" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\App.BulletPhysics\App.BulletPhysics.vcxproj">
