@@ -1584,10 +1584,15 @@ void ScriptContext::resume(ThreadRef thread, boost::function1<size_t, lua_State*
 	int argCount = pushArguments(thread);
 
 	Result resumeResult = resume(thread, argCount);
-	if (resumeResult == Success)
+	if (resumeResult == Success || resumeResult == Yield)
 	{
-		// Collect all the return arguments into a Tuple
-		const int returnCount = lua_gettop(thread) - stackSize + 1;
+		// Collect all the return arguments into a Tuple. A yielded
+		// coroutine may hold no collectible results — Luau can leave
+		// the stack emptier than 5.1.4 did, so clamp instead of
+		// underflowing into a 4-billion-element Tuple ("vector too long").
+		int returnCount = lua_gettop(thread) - stackSize + 1;
+		if (returnCount < 0)
+			returnCount = 0;
 		if (readResults)
 			try
 			{
@@ -1602,13 +1607,6 @@ void ScriptContext::resume(ThreadRef thread, boost::function1<size_t, lua_State*
 
 		// Clean up the stack
 		lua_pop(thread, returnCount);
-	}
-	else if (resumeResult == Yield)
-	{
-		// WS4: a yielded coroutine holds no collectible results — Luau
-		// leaves nothing result-like on the stack (5.1.4 left
-		// func/args/yields behind, which this math accidentally
-		// tolerated). Leave the stack for later resumption.
 	}
 	else
 	{
