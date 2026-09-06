@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include <cstdio>
 #include "Script/ScriptContext.h"
 #include "Script/CoreScript.h"
 #include "Script/DebuggerManager.h"
@@ -1356,6 +1357,7 @@ void ScriptContext::executeInNewThread(RBX::Security::Identities identity, const
 
 static void readResults(std::auto_ptr<Reflection::Tuple>& result, lua_State* thread, size_t returnCount)
 {
+	fprintf(stderr, "DIAG readResults returnCount=%u\n", (unsigned)returnCount);
 	result.reset(new Reflection::Tuple(returnCount));
 	for (size_t i = 0; i<returnCount; ++i)
 	{
