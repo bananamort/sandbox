@@ -2948,7 +2948,7 @@ std::string ScriptContext::extractCallStack(lua_State* thread, shared_ptr<BaseSc
 	source = RobloxExtraSpace::get(thread)->script.lock();
 
 	std::stringstream str;
-	lua_Debug ar;
+	lua_Debug ar = {};
 	if (lua_getstack(thread, 0, &ar)) 
 	{
 		int level = 0;
@@ -2984,7 +2984,7 @@ void ScriptContext::printCallStack(lua_State* thread, std::string * output, bool
 
 	std::stringstream stream;
 
-	lua_Debug ar;
+	lua_Debug ar = {};
 	if (lua_getstack(thread, 0, &ar)) 
 	{
 		bool moreStack = false;

@@ -8,6 +8,7 @@
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "luaconf.h"
 
@@ -560,24 +561,27 @@ static inline void luaL_unref(lua_State* L, int t, int ref) {
 #ifndef LUA_QL
 #define LUA_QL(x) "'" x "'"
 #endif
-// 5.1.4 luaO_chunkid(char* buf, const char* source, size_t srclen):
-// formats source into buf truncated to a "[string \"...\"]" form.
-// Luau removed it; we shim using the public sprintf path. Two overloads:
-// the 3-arg form the engine uses (no buflen; buflen is the buf's
-// known fixed size LUA_IDSIZE) and a 4-arg form for VM-internal callers
-// (lvmload.cpp, ldebug.cpp) that need an explicit buflen.
-static inline const char* luaO_chunkid(char* buf, const char* source, size_t srclen) {
+// 5.1.4 luaO_chunkid(char* buf, const char* source, size_t buflen):
+// buflen is the OUTPUT buffer size (callers pass LUA_IDSIZE); source is
+// NUL-terminated. 5.1.4 prefix handling: '=' strips, '@' keeps the tail,
+// otherwise [string "..."] form. Always NUL-terminated within buflen.
+static inline const char* luaO_chunkid(char* buf, const char* source, size_t buflen) {
     if (source == NULL) source = "?";
-    if (srclen > (size_t)(120 - 5)) srclen = (size_t)(120 - 5);
-    buf[0] = '[';
-    size_t i = 1;
-    for (; i < srclen + 1; ++i) {
-        char c = source[i - 1];
-        if (c == '\n' || c == '\r') c = ' ';
-        buf[i] = c;
+    if (buflen == 0) return buf;
+    if (*source == '=') {
+        snprintf(buf, buflen, "%s", source + 1);
     }
-    buf[i++] = ']';
-    buf[i] = '\0';
+    else if (*source == '@') {
+        size_t len = strlen(source + 1);
+        if (len + 1 <= buflen)
+            snprintf(buf, buflen, "%s", source + 1);
+        else
+            snprintf(buf, buflen, "...%s", source + 1 + len - (buflen - 4));
+    }
+    else {
+        size_t inner = buflen > 12 ? buflen - 12 : 0;
+        snprintf(buf, buflen, "[string \"%.*s\"]", (int)inner, source);
+    }
     return buf;
 }
 // 4-arg overload removed in WS4-C5: lobject.cpp provides the real
