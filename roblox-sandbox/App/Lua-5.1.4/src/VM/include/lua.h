@@ -728,7 +728,10 @@ struct RbxHookState {
 LUA_API RbxHookState* rbx_hookstate(lua_State* L);
 // Nonzero while any thread has hooks installed; the VM loop polls hooks
 // only then, so untraced execution pays one predictable branch.
-LUA_API extern volatile int rbxHookActive;
+LUA_API volatile int rbxHookActive;
+// Frame selection for the 3-arg query helpers below. Real port: walks
+// the CallInfo chain in ldebug.cpp (was a no-op stub).
+LUA_API int lua_getstack(lua_State* L, int level, lua_Debug* ar);
 // Real lua_sethook: records func/mask/count in the thread's hook state.
 // Firing happens in the VM loop (lvmexecute dispatch poll) with true
 // 5.1.4 event granularity (call/ret/line/count).
