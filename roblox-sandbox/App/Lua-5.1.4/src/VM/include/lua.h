@@ -546,16 +546,16 @@ static inline int luaL_ref(lua_State* L, int t) {
     lua_rawseti(L, t, ref);
     return ref;
 }
-// 5.1.4 luaL_unref(L, t, ref) clears slot ref in table t and threads
-// it back onto the freelist in slot 0, exactly like 5.1.4.
+// 5.1.4 luaL_unref(L, t, ref) frees slot ref back onto the freelist in
+// slot 0: slot[ref] takes the old head, slot 0 takes ref. Net stack
+// effect zero, exactly like 5.1.4.
 static inline void luaL_unref(lua_State* L, int t, int ref) {
     if (ref < 0)
         return;
-    lua_rawgeti(L, t, ref);
-    lua_rawseti(L, t, 0);
-    lua_pushvalue(L, -1);
+    lua_rawgeti(L, t, 0);
     lua_rawseti(L, t, ref);
-    lua_pop(L, 1);
+    lua_pushinteger(L, ref);
+    lua_rawseti(L, t, 0);
 }
 // 5.1.4 macro for string-literal quoting. Luau doesn't define it.
 #ifndef LUA_QL
