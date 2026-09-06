@@ -56,14 +56,16 @@ void onCloseState(lua_State* L) {
     }
 }
 
-void onNewThread(lua_State* L) {
-    auto* parent_es = RobloxExtraSpace::get(L);
+void onNewThread(lua_State* L, lua_State* parent) {
+    auto* parent_es = parent ? RobloxExtraSpace::get(parent) : nullptr;
     auto* es = new RobloxExtraSpace();
     es->identity = parent_es ? parent_es->identity : 0;
     es->yieldCaptured = 0;
     es->script = parent_es ? parent_es->script : boost::weak_ptr<RBX::BaseScript>();
     es->continuations = nullptr;
     es->scriptContext = parent_es ? parent_es->scriptContext : nullptr;
+    es->ckey = parent_es ? parent_es->ckey : 0;
+    es->modKey = parent_es ? parent_es->modKey : 0;
     es->parent = parent_es;
     es->legacyShared = parent_es ? parent_es->legacyShared : nullptr;
     if (parent_es) parent_es->children.push_back(es);

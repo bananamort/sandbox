@@ -101,7 +101,9 @@ inline void setRobloxExtraSpace(lua_State* L, RobloxExtraSpace* es) {
 namespace RobloxExtraSpaceImpl {
     void onNewState(lua_State* L);
     void onCloseState(lua_State* L);
-    void onNewThread(lua_State* L);
+    // parent supplies identity/context/ckey inheritance; the new thread's
+    // own entry is always empty at this point, so it cannot be the source.
+    void onNewThread(lua_State* L, lua_State* parent);
     void onFreeThread(lua_State* L);
     void onResume(lua_State* L);
     void onYield(lua_State* L);
