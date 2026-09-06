@@ -383,7 +383,7 @@ namespace RBX { namespace Lua {
 
 				// push "FunctionDescriptor*" onto the stack as an up-value
 				lua_pushlightuserdata(L, desc);     // Stack:   desc
-				lua_pushcclosure(L, ObjectBridge::callMemberYieldFunction, 1);
+				lua_pushcclosure_3(L, ObjectBridge::callMemberYieldFunction, 1);
 				// Stack:   closure
 				lua_pushlightuserdata(L, desc);     // Stack:   closure, desc
 				lua_pushvalue(L, -2);               // Stack:   closure, desc, closure
@@ -411,7 +411,7 @@ namespace RBX { namespace Lua {
 
 				// push "FunctionDescriptor*" onto the stack as an up-value
 				lua_pushlightuserdata(L, desc);     // Stack:   desc
-				lua_pushcclosure(L, ObjectBridge::callMemberFunction, 1);
+				lua_pushcclosure_3(L, ObjectBridge::callMemberFunction, 1);
 				// Stack:   closure
 				lua_pushlightuserdata(L, desc);     // Stack:   closure, desc
 				lua_pushvalue(L, -2);               // Stack:   closure, desc, closure
@@ -732,6 +732,7 @@ shared_ptr<Tuple> callCallback(Lua::WeakFunctionRef function, shared_ptr<const T
 		int top = lua_gettop(functionThread);
 
 		callbackThread = lua_newthread(functionThread);
+		RobloxExtraSpaceImpl::onNewThread(callbackThread, functionThread);
 		RBXASSERT(lua_isthread(functionThread, -1));
 
 		while (lua_gettop(functionThread)>top+1)				//oldTop, ???, slotThread
@@ -849,6 +850,8 @@ void callAsyncCallback(Lua::WeakFunctionRef function, shared_ptr<const Tuple> ar
 	{	
 		callbackThread = lua_newthread(functionThread);
 
+		RobloxExtraSpaceImpl::onNewThread(callbackThread, functionThread);
+
         lua_pop(functionThread, 1);
 
 		createdThread = true;
@@ -886,8 +889,8 @@ void callAsyncCallback(Lua::WeakFunctionRef function, shared_ptr<const Tuple> ar
             continuations.success = boost::bind(callAsyncCallbackSuccess, resumeFunction, _1);
             continuations.error = boost::bind(callAsyncCallbackError, errorFunction, _1);
 
-            RBXASSERT(RobloxExtraSpace::get(callbackThread.get())->continuations.get() == NULL);
-            RobloxExtraSpace::get(callbackThread.get())->continuations.reset(new Lua::Continuations(continuations));
+            RBXASSERT(RobloxExtraSpace::get(callbackThread.getRawState())->continuations == NULL);
+            RobloxExtraSpace::get(callbackThread.getRawState())->continuations = (void*)new Lua::Continuations(continuations);
 
             break;
         }
@@ -1061,7 +1064,7 @@ protected:
 	{
 		if (ThreadRef thread = threadRef->lock())
 		{
-			if (Continuations* continuations = RobloxExtraSpace::get(thread)->continuations.get()) {
+			if (Lua::Continuations* continuations = (Lua::Continuations*)RobloxExtraSpace::get(thread)->continuations) {
 				if (continuations->error)
 				{
 					lua_pushstring(thread, message);

@@ -40,7 +40,13 @@ static int getfield (lua_State *L, const char *key, int d) {
     res = (int)lua_tointeger(L, -1);
   else {
     if (d < 0)
-      return luaL_error(L, "field " LUA_QS " missing in date table", key);
+    {
+      // WS4-C6: Luau's luaL_error is l_noret (does not return).
+      // Call it for the throw and return 0; the engine's error
+      // callback will not continue past this line.
+      luaL_error(L, "field " LUA_QS " missing in date table", key);
+      return 0;
+    }
     res = d;
   }
   lua_pop(L, 1);

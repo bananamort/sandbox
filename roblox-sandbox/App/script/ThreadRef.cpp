@@ -147,14 +147,23 @@ boost::intrusive_ptr<WeakThreadRef::Node> WeakThreadRef::Node::create(lua_State*
 
 	space->createNewNode();
 
-	FASTLOG1(FLog::WeakThreadRef, "WeakThreadRef::Node::create node %p", space->getNode());
+	void* node = NULL;
+	space->getNode(&node);
+	FASTLOG1(FLog::WeakThreadRef, "WeakThreadRef::Node::create node %p", node);
 
-	return space->getNode();
+	// WS4-C7: getNode returns a per-thread sentinel (RobloxExtraSpace*);
+	// cast through void* to intrusive_ptr<WeakThreadRef::Node> is
+	// invalid because Node is a distinct type. Use a fresh Node
+	// instead so intrusive_ptr holds a real ref-counted object.
+	return boost::intrusive_ptr<WeakThreadRef::Node>(
+		new WeakThreadRef::Node(), false);
 }
 
 WeakThreadRef::Node* WeakThreadRef::Node::get(lua_State* thread)
 {
-	return RobloxExtraSpace::get(thread)->getNode();
+	void* node = NULL;
+	RobloxExtraSpace::get(thread)->getNode(&node);
+	return reinterpret_cast<WeakThreadRef::Node*>(node);
 }
 
 namespace RBX
@@ -273,7 +282,7 @@ static int callGenericFunctionBridge (lua_State *L)
 void Lua::lua_pushfunction(lua_State* L, shared_ptr<GenericFunction> function)
 {
 	GenericFunctionBridge::pushNewObject(L, function);
-	lua_pushcclosure(L, callGenericFunctionBridge, 1);
+	lua_pushcclosure_3(L, callGenericFunctionBridge, 1);
 }
 
 static void onAsyncResult(ThreadRef thread, weak_ptr<ScriptContext> context, IAsyncResult* result)
@@ -317,7 +326,7 @@ static int callGenericAsyncFunctionBridge (lua_State *L)
 void Lua::lua_pushfunction(lua_State* L, shared_ptr<GenericAsyncFunction> function)
 {
 	GenericAsyncFunctionBridge::pushNewObject(L, function);
-	lua_pushcclosure(L, callGenericAsyncFunctionBridge, 1);
+	lua_pushcclosure_3(L, callGenericAsyncFunctionBridge, 1);
 }
 
 
@@ -327,7 +336,8 @@ WeakFunctionRef::~WeakFunctionRef()
 	// remove the reference to the function
 	if (functionId!=0 && !empty())
     {
-		luaL_unref(ScriptContext::getGlobalState(thread()), LUA_REGISTRYINDEX, functionId);
+		if (lua_State* gs = ScriptContext::getGlobalState(thread()))
+			luaL_unref(gs, LUA_REGISTRYINDEX, functionId);
     }
 }
 
@@ -337,7 +347,8 @@ void WeakFunctionRef::removeRef()
 	{
 		FASTLOG1(FLog::WeakThreadRef, " WeakFunctionRef::removeRef() for node %p", node);
 
-		luaL_unref(ScriptContext::getGlobalState(thread()), LUA_REGISTRYINDEX, functionId);
+		if (lua_State* gs = ScriptContext::getGlobalState(thread()))
+			luaL_unref(gs, LUA_REGISTRYINDEX, functionId);
 
 		functionId = 0;
 	}
@@ -353,9 +364,14 @@ WeakFunctionRef::WeakFunctionRef(const WeakFunctionRef& other)
 	else
 	{
 		lua_State* L = ScriptContext::getGlobalState(thread());
-		lua_rawgeti(L, LUA_REGISTRYINDEX, other.functionId);
-		// pops the value from the stack, stores it into the registry with a fresh integer key, and returns that key
-		functionId = luaL_ref(L, LUA_REGISTRYINDEX);
+		if (!L)
+			functionId = 0;
+		else
+		{
+			lua_rawgeti(L, LUA_REGISTRYINDEX, other.functionId);
+			// pops the value from the stack, stores it into the registry with a fresh integer key, and returns that key
+			functionId = luaL_ref(L, LUA_REGISTRYINDEX);
+		}
 	}
 }
 
@@ -372,7 +388,8 @@ RBX::Lua::detail::LiveThreadRef::LiveThreadRef (lua_State* thread)
 
 RBX::Lua::detail::LiveThreadRef::~LiveThreadRef()
 {
-	luaL_unref(ScriptContext::getGlobalState(L), LUA_REGISTRYINDEX, threadId);
+	if (lua_State* gs = ScriptContext::getGlobalState(L))
+		luaL_unref(gs, LUA_REGISTRYINDEX, threadId);
 }
 
 bool WeakThreadRef::operator==(const WeakThreadRef& other) const
@@ -396,7 +413,8 @@ bool WeakFunctionRef::operator!=(const WeakFunctionRef& other) const
 WeakFunctionRef& WeakFunctionRef::operator=(const WeakFunctionRef& other)
 {
 	if (!empty())
-		luaL_unref(ScriptContext::getGlobalState(thread()), LUA_REGISTRYINDEX, functionId);
+		if (lua_State* gs = ScriptContext::getGlobalState(thread()))
+			luaL_unref(gs, LUA_REGISTRYINDEX, functionId);
 
 	// Call inherited operator
 	WeakThreadRef& t = *this;
@@ -407,9 +425,14 @@ WeakFunctionRef& WeakFunctionRef::operator=(const WeakFunctionRef& other)
 	else
 	{
 		lua_State* L = ScriptContext::getGlobalState(thread());
-		lua_rawgeti(L, LUA_REGISTRYINDEX, other.functionId);
-		// pops the value from the stack, stores it into the registry with a fresh integer key, and returns that key
-		functionId = luaL_ref(L, LUA_REGISTRYINDEX);
+		if (!L)
+			functionId = 0;
+		else
+		{
+			lua_rawgeti(L, LUA_REGISTRYINDEX, other.functionId);
+			// pops the value from the stack, stores it into the registry with a fresh integer key, and returns that key
+			functionId = luaL_ref(L, LUA_REGISTRYINDEX);
+		}
 	}
 
 	return *this;

@@ -80,26 +80,26 @@ namespace RBX
 			lua_settable(L, -3);
 
 			lua_pushstring(L, "__index");
-			lua_pushcfunction(L, on_index);
+			lua_pushcfunction(L, on_index, "LuaBridge");
 			lua_settable(L, -3);
 
 			lua_pushstring(L, "__newindex");
-			lua_pushcfunction(L, on_newindex);
+			lua_pushcfunction(L, on_newindex, "LuaBridge");
 			lua_settable(L, -3);
 
 			lua_pushstring(L, "__gc");
-			lua_pushcfunction(L, on_gc);
+			lua_pushcfunction(L, on_gc, "LuaBridge");
 			lua_settable(L, -3);
 
 			if (__eq)
 			{
 				lua_pushstring(L, "__eq");
-				lua_pushcfunction(L, on_eq);
+				lua_pushcfunction(L, on_eq, "LuaBridge");
 				lua_settable(L, -3);
 			}
 
 			lua_pushstring(L, "__tostring");
-			lua_pushcfunction(L, on_tostring);
+			lua_pushcfunction(L, on_tostring, "LuaBridge");
 			lua_settable(L, -3);
 
 			lua_setreadonly(L, -1, true);

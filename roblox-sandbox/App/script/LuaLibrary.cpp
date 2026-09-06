@@ -84,7 +84,7 @@ template<>
 int Bridge<Library>::on_index(const Library& object, const char* name, lua_State *L)
 {
 	if(strcmp(name,"GetApi") == 0){
-		lua_pushcfunction(L, getApi);
+		lua_pushcfunction(L, getApi, "LuaLibrary");
 		return 1;
 	}
 	if(strcmp(name,"Name") == 0){

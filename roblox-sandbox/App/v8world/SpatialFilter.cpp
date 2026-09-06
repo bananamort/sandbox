@@ -43,7 +43,7 @@ MechToAssemblyStage* SpatialFilter::getMechToAssemblyStage()
 
 
 
-void SpatialFilter::changePhase(MoveInstructions& mi)
+void SpatialFilter::changePhase(const MoveInstructions& mi)
 {
 	RBXASSERT(mi.to != mi.from);
 	RBXASSERT(mi.a->getFilterPhase() == mi.from);
@@ -70,7 +70,7 @@ void SpatialFilter::changePhase(MoveInstructions& mi)
 // Sim_SendIfSim, Sim_SendAlwasy, NoSim_SendAlways, NoSim_NoSend, NUM_PHASES, NOT_IN_LISTS} Phase;
 
 
-void SpatialFilter::moveInto(MoveInstructions& mi)
+void SpatialFilter::moveInto(const MoveInstructions& mi)
 {
 	bool wasSending = sendingPhase(mi.from);
 	bool wasSimulating = simulatingPhase(mi.from);

@@ -60,7 +60,7 @@ template<>
 int Bridge<EnumDescriptorPtr, false>::on_index(const EnumDescriptorPtr& object, const char* name, lua_State *L)
 {
 	if(strcmp(name,"GetEnumItems") == 0){
-		lua_pushcfunction(L, pushEnumList);
+		lua_pushcfunction(L, pushEnumList, "LuaEnum");
 		return 1;
 	}
 	const Reflection::EnumDescriptor::Item* item = object->lookup(name);

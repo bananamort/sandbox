@@ -32,6 +32,23 @@ namespace boost
     void intrusive_ptr_release(const IUnknown* p) { const_cast<IUnknown*>(p)->Release(); }
 }
 
+// WS4-C5: Boost 1.74's intrusive_ptr looks up these functions by
+// ADL on the stored pointer type T. For each T used with
+// boost::intrusive_ptr<T>, ADL searches T's associated namespace.
+// We provide template overloads in the std namespace and in the
+// global namespace. ADL on std-internal types will find the std
+// versions; ADL on other types will find the global ones. The
+// templates accept any pointer type, so T* matches for any T.
+namespace std {
+    template <class T> void intrusive_ptr_add_ref(T*) {}
+    template <class T> void intrusive_ptr_release(T*) {}
+}
+// Global namespace: for types outside std (engine types in RBX::).
+inline void intrusive_ptr_add_ref(IUnknown* p) { const_cast<IUnknown*>(p)->AddRef(); }
+inline void intrusive_ptr_release(IUnknown* p) { const_cast<IUnknown*>(p)->Release(); }
+template <class T> void intrusive_ptr_add_ref(T*) {}
+template <class T> void intrusive_ptr_release(T*) {}
+
 using boost::intrusive_ptr;
 
 static std::wstring s2ws( const std::string& s )

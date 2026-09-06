@@ -79,36 +79,47 @@ void CountersClient::reportEvents(std::set<std::wstring> &events)
 #else
 	HINTERNET session = InternetOpen("Roblox/WinInet", PRE_CONFIG_INTERNET_ACCESS, NULL, NULL, 0);
 #endif
-	if (!session) 
+	if (!session)
 	{
 		goto Error;
 	}
 
-	HINTERNET connection = ::InternetConnect(session, u.GetHostName(), u.GetPortNumber(), u.GetUserName(), u.GetPassword(), INTERNET_SERVICE_HTTP, 0, 0); 
-	if (!connection) 
+	// WS4-C5: C++17 disallows goto over init. Declare at outer scope,
+	// initialize in inner block. The Error: label below can still see them.
+	HINTERNET connection = NULL;
+	HINTERNET request = NULL;
+	DWORD timeout = 0;
+	DWORD httpSendResult = 0;
+	{
+	// keep outer connection
+	connection = ::InternetConnect(session, u.GetHostName(), u.GetPortNumber(), u.GetUserName(), u.GetPassword(), INTERNET_SERVICE_HTTP, 0, 0);
+	if (!connection)
 	{
 		goto Error;
 	}
 
 	s = u.GetUrlPath();
 	s += u.GetExtraInfo();
-	HINTERNET request = ::HttpOpenRequest(connection, _T("POST"), s, HTTP_VERSION, _T(""), NULL, isSecure ? INTERNET_FLAG_SECURE : 0, 0); 
-	if (!request) 
+	request = ::HttpOpenRequest(connection, _T("POST"), s, HTTP_VERSION, _T(""), NULL, isSecure ? INTERNET_FLAG_SECURE : 0, 0);
+	if (!request)
 	{
 		goto Error;
 	}
 
 	::HttpAddRequestHeaders(request, _T("Content-Type: application/x-www-form-urlencoded"), -1L, HTTP_ADDREQ_FLAG_ADD);
 
-	DWORD timeout = 5 * 1000; // milliseconds
+	// WS4-C5: timeout declared in outer scope
+	timeout = 5 * 1000; // milliseconds
 	InternetSetOption(request, INTERNET_OPTION_CONNECT_TIMEOUT, (void*)&timeout, sizeof(timeout));
 	InternetSetOption(request, INTERNET_OPTION_RECEIVE_TIMEOUT, (void*)&timeout, sizeof(timeout));
 	InternetSetOption(request, INTERNET_OPTION_SEND_TIMEOUT, (void*)&timeout, sizeof(timeout));
 
-	DWORD httpSendResult = ::HttpSendRequest(request, NULL, 0, (LPVOID)postData.c_str(), postData.length());
-	if (!httpSendResult) 
+	// WS4-C5: httpSendResult declared in outer scope
+	httpSendResult = ::HttpSendRequest(request, NULL, 0, (LPVOID)postData.c_str(), postData.length());
+	if (!httpSendResult)
 	{
 		goto Error;
+	}
 	}
 
 Error:

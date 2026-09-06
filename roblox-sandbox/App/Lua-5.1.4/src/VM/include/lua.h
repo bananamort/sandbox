@@ -513,7 +513,86 @@ LUA_API int lua_unref(lua_State* L, int ref);
 
 #define lua_pushliteral(L, s) lua_pushlstring(L, "" s, (sizeof(s) / sizeof(char)) - 1)
 #define lua_pushcfunction(L, fn, debugname) lua_pushcclosurek(L, fn, debugname, 0, NULL)
+#define lua_pushcclosure_3(L, fn, nup) lua_pushcclosurek(L, fn, "", nup, NULL)
 #define lua_pushcclosure(L, fn, debugname, nup) lua_pushcclosurek(L, fn, debugname, nup, NULL)
+
+// 5.1.4 lauxlib helpers removed in Luau. Provide real implementations
+// backed by Luau's registry + stack primitives.
+// luaL_ref: pops top of stack, returns integer key in registry table.
+// 5.1.4 used a freetable; we use a counter for unique integer keys.
+static inline int rbx_next_lua_ref_key() {
+    static int counter = 1;
+    return counter++;
+}
+static inline int luaL_ref(lua_State* L, int idx) {
+    (void)idx;  // 5.1.4 allowed any table; the engine only uses
+                // LUA_REGISTRYINDEX, and Luau's registry is shared
+                // process-wide anyway.
+    // 5.1.4 pops the TOP of stack into the table — idx only selects
+    // the table, it is NOT pushed. (Pushing idx first would anchor the
+    // table into itself, leak a stack slot, and leave the intended
+    // value — e.g. LiveThreadRef's coroutine — unrooted for GC.)
+    int key = rbx_next_lua_ref_key();
+    lua_rawseti(L, LUA_REGISTRYINDEX, key);
+    return key;
+}
+// 5.1.4 luaL_unref(L, t, ref) takes a table t at the registry (or
+// pseudo-index) and clears slot ref. Luau removed it; we shim
+// using rawseti on the registry table.
+static inline void luaL_unref(lua_State* L, int t, int ref) {
+    (void)t;  // 5.1.4 supported any table, but the engine only uses
+              // LUA_REGISTRYINDEX which is the standard registry.
+    if (ref == -1) return;  // LUA_NOREF
+    lua_pushnil(L);
+    lua_rawseti(L, LUA_REGISTRYINDEX, ref);
+}
+// 5.1.4 macro for string-literal quoting. Luau doesn't define it.
+#ifndef LUA_QL
+#define LUA_QL(x) "'" x "'"
+#endif
+// 5.1.4 luaO_chunkid(char* buf, const char* source, size_t srclen):
+// formats source into buf truncated to a "[string \"...\"]" form.
+// Luau removed it; we shim using the public sprintf path. Two overloads:
+// the 3-arg form the engine uses (no buflen; buflen is the buf's
+// known fixed size LUA_IDSIZE) and a 4-arg form for VM-internal callers
+// (lvmload.cpp, ldebug.cpp) that need an explicit buflen.
+static inline const char* luaO_chunkid(char* buf, const char* source, size_t srclen) {
+    if (source == NULL) source = "?";
+    if (srclen > (size_t)(120 - 5)) srclen = (size_t)(120 - 5);
+    buf[0] = '[';
+    size_t i = 1;
+    for (; i < srclen + 1; ++i) {
+        char c = source[i - 1];
+        if (c == '\n' || c == '\r') c = ' ';
+        buf[i] = c;
+    }
+    buf[i++] = ']';
+    buf[i] = '\0';
+    return buf;
+}
+// 4-arg overload removed in WS4-C5: lobject.cpp provides the real
+// implementation; keeping this static inline caused C2084 duplicate body.
+// 5.1.4 lua_Reader: callback to feed chunks of source to lua_load.
+// Luau removed the reader-based load (luau_load takes (L, name, data, size, env)
+// directly). The engine uses a reader to avoid copying the source string.
+// The shim here uses a small static buffer and the caller's data pointer
+// (which is expected to be a struct { const char* s; size_t size; } or similar).
+typedef const char* (*lua_Reader)(lua_State *L, void *ud, size_t *sz);
+static inline int lua_load(lua_State* L, lua_Reader reader, void* data, const char* chunkname)
+{
+    size_t size;
+    const char* p = reader(L, data, &size);
+    if (!p) return LUA_ERRMEM;
+    return luau_load(L, chunkname, p, size, 0);
+}
+
+// 5.1.4 getline(Proto*, int): returns the line number of a given PC
+// instruction in a function's proto. Luau doesn't expose Proto or
+// getline; the function is 5.1.4 internal debug-API sugar. We shim
+// getline to return 0 (currentline). Proto is a Luau internal type
+// (typedef struct Proto in lobject.h) so we don't re-declare it; the
+// engine's `struct Proto*` parameter resolves to Luau's struct.
+static inline int getline(const void* p, int pc) { (void)p; (void)pc; return 0; }
 #define lua_pushlightuserdata(L, p) lua_pushlightuserdatatagged(L, p, 0)
 
 #define lua_rawgetp(L, idx, p) lua_rawgetptagged(L, idx, p, 0)
@@ -659,6 +738,19 @@ struct lua_Callbacks
 typedef struct lua_Callbacks lua_Callbacks;
 
 LUA_API lua_Callbacks* lua_callbacks(lua_State* L);
+
+// 5.1.4 lua_atpanic: set the unprotected-error panic callback, return
+// the previous one. Luau moved this to lua_callbacks(L)->panic and
+// changed the signature to void(*)(lua_State*, int). We shim with a
+// per-coroutine 5.1.4 panic function pointer (declared extern in
+// this header, defined in roboxlua_extraspace.cpp).
+extern "C" void rbx_set_panic_51(lua_State* L, int (*panic51)(lua_State*));
+extern "C" int (*rbx_get_panic_51(lua_State*))(lua_State*);
+static inline int (*lua_atpanic(lua_State* L, int (*panicf)(lua_State*)))(lua_State*) {
+    int (*old)(lua_State*) = rbx_get_panic_51(L);
+    rbx_set_panic_51(L, panicf);
+    return old;
+}
 
 /******************************************************************************
  * Copyright (c) 2019-2023 Roblox Corporation

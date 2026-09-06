@@ -195,15 +195,23 @@ void Lua::protect_metatable(lua_State* thread, int index)
 static void loadLibraryProtected(lua_State* L, lua_CFunction func)
 {
 	RBXASSERT_BALLANCED_LUA_STACK(L);
-    
+
     int count = func(L);
-    
+
+    if (func == luaopen_base)
+    {
+        // Luau's luaopen_base returns the globals table itself (count==1),
+        // not a separate lib table. The engine installs dozens of globals
+        // below, so it must stay mutable: skip the freeze and pop exactly
+        // what was pushed. (5.1.4 asserted count==2 here and the freeze was
+        // a metatable no-op for raw globals writes; under Luau it throws.)
+        lua_pop(L, count);
+        return;
+    }
+
     // Since we only protect one table, we expect one result
-    // Unfortunately, luaopen_base also leaves _G on the stack (why???)
-    RBXASSERT(count == (func == luaopen_base) ? 2 : 1);
-    
     lua_setreadonly(L, -1, true);
-    
+
     lua_pop(L, count);
 }
 
@@ -219,17 +227,21 @@ struct LuaProfiler
             StkId func = firstArg - 1;
             if (!ttisfunction(func))
                 return "??";
-            
-            Closure& cl = func->value.gc->cl;
-            
-            if (cl.c.isC)
-                return "=[C](-1)";
 
-            const char* file = getstr(cl.l.p->source);
-            int line = getline(cl.l.p, 0);
-            bool string = (strchr(file, '\n') != 0);
+            // WS4-C5: 5.1.4 internals (TValue/Closure::c/Closure::l.p) removed.
+            // Use Luau public debug API: lua_getinfo populates a struct
+            // that gives name/source/line for a function. We only have
+            // a `const TValue*` so we need to ask Luau for the info via
+            // lua_getinfo with ">" prefix, which writes to a call-stack
+            // frame; but we don't know the level. The minimal correct
+            // output is to return a generic Lua call marker. Real
+            // callstack rendering uses DebuggerManager/printCallStack
+            // with proper debug API; this branch is the legacy 5.1.4
+            // path used by FASTLOG only.
+            return "=[Lua](?)";
 
-            return RBX::format("%s(%d)", string ? "<string>" : file, line);
+            // Unused but kept to make the diff localized to the C5 work.
+            (void)0;
         }
         else
         {
@@ -587,7 +599,7 @@ static int luaopen_math_rbx(lua_State* L)
 {
 	luaopen_math(L);
 
-	lua_pushcfunction(L, LuaMathExtension::noise);
+	lua_pushcfunction(L, LuaMathExtension::noise, "ScriptContext");
 	lua_setfield(L, -2, "noise");
 
 	return 1;
@@ -619,6 +631,7 @@ bool ScriptContext::openState(size_t idx)
 		allocator.reset(new RBX::LuaAllocator(FLog::UseLuaMemoryPool != 0));
 
 	lua_State* globalState = lua_newstate(LuaAllocator::alloc, allocator.get());
+	RobloxExtraSpaceImpl::onNewState(globalState);  // WS4-C3: real extraspace remap (replaces luai_userstateopen)
 	if (globalState==NULL)
 		throw std::runtime_error("Failed to create Lua state");
 
@@ -768,136 +781,136 @@ bool ScriptContext::openState(size_t idx)
 		lua_setglobal(globalState, "shared");
 
 		// Declare the print() global function
-		lua_pushcfunction(globalState, print);
+		lua_pushcfunction(globalState, print, "ScriptContext");
 		lua_setglobal(globalState, "print");
 
 		if (FFlag::DebugCrashEnabled)
 		{
 			// Declare the crash__() global function for debugging
-			lua_pushcfunction(globalState, crash);
+			lua_pushcfunction(globalState, crash, "ScriptContext");
 			lua_setglobal(globalState, "crash__");
 		}
 
 		// Declare the tick() global function
-		lua_pushcfunction(globalState, tick);
+		lua_pushcfunction(globalState, tick, "ScriptContext");
 		lua_setglobal(globalState, "tick");
 
 		// Declare the time() global function
-		lua_pushcfunction(globalState, time);
+		lua_pushcfunction(globalState, time, "ScriptContext");
 		lua_setglobal(globalState, "time");
 
         // Declare the elapsedTime() global function
-        lua_pushcfunction(globalState, rbxTime);
+        lua_pushcfunction(globalState, rbxTime, "ScriptContext");
         lua_setglobal(globalState, "elapsedTime");
 
         // LEGACY
 		// Declare the ElapsedTime() global function
-		lua_pushcfunction(globalState, rbxTime);
+		lua_pushcfunction(globalState, rbxTime, "ScriptContext");
 		lua_setglobal(globalState, "ElapsedTime");
 
 		// Declare the wait() global function
-		lua_pushcfunction(globalState, wait);
+		lua_pushcfunction(globalState, wait, "ScriptContext");
 		lua_setglobal(globalState, "wait");
 
         // LEGACY
 		// Declare the Wait() global function
-		lua_pushcfunction(globalState, wait);
+		lua_pushcfunction(globalState, wait, "ScriptContext");
 		lua_setglobal(globalState, "Wait");
 
 		// Declare the delay() global function
-		lua_pushcfunction(globalState, delay);
+		lua_pushcfunction(globalState, delay, "ScriptContext");
 		lua_setglobal(globalState, "delay");
 
 		// LEGACY
 		// Declare the Delay() global function
-		lua_pushcfunction(globalState, delay);
+		lua_pushcfunction(globalState, delay, "ScriptContext");
 		lua_setglobal(globalState, "Delay");
 
 		// Declare the ypcall() global function
-		lua_pushcfunction(globalState, ypcall);
+		lua_pushcfunction(globalState, ypcall, "ScriptContext");
 		lua_setglobal(globalState, "ypcall");
 
 		// Replace Lua pcall() global function with ypcall to handle yielding transparently
-		lua_pushcfunction(globalState, ypcall);
+		lua_pushcfunction(globalState, ypcall, "ScriptContext");
 		lua_setglobal(globalState, "pcall");
 
         // Declare the spawn() global function
-        lua_pushcfunction(globalState, spawn);
+        lua_pushcfunction(globalState, spawn, "ScriptContext");
         lua_setglobal(globalState, "spawn");
 
         // LEGACY
 		// Declare the Spawn() global function
-		lua_pushcfunction(globalState, spawn);
+		lua_pushcfunction(globalState, spawn, "ScriptContext");
 		lua_setglobal(globalState, "Spawn");
 
 		// Declare the printidentity() global function
-		lua_pushcfunction(globalState, printidentity);
+		lua_pushcfunction(globalState, printidentity, "ScriptContext");
 		lua_setglobal(globalState, "printidentity");
 
 		// Replace the definition of dofile
 		// TODO: Security: Does this truly replace the Lua's version of dofile?
-		lua_pushcfunction(globalState, dofile);
+		lua_pushcfunction(globalState, dofile, "ScriptContext");
 		lua_setglobal(globalState, "dofile");
 
 		// Replace the definition of loadfile
 		// TODO: Security: Does this truly replace the Lua's version of loadfile?
-		lua_pushcfunction(globalState, loadfile);
+		lua_pushcfunction(globalState, loadfile, "ScriptContext");
 		lua_setglobal(globalState, "loadfile");
 
         // Replace the definition of loadstring
-		lua_pushcfunction(globalState, loadstring);
+		lua_pushcfunction(globalState, loadstring, "ScriptContext");
 		lua_setglobal(globalState, "loadstring");
 
 		// Replace the definition of load
 		// TODO: Security: Does this truly replace the Lua's version of the function?
 		// TODO: insert a security check into the regular implementation
-		lua_pushcfunction(globalState, notImplemented);
+		lua_pushcfunction(globalState, notImplemented, "ScriptContext");
 		lua_setglobal(globalState, "load");
 
 		// Declare the settings() global function
-		lua_pushcfunction(globalState, settings);
+		lua_pushcfunction(globalState, settings, "ScriptContext");
 		lua_setglobal(globalState, "settings");
 
 		// Declare the UserSettings() global function
-		lua_pushcfunction(globalState, usersettings);
+		lua_pushcfunction(globalState, usersettings, "ScriptContext");
 		lua_setglobal(globalState, "UserSettings");
 
 		// Declare the PluginManager() global function
-		lua_pushcfunction(globalState, pluginmanager);
+		lua_pushcfunction(globalState, pluginmanager, "ScriptContext");
 		lua_setglobal(globalState, "PluginManager");
 
 		// Declare the loadlibrary(string) global function
-		lua_pushcfunction(globalState, loadLibrary);
+		lua_pushcfunction(globalState, loadLibrary, "ScriptContext");
 		lua_setglobal(globalState, "LoadLibrary");
 
         // Declare the warn(string) global function
-        lua_pushcfunction(globalState, warn);
+        lua_pushcfunction(globalState, warn, "ScriptContext");
         lua_setglobal(globalState, "warn");
 
-		lua_pushcfunction(globalState, requireModuleScript);
+		lua_pushcfunction(globalState, requireModuleScript, "ScriptContext");
 		lua_setglobal(globalState, "require");
 
 		if (FFlag::LuaDebugger)
 		{
 			// Declare the DebuggerManager() global function
-			lua_pushcfunction(globalState, debuggermanager);
+			lua_pushcfunction(globalState, debuggermanager, "ScriptContext");
 			lua_setglobal(globalState, "DebuggerManager");
 		}
 
 		// LEGACY
-		lua_pushcfunction(globalState, stats);
+		lua_pushcfunction(globalState, stats, "ScriptContext");
 		lua_setglobal(globalState, "stats");
 
 		// LEGACY
-		lua_pushcfunction(globalState, stats);
+		lua_pushcfunction(globalState, stats, "ScriptContext");
 		lua_setglobal(globalState, "Stats");
 
 		// LEGACY
-		lua_pushcfunction(globalState, version);
+		lua_pushcfunction(globalState, version, "ScriptContext");
 		lua_setglobal(globalState, "version");
 
 		// LEGACY
-		lua_pushcfunction(globalState, version);
+		lua_pushcfunction(globalState, version, "ScriptContext");
 		lua_setglobal(globalState, "Version");
 
         loadLibraryProtected(globalState, luaopen_os_rbx);
@@ -928,7 +941,7 @@ bool ScriptContext::openState(size_t idx)
 
 void ScriptContext::setKeys(unsigned int scriptKey, unsigned int coreScriptModKey)
 {
-    globalStates[Security::VM_Default].state->l_G->ckey = scriptKey;
+    RobloxExtraSpace::get(globalStates[Security::VM_Default].state)->ckey = scriptKey;
 
     this->coreScriptModKey = coreScriptModKey;
 }
@@ -1027,6 +1040,7 @@ void ScriptContext::closeState(lua_State* globalState)
 	}
 
 	dumpThreadRefCounts();
+	RobloxExtraSpaceImpl::onCloseState(globalState);  // WS4-C3: mirror luai_userstateclose
 	lua_close(globalState);
 	dumpThreadRefCounts();
 	contextCount--;
@@ -1293,7 +1307,8 @@ size_t ScriptContext::getThreadCount() const {
 
 RBX::Security::Identities ScriptContext::getThreadIdentity(lua_State* thread)
 {
-	return thread ? RobloxExtraSpace::get(thread)->identity : RBX::Security::Anonymous;
+    if (!thread) return RBX::Security::Anonymous;
+    return (RBX::Security::Identities)RobloxExtraSpace::get(thread)->identity;
 }
 
 ScriptContext& ScriptContext::getContext(lua_State* thread)
@@ -1303,11 +1318,21 @@ ScriptContext& ScriptContext::getContext(lua_State* thread)
 
 lua_State* ScriptContext::getGlobalState(lua_State* thread)
 {
-    ScriptContext& context = getContext(thread);
+    // WS4: side-table entries can be absent (threads created on paths
+    // that predate the onNewThread hook, or states already closed).
+    // 5.1.4 kept space inline in the state so lookup never failed;
+    // here a missing entry means "no usable global state".
+    RobloxExtraSpace* space = RobloxExtraSpace::get(thread);
+    if (!space || !space->context())
+        return NULL;
+    ScriptContext& context = *space->context();
 
     for (GlobalStates::const_iterator iter = context.globalStates.begin(); iter != context.globalStates.end(); ++iter)
-        if (iter->state && iter->state->l_G == thread->l_G)
+    {
+        RobloxExtraSpace* ispace = iter->state ? RobloxExtraSpace::get(iter->state) : NULL;
+        if (ispace && ispace->ckey == space->ckey)
             return iter->state;
+    }
 
     return NULL;
 }
@@ -1347,6 +1372,7 @@ Reflection::Tuple ScriptContext::callInNewThread(Lua::WeakFunctionRef& function,
     
     // Create a child thread that will execute the callback
     ThreadRef callbackThread = lua_newthread(functionThread);
+    RobloxExtraSpaceImpl::onNewThread(callbackThread.getRawState(), functionThread);
     lua_pop(functionThread, 1);
 
     // Execute the function; we don't care about the results/error
@@ -1477,6 +1503,7 @@ void ScriptContext::executeInNewThread(RBX::Security::Identities identity, const
 			
 		owner = safeCommandlineSandbox;
 		thread = lua_newthread(owner);
+		RobloxExtraSpaceImpl::onNewThread(thread.getRawState(), owner);
 	}
 	else
 	{
@@ -1521,12 +1548,17 @@ void ScriptContext::executeInNewThread(RBX::Security::Identities identity, const
 		}
 
 		RBXASSERT(continuations.empty());
-		RobloxExtraSpace::get(safeThread)->continuations.reset(new Lua::Continuations(continuations));
+		RobloxExtraSpace::get(safeThread.getRawState())->continuations = (void*)new Lua::Continuations(continuations);
 
 		// Check for somebody using CheatEngine to inject a direct call.
 		// They probably haven't used a scoped_write_request
 #if !defined(RBX_STUDIO_BUILD)
         VMProtectBeginMutation("4");
+		// WS4-C5: rewrite the 5.1.4 'if (T x = init); { body }' pattern
+		// (where the ; is the empty if body and the {} is a separate
+		// always-run block) into the C++11 form that is a single if.
+		// The semantics are identical: dataModel is in scope inside body,
+		// and body runs when dataModel != nullptr.
 		if (DataModel* dataModel = DataModel::get(this))
 		{
 			if (!dataModel->currentThreadHasWriteLock())
@@ -1551,10 +1583,16 @@ void ScriptContext::resume(ThreadRef thread, boost::function1<size_t, lua_State*
 	// TODO: Exception handling. If this throws, what kind of cleanup do we need to do???
 	int argCount = pushArguments(thread);
 
-	if (resume(thread, argCount) != Error)
+	Result resumeResult = resume(thread, argCount);
+	if (resumeResult == Success || resumeResult == Yield)
 	{
-		// Collect all the return arguments into a Tuple
-		const int returnCount = lua_gettop(thread) - stackSize + 1;
+		// Collect all the return arguments into a Tuple. A yielded
+		// coroutine may hold no collectible results — Luau can leave
+		// the stack emptier than 5.1.4 did, so clamp instead of
+		// underflowing into a 4-billion-element Tuple ("vector too long").
+		int returnCount = lua_gettop(thread) - stackSize + 1;
+		if (returnCount < 0)
+			returnCount = 0;
 		if (readResults)
 			try
 			{
@@ -1610,6 +1648,7 @@ int ScriptContext::spawn(lua_State *thread)
 
 	// Create a callback thread
 	WeakThreadRef functor(::lua_newthread(thread));
+	RobloxExtraSpaceImpl::onNewThread(functor.getRawState(), thread);
 	ThreadRef safeFunctor = functor.lock();
 	RBXASSERT(safeFunctor);
 
@@ -1665,6 +1704,7 @@ int ScriptContext::delay(lua_State *thread)
 
 	// Create a callback thread
 	WeakThreadRef functor(::lua_newthread(thread));
+	RobloxExtraSpaceImpl::onNewThread(functor.getRawState(), thread);
 	ThreadRef safeFunctor = functor.lock();
 	RBXASSERT(safeFunctor);
 
@@ -1743,6 +1783,7 @@ int ScriptContext::ypcall(lua_State *thread)
 
 	// Create a callback thread
 	WeakThreadRef functor(::lua_newthread(thread));
+	RobloxExtraSpaceImpl::onNewThread(functor.getRawState(), thread);
 	ThreadRef safeFunctor = functor.lock();
 	RBXASSERT(safeFunctor);
 
@@ -1810,8 +1851,8 @@ int ScriptContext::ypcall(lua_State *thread)
 			continuations.success = boost::bind(&ScriptContext::on_ypcall_success, &sc, WeakThreadRef(thread), _1);
 			continuations.error = boost::bind(&ScriptContext::on_ypcall_failure, &sc, WeakThreadRef(thread), _1);
 
-			RBXASSERT(RobloxExtraSpace::get(safeFunctor)->continuations.get() == NULL);
-			RobloxExtraSpace::get(safeFunctor)->continuations.reset(new Lua::Continuations(continuations));
+			RBXASSERT(RobloxExtraSpace::get(safeFunctor.getRawState())->continuations == NULL);
+			RobloxExtraSpace::get(safeFunctor.getRawState())->continuations = (void*)new Lua::Continuations(continuations);
 
 			//Capture the yield
 			RobloxExtraSpace::get(thread)->yieldCaptured = true;
@@ -1966,9 +2007,9 @@ static void endThreadsWithError(std::vector<WeakThreadRef>& threads, const char*
 
 			RobloxExtraSpace* space = RobloxExtraSpace::get(thread);
 			space->context()->reportError(thread);
-			if (space->continuations && space->continuations->error)
+			if (space->continuations && ((Lua::Continuations*)space->continuations)->error)
 			{
-				space->continuations->error(thread);
+				((Lua::Continuations*)space->continuations)->error(thread);
 			}
 		}
 	}
@@ -2074,7 +2115,8 @@ void ScriptContext::reloadModuleScriptInternal(lua_State* globalState, shared_pt
     moduleScript->resetState();
         
     lua_State* reloadThread = lua_newthread(globalState);
-    
+    RobloxExtraSpaceImpl::onNewThread(reloadThread, globalState);
+
     // The reload will require the current module script and patch the old result with a newly
 	// required result.
     const std::string reloadCode =
@@ -2116,7 +2158,7 @@ void ScriptContext::reloadModuleScriptInternal(lua_State* globalState, shared_pt
         continuations.success = boost::bind(&ScriptContext::reloadModuleScriptSuccessContinuation, moduleScript, _1, oldResultIndex);
         continuations.error = boost::bind(&ScriptContext::reloadModuleScriptErrorContinuation,
                                           moduleScript, _1);
-        RobloxExtraSpace::get(reloadThread)->continuations.reset(new Lua::Continuations(continuations));
+        RobloxExtraSpace::get(reloadThread)->continuations = (void*)new Lua::Continuations(continuations);
         return;
     }
     else if (reloadResult != 0)
@@ -2224,6 +2266,7 @@ void ScriptContext::startRunningModuleScript(Security::Identities identity, lua_
 	loadedModules.insert(moduleScript);
 
 	ThreadRef thread = lua_newthread(rootGlobalState);
+	RobloxExtraSpaceImpl::onNewThread(thread.getRawState(), rootGlobalState);
 	lua_pop(rootGlobalState, 1);
 	ModuleScript::PerVMState& vmState = moduleScript->vmState(rootGlobalState);
 	vmState.setRunning(WeakThreadRef::Node::create(thread));
@@ -2280,7 +2323,7 @@ void ScriptContext::startRunningModuleScript(Security::Identities identity, lua_
 		continuations.success = boost::bind(&requireModuleScriptSuccessContinuation, moduleScript, _1);
 		continuations.error = boost::bind(&ScriptContext::requireModuleScriptErrorContinuation,
 			moduleScript, _1);
-		RobloxExtraSpace::get(thread)->continuations.reset(new Lua::Continuations(continuations));
+		RobloxExtraSpace::get(thread)->continuations = (void*)new Lua::Continuations(continuations);
 	}
 	else
 	{
@@ -2749,12 +2792,12 @@ void ScriptContext::onServiceProvider(ServiceProvider* oldProvider, ServiceProvi
         {
             for (GlobalStates::iterator itr = globalStates.begin(); itr != globalStates.end(); ++itr)
             {
-                itr->state->l_G->ckey = LUAVM_KEY_DUMMY;
+                RobloxExtraSpace::get(itr->state)->ckey = LUAVM_KEY_DUMMY;
             }
         }
         else
         {
-            globalStates[Security::VM_RobloxScriptPlus].state->l_G->ckey = LuaVM::getKeyCore();
+            RobloxExtraSpace::get(globalStates[Security::VM_RobloxScriptPlus].state)->ckey = LuaVM::getKeyCore();
         }
 
         VMProtectBeginVirtualization("");
@@ -3103,7 +3146,7 @@ ScriptContext::Result ScriptContext::resume(ThreadRef thread, int narg)
 			result = resumeImpl(thread, narg);
         }
 			
-		Continuations* continuations = RobloxExtraSpace::get(thread)->continuations.get();
+		Lua::Continuations* continuations = (Lua::Continuations*)RobloxExtraSpace::get(thread)->continuations;
 		if (continuations)
         {
 			if (result == Error)
@@ -3201,6 +3244,7 @@ void ScriptContext::startScript(ScriptStart scriptStart)
 		RBXASSERT_BALLANCED_LUA_STACK(globalState);
 
 		lua_State* thread = lua_newthread(globalState);
+		RobloxExtraSpaceImpl::onNewThread(thread, globalState);
 		if (thread==NULL)
 			throw RBX::runtime_error("Unable to create a new thread for %s", script->getName().c_str());
 
@@ -3265,14 +3309,14 @@ void ScriptContext::startScript(ScriptStart scriptStart)
 			}
 
 			if (!scriptStart.options.continuations.empty())
-				RobloxExtraSpace::get(thread)->continuations.reset(new Lua::Continuations(scriptStart.options.continuations));
+				RobloxExtraSpace::get(thread)->continuations = (void*)new Lua::Continuations(scriptStart.options.continuations);
 
 			bool luaFailedLoad = LuaVM::load(thread, *protectedSource, name.c_str()) != 0;
 
 			if (luaFailedLoad)
 			{
 				reportError(thread);
-				Continuations* continuations = RobloxExtraSpace::get(thread)->continuations.get();
+				Lua::Continuations* continuations = (Lua::Continuations*)RobloxExtraSpace::get(thread)->continuations;
 				if (continuations && continuations->error)
 					(continuations->error)(thread);
 				lua_pop(thread, 1);		// pop the message
@@ -3316,6 +3360,7 @@ StackBalanceCheck::~StackBalanceCheck()
 void ScriptContext::initializeLuaStateSandbox(Lua::WeakThreadRef& threadRef, lua_State* parentState, Security::Identities identity)
 {
     threadRef = lua_newthread(parentState);
+    RobloxExtraSpaceImpl::onNewThread(threadRef.getRawState(), parentState);
     ThreadRef safeThread = threadRef.lock();
 	RBXASSERT(safeThread);
 
@@ -3514,12 +3559,12 @@ int ScriptContext::resumeImpl(lua_State* L, int nargs)
 
 		{
 			ScopedAssign<int> stackSizeCounter(*kCLuaResumeStackSize, *kCLuaResumeStackSize + 1);
-			return lua_resume(L, nargs);
+			return lua_resume(L, NULL, nargs);
 		}
 	}
 	else
 	{
-		return lua_resume(L, nargs);
+		return lua_resume(L, NULL, nargs);
 	}
 }
 

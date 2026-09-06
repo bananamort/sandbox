@@ -14,8 +14,10 @@ using namespace RBX;
 
 namespace { 
 
-struct StrHash : std::unary_function<const char*, std::size_t>
+struct StrHash
 {
+	using argument_type = const char*;
+	using result_type = std::size_t;
 	size_t operator()(const char*s) const
 	{
 		size_t h = boost::hash_range(s, s + strlen(s) );
@@ -23,8 +25,11 @@ struct StrHash : std::unary_function<const char*, std::size_t>
 	}
 };
 
-struct StrEqualTo : public std::binary_function<const char*, const char*, bool>
+struct StrEqualTo
 {
+	using first_argument_type = const char*;
+	using second_argument_type = const char*;
+	using result_type = bool;
 	bool operator()(const char* a, const char* b) const
 	{
 		return strcmp(a, b) == 0;
