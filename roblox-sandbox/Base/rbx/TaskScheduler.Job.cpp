@@ -106,7 +106,7 @@ TaskScheduler::Job::Job(const char* name, shared_ptr<TaskScheduler::Arbiter> arb
 	,cyclicPriority(CyclicExecutiveJobPriority_Default)
 {
 	FASTLOG2(FLog::TaskSchedulerInit, "Job Created - this(%p) arbiter(%p)", this, arbiter.get());
-	FASTLOGS(FLog::TaskSchedulerInit, "JobName(%s)", name.c_str());
+	FASTLOGS(FLog::TaskSchedulerInit, "JobName(%s)", name);
 }
 
 TaskScheduler::Job::~Job()
@@ -120,7 +120,7 @@ TaskScheduler::Job::~Job()
 	}
 
 	FASTLOG1(FLog::TaskSchedulerInit, "Job Destroyed - this(%p)", this);
-	FASTLOGS(FLog::TaskSchedulerInit, "JobName(%s)", name.c_str());
+	FASTLOGS(FLog::TaskSchedulerInit, "JobName(%s)", name);
 }
 
 // Use this to generate the error function if you just want to try to track the desiredHz
