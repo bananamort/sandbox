@@ -1,6 +1,5 @@
 
 #include "stdafx.h"
-#include <cstdio>
 
 #include <atlsync.h>
 
@@ -845,9 +844,7 @@ public:
 			if (dataModel->isClosed())
 				throw std::runtime_error("The DataModel is closed");
 			RBX::ScriptContext* scriptContext = RBX::ServiceProvider::create<RBX::ScriptContext>(dataModel.get());
-			fprintf(stderr, "DIAG execute code bytes=%u head=%.60s\n", (unsigned)code.size(), code.c_str());
-		tuple = scriptContext->executeInNewThread(RBX::Security::WebService, RBX::ProtectedString::fromTrustedSource(code), script->name->c_str(), args);
-		fprintf(stderr, "DIAG execute tuple values=%u\n", (unsigned)tuple->values.size());
+			tuple = scriptContext->executeInNewThread(RBX::Security::WebService, RBX::ProtectedString::fromTrustedSource(code), script->name->c_str(), args);
 		}
 
 		result->resize(tuple->values.size());

@@ -1,5 +1,4 @@
 #include "stdafx.h"
-#include <cstdio>
 #include "Script/ScriptContext.h"
 #include "Script/CoreScript.h"
 #include "Script/DebuggerManager.h"
@@ -1357,7 +1356,6 @@ void ScriptContext::executeInNewThread(RBX::Security::Identities identity, const
 
 static void readResults(std::auto_ptr<Reflection::Tuple>& result, lua_State* thread, size_t returnCount)
 {
-	fprintf(stderr, "DIAG readResults returnCount=%u\n", (unsigned)returnCount);
 	result.reset(new Reflection::Tuple(returnCount));
 	for (size_t i = 0; i<returnCount; ++i)
 	{
@@ -1584,11 +1582,9 @@ void ScriptContext::resume(ThreadRef thread, boost::function1<size_t, lua_State*
 
 	// TODO: Exception handling. If this throws, what kind of cleanup do we need to do???
 	int argCount = pushArguments(thread);
-	fprintf(stderr, "DIAG resume top0=%d stackSize=%d argCount=%d\n", lua_gettop(thread), stackSize, argCount);
 
-	int resumeResult = resume(thread, argCount);
-	fprintf(stderr, "DIAG resumeAfter top=%d result=%d\n", lua_gettop(thread), (int)resumeResult);
-	if (resumeResult != Error)
+	Result resumeResult = resume(thread, argCount);
+	if (resumeResult == Success)
 	{
 		// Collect all the return arguments into a Tuple
 		const int returnCount = lua_gettop(thread) - stackSize + 1;
@@ -1606,6 +1602,13 @@ void ScriptContext::resume(ThreadRef thread, boost::function1<size_t, lua_State*
 
 		// Clean up the stack
 		lua_pop(thread, returnCount);
+	}
+	else if (resumeResult == Yield)
+	{
+		// WS4: a yielded coroutine holds no collectible results — Luau
+		// leaves nothing result-like on the stack (5.1.4 left
+		// func/args/yields behind, which this math accidentally
+		// tolerated). Leave the stack for later resumption.
 	}
 	else
 	{
