@@ -441,7 +441,7 @@ private:
     btAlignedObjectArray<btVector3> vector_buf;
     btAlignedObjectArray<btMatrix3x3> matrix_buf;
 
-    //std::auto_ptr<Eigen::LU<Eigen::Matrix<btScalar, 6, 6> > > cached_imatrix_lu;
+    //std::unique_ptr<Eigen::LU<Eigen::Matrix<btScalar, 6, 6> > > cached_imatrix_lu;
 
 	btMatrix3x3 cached_inertia_top_left;
 	btMatrix3x3 cached_inertia_top_right;

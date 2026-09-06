@@ -221,7 +221,7 @@ namespace RBX
 		class ReceiverStringDictionary
 		{
 			std::string dictionary[DICTIONARY_SIZE];
-			std::auto_ptr<std::size_t> hashTable;
+			std::unique_ptr<std::size_t> hashTable;
 			static void setDefault(std::string& t);
 
 			bool protection;

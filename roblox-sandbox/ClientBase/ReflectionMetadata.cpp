@@ -113,7 +113,7 @@ void Metadata::Reflection::load(const boost::filesystem::path& filePath)
 	std::ifstream stream(filePath.native().c_str(), std::ios_base::in | std::ios_base::binary);
 
 	TextXmlParser machine(stream.rdbuf());
-	std::auto_ptr<XmlElement> root(machine.parse());
+	std::unique_ptr<XmlElement> root(machine.parse());
 
 	MergeBinder binder;
 

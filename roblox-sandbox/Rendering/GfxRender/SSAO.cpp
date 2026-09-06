@@ -209,7 +209,7 @@ SSAO::Data* SSAO::createData(unsigned int width, unsigned int height)
     unsigned int widthHalf = std::max(width / 2, 1u);
     unsigned int heightHalf = std::max(height / 2, 1u);
 
-    std::auto_ptr<SSAO::Data> result(new SSAO::Data());
+    std::unique_ptr<SSAO::Data> result(new SSAO::Data());
 
     Device* device = visualEngine->getDevice();
 

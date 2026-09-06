@@ -2828,7 +2828,7 @@ int Replicator::sendItems(ItemSender& sender, ItemQueue& itemQueue)
 	int numSent = 0;
 	while (itemQueue.pop_if_present(item))
 	{
-		std::auto_ptr<Item> scope(item);	// auto-delete when done
+		std::unique_ptr<Item> scope(item);	// auto-delete when done
 		if (sender.send(*item) == ItemSender::SEND_BITSTREAM_FULL) 
 		{
 			scope.release();

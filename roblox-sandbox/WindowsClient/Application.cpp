@@ -797,7 +797,7 @@ bool Application::LoadAppSettings(HINSTANCE hInstance)
 		// Parse the xml
 		std::ifstream fileStream(utf8_decode(settingsFileName).c_str());
 		TextXmlParser parser(fileStream.rdbuf());
-		std::auto_ptr<XmlElement> root;
+		std::unique_ptr<XmlElement> root;
 		root = parser.parse();
 
 		// On 64 bit OSes, we may need to configure windows to not swallow user

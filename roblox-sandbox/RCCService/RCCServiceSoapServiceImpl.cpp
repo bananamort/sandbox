@@ -677,7 +677,7 @@ public:
 	// Gathers diagnostic data. Does NOT require locks on datamodel :)
 	const RBX::Reflection::ValueArray* diag(int type, shared_ptr<RBX::DataModel> dataModel)
 	{
-		std::auto_ptr<RBX::Reflection::ValueArray> tuple(new RBX::Reflection::ValueArray());
+		std::unique_ptr<RBX::Reflection::ValueArray> tuple(new RBX::Reflection::ValueArray());
 		
 		/* This is the format of the Diag data:
 
@@ -833,7 +833,7 @@ public:
 			dataModel = iter->second->dataModel;
 		}
 
-		std::auto_ptr<const RBX::Reflection::Tuple> tuple;
+		std::unique_ptr<const RBX::Reflection::Tuple> tuple;
 		{
 			const size_t count = script->arguments ? script->arguments->LuaValue.size() : 0;
 			RBX::Reflection::Tuple args(count);
@@ -857,7 +857,7 @@ public:
 
 	void diag(int type, std::string jobID, std::vector<ns1__LuaValue*>* result, soap* soap)
 	{
-		std::auto_ptr<const RBX::Reflection::ValueArray> tuple;
+		std::unique_ptr<const RBX::Reflection::ValueArray> tuple;
 
 		{
 			shared_ptr<RBX::DataModel> dataModel;
@@ -1468,7 +1468,7 @@ void CWebService::LoadAppSettings()
 	std::ifstream stream((exePath / "AppSettings.xml").native().c_str());
 
 	TextXmlParser machine(stream.rdbuf());
-	std::auto_ptr<XmlElement> root = machine.parse();
+	std::unique_ptr<XmlElement> root = machine.parse();
 
 	const XmlElement* baseURLNode = root->findFirstChildByTag(RBX::Name::declare("BaseUrl"));
 	if(baseURLNode)
