@@ -1584,8 +1584,11 @@ void ScriptContext::resume(ThreadRef thread, boost::function1<size_t, lua_State*
 
 	// TODO: Exception handling. If this throws, what kind of cleanup do we need to do???
 	int argCount = pushArguments(thread);
+	fprintf(stderr, "DIAG resume top0=%d stackSize=%d argCount=%d\n", lua_gettop(thread), stackSize, argCount);
 
-	if (resume(thread, argCount) != Error)
+	int resumeResult = resume(thread, argCount);
+	fprintf(stderr, "DIAG resumeAfter top=%d result=%d\n", lua_gettop(thread), (int)resumeResult);
+	if (resumeResult != Error)
 	{
 		// Collect all the return arguments into a Tuple
 		const int returnCount = lua_gettop(thread) - stackSize + 1;
