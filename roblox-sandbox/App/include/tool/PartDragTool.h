@@ -15,8 +15,8 @@ namespace RBX {
 	private:
 		typedef Named<MouseCommand, sPartDragTool> Super;
 	protected:
-		std::auto_ptr<RunDragger> runDragger;		// does snapping
-		std::auto_ptr<MegaDragger> megaDragger;		// does join / unJoin
+		std::unique_ptr<RunDragger> runDragger;		// does snapping
+		std::unique_ptr<MegaDragger> megaDragger;		// does join / unJoin
 		shared_ptr<Instance> selectIfNoDrag;
 		Vector2 downPoint;
 		bool dragging;

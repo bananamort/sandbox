@@ -13,7 +13,7 @@ namespace RBX {
 	class GroupDragTool : public Named<MouseCommand, sGroupDragTool>
 	{
 	protected:
-		std::auto_ptr<MegaDragger> megaDragger;
+		std::unique_ptr<MegaDragger> megaDragger;
 		Vector2 downPoint;
 		bool dragging;
 		Vector3 lastHit;

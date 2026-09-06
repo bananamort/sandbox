@@ -164,6 +164,77 @@ LUAU_FASTFLAG(LuauFastpcall)
 // Does VM support native execution via ExecutionCallbacks? We mostly assume it does but keep the define to make it easy to quantify the cost.
 #define VM_HAS_NATIVE 1
 
+volatile int rbxHookActive = 0;
+
+// Real 5.1.4-style hook dispatch, polled once per interpreter iteration
+// from the dispatch label below (MSVC switch dispatch reaches it every
+// instruction; on computed-goto platforms it runs in single-step mode,
+// same caveat as the existing SingleStep block). Per-thread hook state
+// lives in RbxHookState (engine side-table via rbx_hookstate), so this
+// file never touches engine types.
+static void rbxFireHook(lua_State* L, RbxHookState* hs, int event, int line, const Instruction* pc)
+{
+    lua_Debug ar;
+    memset(&ar, 0, sizeof(ar));
+    ar.event = event;
+    ar.currentline = line;
+    ar.stacklevel = 0;
+
+    L->ci->savedpc = pc;
+    ptrdiff_t top = savestack(L, L->top);
+    ptrdiff_t ci_top = savestack(L, L->ci->top);
+    luaD_checkstack(L, LUA_MINSTACK);
+    L->ci->top = L->top + LUA_MINSTACK;
+    hs->func(L, &ar);
+    L->ci->top = restorestack(L, ci_top);
+    L->top = restorestack(L, top);
+}
+
+static LUAU_FORCEINLINE void rbxHookPoll(lua_State* L, const Instruction* pc)
+{
+    if (!isLua(L->ci))
+        return;
+    RbxHookState* hs = rbx_hookstate(L);
+    if (!hs || !hs->func || hs->mask == 0)
+        return;
+
+    Closure* func = clvalue(L->ci->func);
+    Proto* p = FFlag::LuauCIProto ? L->ci->p : func->l.p;
+    int line = (p && p->lineinfo) ? luaG_getline(p, pcRel(pc, p)) : 0;
+    int depth = int(L->ci - L->base_ci);
+    int event = -1;
+
+    if (hs->lastframe != L->ci || hs->lastfunc != func)
+    {
+        // Entering a function: deeper frame, or same depth with a new
+        // function (tailcall reuses the frame). Anything else is a return.
+        if (depth > hs->lastdepth || (depth == hs->lastdepth && hs->lastfunc != func))
+            event = LUA_HOOKCALL;
+        else
+            event = LUA_HOOKRET;
+        hs->lastframe = L->ci;
+        hs->lastfunc = func;
+        hs->lastdepth = depth;
+        hs->lastline = -1;
+    }
+    else if ((hs->mask & LUA_MASKCOUNT) != 0)
+    {
+        if (--hs->countdown == 0)
+        {
+            hs->countdown = hs->count;
+            event = LUA_HOOKCOUNT;
+        }
+    }
+    if (event < 0 && (hs->mask & LUA_MASKLINE) != 0 && line != hs->lastline)
+    {
+        event = LUA_HOOKLINE;
+        hs->lastline = line;
+    }
+    if (event < 0 || (hs->mask & (1 << event)) == 0)
+        return;
+    rbxFireHook(L, hs, event, line, pc);
+}
+
 LUAU_NOINLINE void luau_callhook(lua_State* L, lua_Hook hook, void* userdata)
 {
     ptrdiff_t base = savestack(L, L->base);
@@ -328,6 +399,19 @@ reentry:
 #if VM_USE_CGOTO
             VM_CONTINUE(LUAU_INSN_OP(*pc));
 #endif
+        }
+
+        // Roblox 5.1-style hooks, polled once per instruction. rbxHookActive
+        // is nonzero only while some thread has hooks installed, so traced
+        // execution pays a single predictable branch. The poll derives
+        // call/ret/line/count transitions from frame and line changes.
+        if (LUAU_UNLIKELY(rbxHookActive))
+        {
+            rbxHookPoll(L, pc);
+
+            // allow hook to put thread into error/yield state
+            if (L->status != 0)
+                goto exit;
         }
 
 #if !VM_USE_CGOTO

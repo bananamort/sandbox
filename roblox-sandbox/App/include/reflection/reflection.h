@@ -187,22 +187,22 @@ namespace RBX
 			}
 
 			template<typename Get, typename Set>
-			static std::auto_ptr< typename Reflection::TypedPropertyDescriptor<V>::GetSet > getset(Get get, Set set)
+			static std::unique_ptr< typename Reflection::TypedPropertyDescriptor<V>::GetSet > getset(Get get, Set set)
 			{
-				return std::auto_ptr< typename Reflection::TypedPropertyDescriptor<V>::GetSet >(new GetSetImpl<Get, Set>(get, set));
+				return std::unique_ptr< typename Reflection::TypedPropertyDescriptor<V>::GetSet >(new GetSetImpl<Get, Set>(get, set));
 			}
             
             // Partial specialization for read-only case
             template<typename Get, typename Set>
-            static std::auto_ptr< typename Reflection::TypedPropertyDescriptor<V>::GetSet > getset(Get get, NULL_FUNCTION_PTR set)
+            static std::unique_ptr< typename Reflection::TypedPropertyDescriptor<V>::GetSet > getset(Get get, NULL_FUNCTION_PTR set)
             {
-                return std::auto_ptr< typename Reflection::TypedPropertyDescriptor<V>::GetSet >(new GetImpl<Get>(get));
+                return std::unique_ptr< typename Reflection::TypedPropertyDescriptor<V>::GetSet >(new GetImpl<Get>(get));
             }
             // Partial specialization for write-only case
             template<typename Get, typename Set>
-            static std::auto_ptr< typename Reflection::TypedPropertyDescriptor<V>::GetSet > getset(NULL_FUNCTION_PTR get, Set set)
+            static std::unique_ptr< typename Reflection::TypedPropertyDescriptor<V>::GetSet > getset(NULL_FUNCTION_PTR get, Set set)
             {
-                return std::auto_ptr< typename Reflection::TypedPropertyDescriptor<V>::GetSet >(new SetImpl<Set>(set));
+                return std::unique_ptr< typename Reflection::TypedPropertyDescriptor<V>::GetSet >(new SetImpl<Set>(set));
             }
 		};
 
@@ -212,7 +212,7 @@ namespace RBX
 		template<class Class, typename V>
 		class EnumPropDescriptor : public EnumPropertyDescriptor
 		{
-			std::auto_ptr<typename TypedPropertyDescriptor<V>::GetSet> getset;
+			std::unique_ptr<typename TypedPropertyDescriptor<V>::GetSet> getset;
 			const EnumDesc<V>& enumDesc;
 		public:
 			template<typename Get, typename Set>
@@ -398,7 +398,7 @@ namespace RBX
 			: public RefPropertyDescriptor
 			, public IIDREF
 		{
-			std::auto_ptr<typename TypedPropertyDescriptor<RefClass*>::GetSet> getset;
+			std::unique_ptr<typename TypedPropertyDescriptor<RefClass*>::GetSet> getset;
 		public:
 			template<typename Get, typename Set>
 			RefPropDescriptor(const char* name, const char* category, Get get, Set set, PropertyDescriptor::Attributes attributes = PropertyDescriptor::Attributes(), Security::Permissions security=Security::None)

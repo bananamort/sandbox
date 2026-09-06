@@ -1042,7 +1042,7 @@ namespace RBX
         }
 	}
 
-	std::auto_ptr<std::istream> ContentProvider::getContent(const RBX::ContentId& ticket, const std::string& expectedType)
+	std::unique_ptr<std::istream> ContentProvider::getContent(const RBX::ContentId& ticket, const std::string& expectedType)
 	{
 		APPLOG("ContentProvider::getContent - ticket");
 
@@ -1052,12 +1052,12 @@ namespace RBX
 		
 		if (item.data)
 		{
-			return std::auto_ptr<std::istream>(new std::istringstream(*item.data));
+			return std::unique_ptr<std::istream>(new std::istringstream(*item.data));
 		}
 		else
 		{
 			std::ifstream* stream = new std::ifstream(utf8_decode(*item.filename).c_str(), std::ios_base::in | std::ios_base::binary);
-			return std::auto_ptr<std::istream>(stream);
+			return std::unique_ptr<std::istream>(stream);
 		}
 	}
 }

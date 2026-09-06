@@ -179,15 +179,15 @@ namespace RBX
 				virtual void setValue(DescribedBase* object, const V& value) const = 0;
 			};
 		protected:
-			std::auto_ptr<GetSet> getset;
-			TypedPropertyDescriptor(ClassDescriptor& classDescriptor, const Type& type, const char* name, const char* category, std::auto_ptr<GetSet> getset, Attributes flags, Security::Permissions security)
-				:PropertyDescriptor(classDescriptor, type, name, category, flags, security),getset(getset) 
+			std::unique_ptr<GetSet> getset;
+			TypedPropertyDescriptor(ClassDescriptor& classDescriptor, const Type& type, const char* name, const char* category, std::unique_ptr<GetSet> getset, Attributes flags, Security::Permissions security)
+				:PropertyDescriptor(classDescriptor, type, name, category, flags, security),getset(std::move(getset)) 
 			{
 				if (this->getset.get())
 					this->checkFlags();
 			}
-			TypedPropertyDescriptor(ClassDescriptor& classDescriptor, const char* name, const char* category, std::auto_ptr<GetSet> getset, Attributes flags, Security::Permissions security)
-				:PropertyDescriptor(classDescriptor, Type::singleton<V>(), name, category, flags, security),getset(getset) 
+			TypedPropertyDescriptor(ClassDescriptor& classDescriptor, const char* name, const char* category, std::unique_ptr<GetSet> getset, Attributes flags, Security::Permissions security)
+				:PropertyDescriptor(classDescriptor, Type::singleton<V>(), name, category, flags, security),getset(std::move(getset)) 
 			{
 				if (this->getset.get())
 					this->checkFlags();
@@ -474,14 +474,14 @@ namespace RBX
 		public:
 			template<class Class>
 			BoundProp(const char* name, const char* category, V Class::*member, void (Class::*changed)(const Reflection::PropertyDescriptor&), typename PropertyDescriptor::Attributes flags = PropertyDescriptor::STANDARD, Security::Permissions security = Security::None)
-				:Reflection::TypedPropertyDescriptor<V>(Class::classDescriptor(), name, category, std::auto_ptr<typename TypedPropertyDescriptor<V>::GetSet>(), flags, security)
+				:Reflection::TypedPropertyDescriptor<V>(Class::classDescriptor(), name, category, std::unique_ptr<typename TypedPropertyDescriptor<V>::GetSet>(), flags, security)
 			{
 				this->getset.reset(new BoundPropGetSet<Class>(*this, member, changed));
 				this->checkFlags();
 			}
 			template<class Class>
 			BoundProp(const char* name, const char* category, V Class::*member, typename PropertyDescriptor::Attributes flags = PropertyDescriptor::STANDARD, Security::Permissions security = Security::None)
-				:Reflection::TypedPropertyDescriptor<V>(Class::classDescriptor(), name, category, std::auto_ptr<typename TypedPropertyDescriptor<V>::GetSet>(), flags, security)
+				:Reflection::TypedPropertyDescriptor<V>(Class::classDescriptor(), name, category, std::unique_ptr<typename TypedPropertyDescriptor<V>::GetSet>(), flags, security)
 			{
 				this->getset.reset(new BoundPropGetSet<Class>(*this, member, NULL));
 				this->checkFlags();

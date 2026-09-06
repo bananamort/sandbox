@@ -218,6 +218,19 @@ int lua_stackdepth(lua_State* L)
     return int(L->ci - L->base_ci);
 }
 
+// 5.1.4 lua_getstack selected a frame for later lua_getinfo/getlocal
+// calls by stashing the frame pointer in the activation record. Luau's
+// lua_Debug carries no frame slot, so record the validated level in the
+// compat stacklevel field, which the 3-arg lua_getinfo/getlocal shims
+// consume. Same validity rule as every other level-based query here.
+int lua_getstack(lua_State* L, int level, lua_Debug* ar)
+{
+    if (level < 0 || unsigned(level) >= unsigned(L->ci - L->base_ci))
+        return 0;
+    ar->stacklevel = level;
+    return 1;
+}
+
 int lua_getinfo(lua_State* L, int level, const char* what, lua_Debug* ar)
 {
     Closure* f = NULL;

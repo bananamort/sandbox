@@ -1854,15 +1854,21 @@ RBX::Instance* ScriptDebugger::getScriptForLuaState(lua_State* L)
 
 bool ScriptDebugger::hasDifferentScriptInstances(lua_State* L)
 {
-	// WS4-C7: 5.1.4 internals (Closure*/curr_func/LUA_ENVIRONINDEX) removed.
-	// The 5.1.4 version walked the closure env to detect script-instance
-	// changes. Luau has no public Closure* accessor; the env table is
-	// also gone (LUA_ENVIRONINDEX removed). Real implementation belongs
-	// in the C6/C7 debug API rewrite. For now: return false so the
-	// debugger treats every script as the same instance (no false
-	// diffs); the caller will proceed to compare script hashes.
-	(void)L;
-	return false;
+	// Find the running function's script instance through public API only: through public API only: select
+	// frame 0, push the running function, read its "script" fenv field
+	// (same source getScriptForLuaState uses), and compare against this
+	// debugger's script. Balanced: getScriptForLuaState leaves the pushed
+	// function behind, so pop it before returning.
+	lua_Debug ar;
+	if (lua_getstack(L, 0, &ar) != 1)
+		return false;
+	if (!lua_getinfo(L, "f", &ar))
+		return false;
+	RBX::Instance* funcScript = getScriptForLuaState(L);
+	lua_pop(L, 1);
+	if (!funcScript)
+		return false;
+	return funcScript != getScript();
 }
 
 static std::string getHashString(RBX::Instance* pInstance)
@@ -2034,10 +2040,10 @@ void ScriptDebugger::updateHook()
 		int hookMask = LUA_MASKLINE | LUA_MASKCALL | LUA_MASKRET | LUA_MASKCOUNT;
 		if (RBX::Scripting::DebuggerManager::singleton().getBreakOnErrorMode() == BreakOnErrorMode_AllExceptions)
 			hookMask = LUA_MASKLINE | LUA_MASKCALL | LUA_MASKRET | LUA_MASKCOUNT | LUA_MASKERROR;
-		pExtraSpace->forEachThread();
-		(void)hookMask;  // WS4-C7: full hook propagation deferred to debug
-		                // API rewrite (C6/C7 follow-up). The 0-arg
-		                // overload marks the action without applying it.
+		pExtraSpace->forEachThread([hookMask](RobloxExtraSpace* es) {
+			if (es && es->self)
+				lua_sethook(es->self, DebuggerManager::hook, hookMask, ScriptContext::hookCount);
+		});
 	}
 }
 

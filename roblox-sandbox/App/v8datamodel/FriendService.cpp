@@ -258,7 +258,7 @@ void FriendService::ProcessBulkFriendResponse(weak_ptr<FriendService> weakFriend
 		if(response && response->size() > 1){
 			try
 			{
-				std::auto_ptr<std::istream> stream(new std::istringstream(response->substr(1)));
+				std::unique_ptr<std::istream> stream(new std::istringstream(response->substr(1)));
 				int otherUserId;
 				char comma;
 				(*stream) >> otherUserId >> comma;

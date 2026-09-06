@@ -163,7 +163,7 @@ public:
 		PartInstance::classDescriptor(), 
 		name, 
 		category, 
-		std::auto_ptr<typename Reflection::TypedPropertyDescriptor<V>::GetSet>(new SurfaceGetSet<face, V, Get, Set>(get, set)), 
+		std::unique_ptr<typename Reflection::TypedPropertyDescriptor<V>::GetSet>(new SurfaceGetSet<face, V, Get, Set>(get, set)), 
 		flags,
 		security
 		)
@@ -178,7 +178,7 @@ public:
 template<RBX::NormalId face, typename V >
 class SurfaceEnumPropDescriptor : public Reflection::EnumPropertyDescriptor
 {
-	std::auto_ptr<typename Reflection::TypedPropertyDescriptor<V>::GetSet> getset;
+	std::unique_ptr<typename Reflection::TypedPropertyDescriptor<V>::GetSet> getset;
 public:
 	template<typename Get, typename Set>
 	SurfaceEnumPropDescriptor(const char* name, const char* category, Get get, Set set, Functionality flags = STANDARD)

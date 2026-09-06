@@ -272,7 +272,7 @@ namespace RBX
 		/////////////////////////////////////////////////
 		// Calls that make lua run/resume
 		void executeInNewThread(RBX::Security::Identities identity, const ProtectedString& script, const char* name);
-		std::auto_ptr<Reflection::Tuple> executeInNewThread(RBX::Security::Identities identity, const ProtectedString& script, const char* name, const Reflection::Tuple& arguments);
+		std::unique_ptr<Reflection::Tuple> executeInNewThread(RBX::Security::Identities identity, const ProtectedString& script, const char* name, const Reflection::Tuple& arguments);
 		void executeInNewThreadWithExtraGlobals(RBX::Security::Identities identity,
 			const ProtectedString& script, const char* name,
 			const std::map<std::string, shared_ptr<Instance> >& extraGlobals);

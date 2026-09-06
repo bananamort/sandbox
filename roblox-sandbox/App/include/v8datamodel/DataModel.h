@@ -119,7 +119,7 @@ public:
 	void postCreate();
 		
 	static rbx::atomic<int> count;
-	std::auto_ptr<RBX::Verb> lockVerb;
+	std::unique_ptr<RBX::Verb> lockVerb;
 
 	rbx::signal<void()> screenshotSignal;
 	rbx::signal<void(const std::string &)> screenshotReadySignal;
@@ -244,7 +244,7 @@ private:
 
 	bool								areCoreScriptsLoaded;
 
-	std::auto_ptr<std::istream> loadAssetIdIntoStream(int assetID);
+	std::unique_ptr<std::istream> loadAssetIdIntoStream(int assetID);
 public:
 	static bool BlockingDataModelShutdown;
 

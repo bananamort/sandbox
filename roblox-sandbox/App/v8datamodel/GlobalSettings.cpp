@@ -75,7 +75,7 @@ void Settings::loadState(const std::string& optGlobalSettingsFile)
 		if (stream)
 		{
 			TextXmlParser machine(stream.rdbuf());
-			std::auto_ptr<XmlElement> root(machine.parse());
+			std::unique_ptr<XmlElement> root(machine.parse());
 
 			MergeBinder binder;
 			readChildren(root.get(), binder, EngineCreator);

@@ -287,7 +287,7 @@ shared_ptr<KeyframeSequence> KeyframeSequenceProvider::privateGetKeyframeSequenc
 	else
 	{
 		if(blocking){
-			std::auto_ptr<std::istream> stream = ServiceProvider::create<ContentProvider>(this)->getContent(assetId);
+			std::unique_ptr<std::istream> stream = ServiceProvider::create<ContentProvider>(this)->getContent(assetId);
 			SyncKeyframeLoaderHelper(AsyncHttpQueue::Succeeded, stream.get(), weak_from(this), keyframeSequence, newContext);
 		}
 		else{

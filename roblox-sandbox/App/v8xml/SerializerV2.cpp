@@ -13,10 +13,8 @@
 #include <map>
 
 #ifdef _WIN32
-   // WS4-C5: removed `using std::mem_fun;` -- removed in C++17 and
-   // the new mem_fun<Result(C::*pmf)()> shim from cpp_compat.h
-   // only handles 0-arg member functions. The single call site that
-   // used mem_fun + bind1st was rewritten to use std::bind directly.
+   // std::mem_fun/bind1st were removed in C++17; the single call site
+   // that used them now uses std::bind directly (see below).
 #else
 #include <ext/functional>
    using __gnu_cxx::mem_fun;
@@ -153,7 +151,7 @@ void SerializerV2::loadInstances(std::istream& stream, RBX::Instances& result)
     {
         // read the XML content
         TextXmlParser machine(stream.rdbuf());
-        std::auto_ptr<XmlElement> root(machine.parse());
+        std::unique_ptr<XmlElement> root(machine.parse());
 
         ArchiveBinder binder;
         loadInstancesXML(root.get(), result, binder, RBX::SerializationCreator);
@@ -163,7 +161,7 @@ void SerializerV2::loadInstances(std::istream& stream, RBX::Instances& result)
 void SerializerV2::loadXML(std::istream& stream, RBX::DataModel* dataModel)
 {
 	TextXmlParser machine(stream.rdbuf());
-	std::auto_ptr<XmlElement> root(machine.parse());
+	std::unique_ptr<XmlElement> root(machine.parse());
 	
 	if (root->getTag() == tag_roblox) 
 	{

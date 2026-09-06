@@ -22,7 +22,7 @@ namespace RBX {
 
 		std::vector<shared_ptr<Joint> > jointsIMade;
 		weak_ptr<PartInstance> rootPart;
-		std::auto_ptr<AdvRunDragger> advRunDragger;		// only if we have one part
+		std::unique_ptr<AdvRunDragger> advRunDragger;		// only if we have one part
 
 		float hitPointHeight;
 

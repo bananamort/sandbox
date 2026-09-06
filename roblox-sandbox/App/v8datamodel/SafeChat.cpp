@@ -64,7 +64,7 @@ void SafeChat::loadChatTree()
 
 	TextXmlParser machine(stream.rdbuf());
 
-	std::auto_ptr<XmlElement> root(machine.parse());
+	std::unique_ptr<XmlElement> root(machine.parse());
 
 	chatRoot.reset(new ChatOption());
 	chatRoot->text = "ROOT";

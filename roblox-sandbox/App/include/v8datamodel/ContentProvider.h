@@ -139,7 +139,7 @@ namespace RBX {
 
 		// The following functions throw exceptions upon failure or return NULL
 		shared_ptr<const std::string> getContentString(ContentId id);
-		std::auto_ptr<std::istream> getContent(const ContentId& contentId, const std::string& expectedType = "");
+		std::unique_ptr<std::istream> getContent(const ContentId& contentId, const std::string& expectedType = "");
 		std::string getFile(ContentId contentId);
 		static std::string getAssetFile(const char* filePath);
 

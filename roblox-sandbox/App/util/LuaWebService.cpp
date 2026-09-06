@@ -349,7 +349,7 @@ LuaWebService::CachedRawLuaWebServiceInfo::CachedRawLuaWebServiceInfo(shared_ptr
 
 LuaWebService::CachedLuaWebServiceInfo::CachedLuaWebServiceInfo(shared_ptr<const std::string> data, shared_ptr<const std::string> filename)
 {
-	std::auto_ptr<std::istream> stream(new std::istringstream(*data));
+	std::unique_ptr<std::istream> stream(new std::istringstream(*data));
 	if(!WebParser::parseWebGenericResponse(*stream, value)){
 		throw std::runtime_error("bad xml");
 	}

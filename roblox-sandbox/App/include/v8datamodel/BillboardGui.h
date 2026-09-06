@@ -21,7 +21,7 @@ namespace RBX {
 	{
 	private:
 		typedef DescribedCreatable<BillboardGui, GuiLayerCollector, sAdornmentGui> Super;
-		std::auto_ptr<ViewportBillboarder> viewportBillboarder;
+		std::unique_ptr<ViewportBillboarder> viewportBillboarder;
 	public:
 		BillboardGui();
 

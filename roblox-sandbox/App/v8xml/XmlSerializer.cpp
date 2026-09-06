@@ -443,7 +443,7 @@ parsing the entire document. Listing 2 shows the entire source code for the
 SimpleDOMParser.parse method. 
 **/
 
-std::auto_ptr<XmlElement> TextXmlParser::parse()
+std::unique_ptr<XmlElement> TextXmlParser::parse()
 {
 	if (buffer->sgetc()==EOF)
 		throw std::runtime_error("TextXmlParser::parse empty file");
@@ -477,7 +477,7 @@ std::auto_ptr<XmlElement> TextXmlParser::parse()
 	        if (elements.empty()) {
 				// document processing is over
 				RBXASSERT(currentElement!=NULL);
-				return std::auto_ptr<XmlElement>(currentElement);
+				return std::unique_ptr<XmlElement>(currentElement);
 			} 
 		} 
 		else {

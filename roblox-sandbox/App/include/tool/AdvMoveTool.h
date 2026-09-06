@@ -27,7 +27,7 @@ namespace RBX {
 
 	private:
 		typedef AdvArrowToolBase Super;
-		std::auto_ptr<MegaDragger> megaDragger;
+		std::unique_ptr<MegaDragger> megaDragger;
 		Vector2int16	downPoint2d;
 	
 		// dynamic - last point on the Ray we dragged to

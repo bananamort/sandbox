@@ -63,7 +63,7 @@ namespace RBX {
 		// Instance 
 
 		Rect2D viewPort;		
-		std::auto_ptr<World> world;	
+		std::unique_ptr<World> world;	
 
 		RootInstance();
 		~RootInstance();

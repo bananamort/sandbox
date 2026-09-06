@@ -5,6 +5,9 @@
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <limits.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "luaconf.h"
 
@@ -516,35 +519,42 @@ LUA_API int lua_unref(lua_State* L, int ref);
 #define lua_pushcclosure_3(L, fn, nup) lua_pushcclosurek(L, fn, "", nup, NULL)
 #define lua_pushcclosure(L, fn, debugname, nup) lua_pushcclosurek(L, fn, debugname, nup, NULL)
 
-// 5.1.4 lauxlib helpers removed in Luau. Provide real implementations
-// backed by Luau's registry + stack primitives.
-// luaL_ref: pops top of stack, returns integer key in registry table.
-// 5.1.4 used a freetable; we use a counter for unique integer keys.
-static inline int rbx_next_lua_ref_key() {
-    static int counter = 1;
-    return counter++;
+// 5.1.4 lauxlib helpers removed in Luau. Real implementations backed
+// by Luau's registry + stack primitives, matching 5.1.4 semantics
+// exactly (freelist threaded through registry slot 0).
+// luaL_ref: pops the top of stack into table t, returns its integer key.
+static inline int luaL_ref(lua_State* L, int t) {
+    int ref;
+    if (lua_isnil(L, -1)) {
+        lua_pop(L, 1);
+        return LUA_REFNIL;
+    }
+    lua_rawgeti(L, t, 0);
+    ref = (int)lua_tointeger(L, -1);
+    lua_pop(L, 1);
+    if (ref != 0) {
+        lua_rawgeti(L, t, ref);
+        lua_rawseti(L, t, 0);
+    }
+    else {
+        ref = (int)lua_objlen(L, t);
+        if (ref >= INT_MAX - 1)
+            return LUA_REFNIL;
+        ref++;
+    }
+    lua_rawseti(L, t, ref);
+    return ref;
 }
-static inline int luaL_ref(lua_State* L, int idx) {
-    (void)idx;  // 5.1.4 allowed any table; the engine only uses
-                // LUA_REGISTRYINDEX, and Luau's registry is shared
-                // process-wide anyway.
-    // 5.1.4 pops the TOP of stack into the table — idx only selects
-    // the table, it is NOT pushed. (Pushing idx first would anchor the
-    // table into itself, leak a stack slot, and leave the intended
-    // value — e.g. LiveThreadRef's coroutine — unrooted for GC.)
-    int key = rbx_next_lua_ref_key();
-    lua_rawseti(L, LUA_REGISTRYINDEX, key);
-    return key;
-}
-// 5.1.4 luaL_unref(L, t, ref) takes a table t at the registry (or
-// pseudo-index) and clears slot ref. Luau removed it; we shim
-// using rawseti on the registry table.
+// 5.1.4 luaL_unref(L, t, ref) clears slot ref in table t and threads
+// it back onto the freelist in slot 0, exactly like 5.1.4.
 static inline void luaL_unref(lua_State* L, int t, int ref) {
-    (void)t;  // 5.1.4 supported any table, but the engine only uses
-              // LUA_REGISTRYINDEX which is the standard registry.
-    if (ref == -1) return;  // LUA_NOREF
-    lua_pushnil(L);
-    lua_rawseti(L, LUA_REGISTRYINDEX, ref);
+    if (ref < 0)
+        return;
+    lua_rawgeti(L, t, ref);
+    lua_rawseti(L, t, 0);
+    lua_pushvalue(L, -1);
+    lua_rawseti(L, t, ref);
+    lua_pop(L, 1);
 }
 // 5.1.4 macro for string-literal quoting. Luau doesn't define it.
 #ifndef LUA_QL
@@ -572,27 +582,45 @@ static inline const char* luaO_chunkid(char* buf, const char* source, size_t src
 }
 // 4-arg overload removed in WS4-C5: lobject.cpp provides the real
 // implementation; keeping this static inline caused C2084 duplicate body.
-// 5.1.4 lua_Reader: callback to feed chunks of source to lua_load.
-// Luau removed the reader-based load (luau_load takes (L, name, data, size, env)
-// directly). The engine uses a reader to avoid copying the source string.
-// The shim here uses a small static buffer and the caller's data pointer
-// (which is expected to be a struct { const char* s; size_t size; } or similar).
+// 5.1.4 lua_Reader: callback feeding chunks of source to lua_load.
+// Luau removed reader-based load (luau_load takes one contiguous
+// buffer), so drain the reader exactly like 5.1.4's generic reader
+// loop did — until it returns NULL or an empty chunk — and hand the
+// concatenation to luau_load. realloc-based to stay C-compatible.
 typedef const char* (*lua_Reader)(lua_State *L, void *ud, size_t *sz);
 static inline int lua_load(lua_State* L, lua_Reader reader, void* data, const char* chunkname)
 {
-    size_t size;
-    const char* p = reader(L, data, &size);
-    if (!p) return LUA_ERRMEM;
-    return luau_load(L, chunkname, p, size, 0);
+    char* buf = NULL;
+    size_t len = 0;
+    size_t cap = 0;
+    for (;;) {
+        size_t size = 0;
+        const char* p = reader(L, data, &size);
+        if (!p || size == 0)
+            break;
+        if (size > (size_t)-1 - len - 1) {
+            free(buf);
+            return LUA_ERRMEM;
+        }
+        if (len + size + 1 > cap) {
+            size_t ncap = cap ? cap * 2 : 256;
+            while (ncap < len + size + 1) ncap *= 2;
+            char* nbuf = (char*)realloc(buf, ncap);
+            if (!nbuf) {
+                free(buf);
+                return LUA_ERRMEM;
+            }
+            buf = nbuf;
+            cap = ncap;
+        }
+        memcpy(buf + len, p, size);
+        len += size;
+    }
+    int status = luau_load(L, chunkname, buf ? buf : "", len, 0);
+    free(buf);
+    return status;
 }
 
-// 5.1.4 getline(Proto*, int): returns the line number of a given PC
-// instruction in a function's proto. Luau doesn't expose Proto or
-// getline; the function is 5.1.4 internal debug-API sugar. We shim
-// getline to return 0 (currentline). Proto is a Luau internal type
-// (typedef struct Proto in lobject.h) so we don't re-declare it; the
-// engine's `struct Proto*` parameter resolves to Luau's struct.
-static inline int getline(const void* p, int pc) { (void)p; (void)pc; return 0; }
 #define lua_pushlightuserdata(L, p) lua_pushlightuserdatatagged(L, p, 0)
 
 #define lua_rawgetp(L, idx, p) lua_rawgetptagged(L, idx, p, 0)
@@ -675,26 +703,60 @@ struct lua_Debug
 #define LUA_MASKLINE (1 << LUA_HOOKLINE)
 #define LUA_MASKCOUNT (1 << LUA_HOOKCOUNT)
 
-// --- Lua 5.1 compat shims for Luau ---
-#ifdef __cplusplus
-extern "C" {
-#endif
-// Old 3-arg lua_getinfo -> Luau 4-arg
-static inline int lua_getinfo_compat(lua_State* L, const char* what, lua_Debug* ar) { return lua_getinfo(L, 0, what, ar); }
+// --- Lua 5.1 debug API on Luau: real implementations, no stubs ---
+// Old 3-arg lua_getinfo -> Luau 4-arg, using the frame selected by the
+// most recent lua_getstack into ar->stacklevel (same contract as 5.1.4,
+// where ar had to come from getstack or a hook event).
+static inline int lua_getinfo_compat(lua_State* L, const char* what, lua_Debug* ar) { return lua_getinfo(L, ar->stacklevel, what, ar); }
 // Provide overload for old code that still calls 3-arg version via macro
 // If code calls lua_getinfo(L, "nS", &ar) it will now match this 3-arg overload
-static inline int lua_getinfo(lua_State* L, const char* what, lua_Debug* ar) { return lua_getinfo(L, 0, what, ar); }
-// Stub out removed Lua 5.1 debug API — make old engine code link
-static inline int lua_getstack(lua_State* L, int level, lua_Debug* ar) { (void)L; (void)level; (void)ar; return 0; }
-static inline int lua_sethook(lua_State* L, lua_Hook func, int mask, int count) { (void)L; (void)func; (void)mask; (void)count; return 0; }
-static inline lua_Hook lua_gethook(lua_State* L) { (void)L; return NULL; }
-static inline int lua_gethookmask(lua_State* L) { (void)L; return 0; }
-static inline int lua_gethookcount(lua_State* L) { (void)L; return 0; }
-static inline const char* lua_getlocal(lua_State* L, const lua_Debug* ar, int n) { (void)L; (void)ar; (void)n; return NULL; }
-static inline const char* lua_setlocal(lua_State* L, const lua_Debug* ar, int n) { (void)L; (void)ar; (void)n; return NULL; }
-#ifdef __cplusplus
+static inline int lua_getinfo(lua_State* L, const char* what, lua_Debug* ar) { return lua_getinfo(L, ar->stacklevel, what, ar); }
+// Per-thread hook state for the real lua_sethook below. Lives in the
+// engine side-table (see rbx_hookstate); the VM loop polls it.
+struct RbxHookState {
+    lua_Hook func;
+    int mask;
+    int count;
+    int countdown;
+    int lastline;
+    const void* lastframe;
+    const void* lastfunc;
+    int lastdepth;
+};
+// Engine-defined: returns the hook state for L, or NULL when the thread
+// carries none (implemented in App/script/ScriptContext.cpp).
+LUA_API RbxHookState* rbx_hookstate(lua_State* L);
+// Nonzero while any thread has hooks installed; the VM loop polls hooks
+// only then, so untraced execution pays one predictable branch.
+LUA_API extern volatile int rbxHookActive;
+// Real lua_sethook: records func/mask/count in the thread's hook state.
+// Firing happens in the VM loop (lvmexecute dispatch poll) with true
+// 5.1.4 event granularity (call/ret/line/count).
+static inline void lua_sethook(lua_State* L, lua_Hook func, int mask, int count) {
+    RbxHookState* hs = rbx_hookstate(L);
+    if (!hs)
+        return;
+    int was = hs->func != NULL && hs->mask != 0;
+    hs->func = func;
+    hs->mask = func ? mask : 0;
+    hs->count = count;
+    hs->countdown = count;
+    hs->lastline = -1;
+    hs->lastframe = NULL;
+    hs->lastfunc = NULL;
+    hs->lastdepth = -1;
+    int is = func != NULL && hs->mask != 0;
+    if (is && !was)
+        rbxHookActive++;
+    else if (!is && was)
+        rbxHookActive--;
 }
-#endif
+static inline lua_Hook lua_gethook(lua_State* L) { RbxHookState* hs = rbx_hookstate(L); return hs ? hs->func : NULL; }
+static inline int lua_gethookmask(lua_State* L) { RbxHookState* hs = rbx_hookstate(L); return hs ? hs->mask : 0; }
+static inline int lua_gethookcount(lua_State* L) { RbxHookState* hs = rbx_hookstate(L); return hs ? hs->count : 0; }
+// ar-based locals go through the getstack-selected level, like 5.1.4.
+static inline const char* lua_getlocal(lua_State* L, const lua_Debug* ar, int n) { return lua_getlocal(L, ar->stacklevel, n); }
+static inline const char* lua_setlocal(lua_State* L, const lua_Debug* ar, int n) { return lua_setlocal(L, ar->stacklevel, n); }
 
 typedef void (*lua_Coverage)(void* context, const char* function, int linedefined, int depth, const int* hits, size_t size);
 

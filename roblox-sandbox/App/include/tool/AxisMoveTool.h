@@ -16,7 +16,7 @@ namespace RBX {
 	{
 	private:
 		typedef ArrowToolBase Super;
-		std::auto_ptr<MegaDragger> megaDragger;
+		std::unique_ptr<MegaDragger> megaDragger;
 		std::string		cursor;
 		bool			dragging;
 		Vector2int16	downPoint2d;

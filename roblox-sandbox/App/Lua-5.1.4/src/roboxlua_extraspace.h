@@ -15,7 +15,7 @@
 #include <set>
 #include <vector>
 
-namespace RBX { class BaseScript; class ScriptContext; }
+namespace RBX { class BaseScript; class ScriptContext; namespace Lua { class Continuations; } }
 
 // Forward declare so the forEachThread template (line 70) can reference
 // allExtraSpaces() at template-definition time (non-dependent name lookup
@@ -34,12 +34,13 @@ struct RobloxExtraSpace {
     int reserved : 26;                // padding
     boost::weak_ptr<RBX::BaseScript> script;
     // continuations: 2016 stored boost::scoped_ptr<RBX::Lua::Continuations>
-    // which requires the full type. We store an opaque void* here;
-    // the engine's RBX::Lua::Continuations is defined in ScriptContext.cpp
-    // and the engine already manages the lifetime through its own state
-    // (Lua::Continuations continuations; in startScript etc.). The side
-    // table just holds a reference. C7 wires the actual integration.
-    void* continuations;
+    // here. A scoped_ptr needs the complete type in every TU that
+    // includes this header, which the Luau adapter can't provide — so
+    // the field is a raw pointer to the forward-declared engine type.
+    // Ownership matches 5.1.4: the entry owns it, freed by
+    // rbx_deleteContinuations (defined where the full type is visible)
+    // from onFreeThread/onCloseState.
+    RBX::Lua::Continuations* continuations;
     // node: 2016 stored boost::intrusive_ptr<WeakThreadRef::Node> here for
     // GC keep-alive. We use std::set in the .cpp instead, so the Node
     // field is not present in our side-table (avoids pulling the
@@ -53,6 +54,14 @@ struct RobloxExtraSpace {
     // engine's setKeys logic works without l_G.
     unsigned int ckey;
     unsigned int modKey;
+    // Back-pointer to the owning thread, so engine code holding only an
+    // entry (e.g. hook propagation) can reach its lua_State. Set once at
+    // creation; the entry outlives all such uses (freed with the state).
+    lua_State* self;
+    // Per-thread 5.1-style hook state for the real lua_sethook. Plain
+    // C struct (declared in lua.h) so the VM loop can poll it without
+    // engine types; the engine reads/writes it through rbx_hookstate.
+    RbxHookState hook;
 
     // 2016 instance methods — inline so the engine call pattern
     // `RobloxExtraSpace::get(L)->method()` resolves to these via the
@@ -108,6 +117,10 @@ namespace RobloxExtraSpaceImpl {
     void onResume(lua_State* L);
     void onYield(lua_State* L);
 }
+
+// Defined where RBX::Lua::Continuations is complete (ScriptContext.cpp).
+// Lets the adapter free continuations without seeing the full type.
+void rbx_deleteContinuations(RBX::Lua::Continuations* p);
 
 inline void setRobloxExtraSpaceContext(lua_State* L, RBX::ScriptContext* ctx) {
     if (auto* es = RobloxExtraSpace::get(L)) es->scriptContext = ctx;

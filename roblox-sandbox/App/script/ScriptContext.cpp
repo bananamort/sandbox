@@ -1337,6 +1337,17 @@ lua_State* ScriptContext::getGlobalState(lua_State* thread)
     return NULL;
 }
 
+RbxHookState* rbx_hookstate(lua_State* L)
+{
+    RobloxExtraSpace* es = RobloxExtraSpace::get(L);
+    return es ? &es->hook : NULL;
+}
+
+void rbx_deleteContinuations(RBX::Lua::Continuations* p)
+{
+    delete p;
+}
+
 static size_t pushNoArguments(lua_State* thread)
 {
 	return 0;
@@ -1354,7 +1365,7 @@ void ScriptContext::executeInNewThread(RBX::Security::Identities identity, const
 		);
 }
 
-static void readResults(std::auto_ptr<Reflection::Tuple>& result, lua_State* thread, size_t returnCount)
+static void readResults(std::unique_ptr<Reflection::Tuple>& result, lua_State* thread, size_t returnCount)
 {
 	result.reset(new Reflection::Tuple(returnCount));
 	for (size_t i = 0; i<returnCount; ++i)
@@ -1378,18 +1389,18 @@ Reflection::Tuple ScriptContext::callInNewThread(Lua::WeakFunctionRef& function,
     // Execute the function; we don't care about the results/error
     lua_pushfunction(callbackThread, function);
 	
-	std::auto_ptr<Reflection::Tuple> results;
+	std::unique_ptr<Reflection::Tuple> results;
 	resume(callbackThread, boost::bind(&LuaArguments::pushTuple, boost::cref(arguments), _1), boost::bind(&readResults, boost::ref(results), _1, _2));
 
 	return *results;
 }
 
-std::auto_ptr<Reflection::Tuple> ScriptContext::executeInNewThread(
+std::unique_ptr<Reflection::Tuple> ScriptContext::executeInNewThread(
 		RBX::Security::Identities identity, const ProtectedString& script,
 		const char* name, const Reflection::Tuple& arguments)
 {
 	VMProtectBeginMutation("1");
-	std::auto_ptr<Reflection::Tuple> result;
+	std::unique_ptr<Reflection::Tuple> result;
 	executeInNewThread(
 		identity, 
 		script,
@@ -1548,7 +1559,7 @@ void ScriptContext::executeInNewThread(RBX::Security::Identities identity, const
 		}
 
 		RBXASSERT(continuations.empty());
-		RobloxExtraSpace::get(safeThread.getRawState())->continuations = (void*)new Lua::Continuations(continuations);
+		RobloxExtraSpace::get(safeThread.getRawState())->continuations = new Lua::Continuations(continuations);
 
 		// Check for somebody using CheatEngine to inject a direct call.
 		// They probably haven't used a scoped_write_request
@@ -1852,7 +1863,7 @@ int ScriptContext::ypcall(lua_State *thread)
 			continuations.error = boost::bind(&ScriptContext::on_ypcall_failure, &sc, WeakThreadRef(thread), _1);
 
 			RBXASSERT(RobloxExtraSpace::get(safeFunctor.getRawState())->continuations == NULL);
-			RobloxExtraSpace::get(safeFunctor.getRawState())->continuations = (void*)new Lua::Continuations(continuations);
+			RobloxExtraSpace::get(safeFunctor.getRawState())->continuations = new Lua::Continuations(continuations);
 
 			//Capture the yield
 			RobloxExtraSpace::get(thread)->yieldCaptured = true;
@@ -2007,9 +2018,9 @@ static void endThreadsWithError(std::vector<WeakThreadRef>& threads, const char*
 
 			RobloxExtraSpace* space = RobloxExtraSpace::get(thread);
 			space->context()->reportError(thread);
-			if (space->continuations && ((Lua::Continuations*)space->continuations)->error)
+			if (space->continuations && (space->continuations)->error)
 			{
-				((Lua::Continuations*)space->continuations)->error(thread);
+				(space->continuations)->error(thread);
 			}
 		}
 	}
@@ -2158,7 +2169,7 @@ void ScriptContext::reloadModuleScriptInternal(lua_State* globalState, shared_pt
         continuations.success = boost::bind(&ScriptContext::reloadModuleScriptSuccessContinuation, moduleScript, _1, oldResultIndex);
         continuations.error = boost::bind(&ScriptContext::reloadModuleScriptErrorContinuation,
                                           moduleScript, _1);
-        RobloxExtraSpace::get(reloadThread)->continuations = (void*)new Lua::Continuations(continuations);
+        RobloxExtraSpace::get(reloadThread)->continuations = new Lua::Continuations(continuations);
         return;
     }
     else if (reloadResult != 0)
@@ -2323,7 +2334,7 @@ void ScriptContext::startRunningModuleScript(Security::Identities identity, lua_
 		continuations.success = boost::bind(&requireModuleScriptSuccessContinuation, moduleScript, _1);
 		continuations.error = boost::bind(&ScriptContext::requireModuleScriptErrorContinuation,
 			moduleScript, _1);
-		RobloxExtraSpace::get(thread)->continuations = (void*)new Lua::Continuations(continuations);
+		RobloxExtraSpace::get(thread)->continuations = new Lua::Continuations(continuations);
 	}
 	else
 	{
@@ -3146,7 +3157,7 @@ ScriptContext::Result ScriptContext::resume(ThreadRef thread, int narg)
 			result = resumeImpl(thread, narg);
         }
 			
-		Lua::Continuations* continuations = (Lua::Continuations*)RobloxExtraSpace::get(thread)->continuations;
+		Lua::Continuations* continuations = RobloxExtraSpace::get(thread)->continuations;
 		if (continuations)
         {
 			if (result == Error)
@@ -3309,14 +3320,14 @@ void ScriptContext::startScript(ScriptStart scriptStart)
 			}
 
 			if (!scriptStart.options.continuations.empty())
-				RobloxExtraSpace::get(thread)->continuations = (void*)new Lua::Continuations(scriptStart.options.continuations);
+				RobloxExtraSpace::get(thread)->continuations = new Lua::Continuations(scriptStart.options.continuations);
 
 			bool luaFailedLoad = LuaVM::load(thread, *protectedSource, name.c_str()) != 0;
 
 			if (luaFailedLoad)
 			{
 				reportError(thread);
-				Lua::Continuations* continuations = (Lua::Continuations*)RobloxExtraSpace::get(thread)->continuations;
+				Lua::Continuations* continuations = RobloxExtraSpace::get(thread)->continuations;
 				if (continuations && continuations->error)
 					(continuations->error)(thread);
 				lua_pop(thread, 1);		// pop the message

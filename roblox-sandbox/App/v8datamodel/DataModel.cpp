@@ -1406,7 +1406,7 @@ void DataModel::luaReportGoogleAnalytics(std::string category, std::string actio
 	RobloxGoogleAnalytics::trackEvent(encodedCategory.c_str(), encodedAction.c_str(), encodedLabel.c_str(), value);
 }
 
-std::auto_ptr<std::istream> DataModel::loadAssetIdIntoStream(int assetID)
+std::unique_ptr<std::istream> DataModel::loadAssetIdIntoStream(int assetID)
 {
 	// construct the url
 	std::string parameters = "asset/?id=" + boost::lexical_cast<std::string>(assetID);
@@ -1414,7 +1414,7 @@ std::auto_ptr<std::istream> DataModel::loadAssetIdIntoStream(int assetID)
 
 	StandardOut::singleton()->printf(RBX::MESSAGE_INFO, "DataModel loading from: %s", url.c_str());
 
-	return std::auto_ptr<std::istream>(ServiceProvider::create<ContentProvider>(this)->getContent( ContentId(url) ));
+	return std::unique_ptr<std::istream>(ServiceProvider::create<ContentProvider>(this)->getContent( ContentId(url) ));
 }
 
 void DataModel::loadWorld(int assetID)
@@ -1425,7 +1425,7 @@ void DataModel::loadWorld(int assetID)
 		return;
 	}
 
-	std::auto_ptr<std::istream> stream = loadAssetIdIntoStream(assetID);
+	std::unique_ptr<std::istream> stream = loadAssetIdIntoStream(assetID);
 
 	if(workspace)
 	{
@@ -1461,7 +1461,7 @@ void DataModel::loadGame(int assetID)
 		return;
 	}
 
-	std::auto_ptr<std::istream> stream = loadAssetIdIntoStream(assetID);
+	std::unique_ptr<std::istream> stream = loadAssetIdIntoStream(assetID);
 
 	if (ServerScriptService* service = ServiceProvider::find<ServerScriptService>(this))
 		service->removeAllChildren();
@@ -1490,7 +1490,7 @@ void DataModel::loadContent(ContentId contentId)
 	StandardOut::singleton()->printf(RBX::MESSAGE_INFO, "DataModel Loading %s", contentId.c_str());
 
 	G3D::RealTime t1 = G3D::System::time(); // time in seconds
-	std::auto_ptr<std::istream> stream(ServiceProvider::create<ContentProvider>(this)->getContent(contentId, "Place"));
+	std::unique_ptr<std::istream> stream(ServiceProvider::create<ContentProvider>(this)->getContent(contentId, "Place"));
 	G3D::RealTime t2 = G3D::System::time();
 
     // post-load check on RCC.  An exploit that can overwrite pointers on RCC could jump to the
@@ -1542,7 +1542,7 @@ shared_ptr<const Instances> DataModel::fetchAsset(ContentId contentId)
 	RBXASSERT(isInitialized);    // If hit show to David or Erik - threading issue
 
 	ContentProvider* cp = create<ContentProvider>();
-	std::auto_ptr<std::istream> stream(cp->getContent(contentId));
+	std::unique_ptr<std::istream> stream(cp->getContent(contentId));
 
 	// Return all the new items in a table
 	shared_ptr<Instances> result(new Instances());

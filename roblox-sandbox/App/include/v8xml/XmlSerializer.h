@@ -76,7 +76,7 @@ protected:
 	XmlParser(std::streambuf* buffer);
 	std::stack<XmlElement*> elements;		// stack
 public:
-	virtual std::auto_ptr<XmlElement> parse() = 0;
+	virtual std::unique_ptr<XmlElement> parse() = 0;
 };
 
 class TextXmlParser : public XmlParser {
@@ -86,7 +86,7 @@ public:
 	TextXmlParser(std::streambuf* buffer)
 		:XmlParser(buffer)
 	{}
-	std::auto_ptr<XmlElement> parse();
+	std::unique_ptr<XmlElement> parse();
 
 private:
 	void skipWhitespace(); 

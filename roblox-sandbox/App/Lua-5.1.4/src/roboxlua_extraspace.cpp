@@ -39,6 +39,15 @@ void onNewState(lua_State* L) {
     es->legacyShared = nullptr;
     es->ckey = 0;
     es->modKey = 0;
+    es->self = L;
+    es->hook.func = NULL;
+    es->hook.mask = 0;
+    es->hook.count = 0;
+    es->hook.countdown = 0;
+    es->hook.lastline = -1;
+    es->hook.lastframe = NULL;
+    es->hook.lastfunc = NULL;
+    es->hook.lastdepth = -1;
     lua_setthreaddata(L, es);
     allExtraSpaces().insert(es);
 }
@@ -46,6 +55,8 @@ void onNewState(lua_State* L) {
 void onCloseState(lua_State* L) {
     auto* es = RobloxExtraSpace::get(L);
     if (es) {
+        rbx_deleteContinuations(es->continuations);
+        es->continuations = nullptr;
         for (auto* child : es->children) {
             if (child) child->parent = nullptr;
         }
@@ -66,6 +77,15 @@ void onNewThread(lua_State* L, lua_State* parent) {
     es->scriptContext = parent_es ? parent_es->scriptContext : nullptr;
     es->ckey = parent_es ? parent_es->ckey : 0;
     es->modKey = parent_es ? parent_es->modKey : 0;
+    es->self = L;
+    es->hook.func = NULL;
+    es->hook.mask = 0;
+    es->hook.count = 0;
+    es->hook.countdown = 0;
+    es->hook.lastline = -1;
+    es->hook.lastframe = NULL;
+    es->hook.lastfunc = NULL;
+    es->hook.lastdepth = -1;
     es->parent = parent_es;
     es->legacyShared = parent_es ? parent_es->legacyShared : nullptr;
     if (parent_es) parent_es->children.push_back(es);
@@ -76,6 +96,8 @@ void onNewThread(lua_State* L, lua_State* parent) {
 void onFreeThread(lua_State* L) {
     auto* es = RobloxExtraSpace::get(L);
     if (es) {
+        rbx_deleteContinuations(es->continuations);
+        es->continuations = nullptr;
         if (es->parent) {
             auto& psib = es->parent->children;
             psib.erase(std::remove(psib.begin(), psib.end(), es), psib.end());

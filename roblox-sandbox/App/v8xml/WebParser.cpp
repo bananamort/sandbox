@@ -18,7 +18,7 @@ namespace RBX
 	bool WebParser::parseWebListResponse(std::istream& stream, RBX::Reflection::ValueArray& result)
 	{
 		TextXmlParser machine(stream.rdbuf());
-		std::auto_ptr<XmlElement> root(machine.parse());
+		std::unique_ptr<XmlElement> root(machine.parse());
 		if(root->getTag() == tag_WebList)
 		{
 			return loadList(root.get(), result);
@@ -28,7 +28,7 @@ namespace RBX
 	bool WebParser::parseWebGenericResponse(std::istream& stream, RBX::Reflection::Variant& result)
 	{
 		TextXmlParser machine(stream.rdbuf());
-		std::auto_ptr<XmlElement> root(machine.parse());
+		std::unique_ptr<XmlElement> root(machine.parse());
 		return parseWebGenericResponse(root.get(), result);
 	}
 	bool WebParser::parseWebGenericResponse(const XmlElement* root, RBX::Reflection::Variant& result)
