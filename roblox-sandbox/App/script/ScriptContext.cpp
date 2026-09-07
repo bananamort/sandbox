@@ -2709,33 +2709,86 @@ void ScriptContext::runForcedCoverage()
 {
 	RBX::ScriptCapture::emit("forced", "pump-start");
 	RBX::Lua::RunForcedCoverageConnects();
+
+	// Snapshot live threads of this context (entries are removed at
+	// thread GC via the userthread callback, but snapshot anyway: a
+	// pcall below can create threads and invalidate the live set).
+	std::vector<RobloxExtraSpace*> entries;
 	for (GlobalStates::const_iterator it = globalStates.begin(); it != globalStates.end(); ++it)
 	{
-		lua_State* gs = it->state;
-		if (!gs)
-			continue;
-		int fired = 0;
-		lua_pushnil(gs);
-		while (lua_next(gs, LUA_GLOBALSINDEX) != 0 && fired < 300)
+		if (RobloxExtraSpace* es = it->state ? RobloxExtraSpace::get(it->state) : NULL)
+			es->forEachThread([&entries](RobloxExtraSpace* e) {
+				if (e && e->self)
+					entries.push_back(e);
+			});
+	}
+
+	// Root main thread for an entry: follow parent links. Orphaned
+	// entries (parent freed) terminate with no root.
+	auto rootOf = [](RobloxExtraSpace* es) -> lua_State* {
+		while (es && es->parent)
+			es = es->parent;
+		return es ? es->self : NULL;
+	};
+
+	// pcall with the budget hook, restoring whatever hook was installed.
+	auto fireOn = [&entries](lua_State* exec, const std::string& name, int& fired) {
+		lua_Hook oldHook = lua_gethook(exec);
+		int oldMask = lua_gethookmask(exec);
+		int oldCount = lua_gethookcount(exec);
+		lua_sethook(exec, censusBudgetHook, LUA_MASKCOUNT, 5000);
+		int status = lua_pcall(exec, 0, 0, 0);
+		lua_sethook(exec, oldHook, oldMask, oldCount);
+		std::string detail = RBX::format("fn=%s status=%d", name.c_str(), status);
+		if (status != 0)
 		{
-			if (lua_type(gs, -1) == LUA_TFUNCTION && !lua_iscfunction(gs, -1))
+			const char* err = lua_tostring(exec, -1);
+			detail += err ? std::string("|err=") + err : std::string("|err=?");
+			lua_pop(exec, 1);
+		}
+		RBX::ScriptCapture::emit("forcedCall", detail);
+		++fired;
+	};
+
+	int fired = 0;
+	for (size_t i = 0; i < entries.size() && fired < 300; ++i)
+	{
+		lua_State* ts = entries[i]->self;
+		if (!ts)
+			continue;
+		// pcall requires a non-suspended thread. Suspended threads keep
+		// their functions callable by moving them to the root main of
+		// the same global state and running them there (closures carry
+		// their own environments).
+		lua_State* exec = ts;
+		bool moved = false;
+		if (lua_status(ts) != 0)
+		{
+			exec = rootOf(entries[i]);
+			if (!exec || exec == ts || lua_status(exec) != 0)
+				continue;
+			moved = true;
+		}
+		lua_pushnil(ts);
+		while (lua_next(ts, LUA_GLOBALSINDEX) != 0 && fired < 300)
+		{
+			if (lua_type(ts, -1) == LUA_TFUNCTION && !lua_iscfunction(ts, -1))
 			{
-				std::string name = lua_type(gs, -2) == LUA_TSTRING ? lua_tostring(gs, -2) : "?";
-				lua_pushvalue(gs, -1);
-				lua_sethook(gs, censusBudgetHook, LUA_MASKCOUNT, 5000);
-				int status = lua_pcall(gs, 0, 0, 0);
-				lua_sethook(gs, NULL, 0, 0);
-				std::string detail = RBX::format("fn=%s status=%d", name.c_str(), status);
-				if (status != 0)
+				std::string name = lua_type(ts, -2) == LUA_TSTRING ? lua_tostring(ts, -2) : "?";
+				if (moved)
 				{
-					const char* err = lua_tostring(gs, -1);
-					detail += err ? std::string("|err=") + err : std::string("|err=?");
-					lua_pop(gs, 1);
+					// xmove pops the value, leaving the key for lua_next.
+					lua_xmove(ts, exec, 1);
 				}
-				RBX::ScriptCapture::emit("forcedCall", detail);
-				++fired;
+				else
+				{
+					lua_pushvalue(ts, -1);
+					lua_pop(ts, 1);
+				}
+				fireOn(exec, name, fired);
+				continue;
 			}
-			lua_pop(gs, 1);
+			lua_pop(ts, 1);
 		}
 	}
 	RBX::ScriptCapture::emit("forced", "pump-end");
