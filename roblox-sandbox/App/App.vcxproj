@@ -2244,6 +2244,7 @@ cmd /c "exit /b 0"</Command>
     <ClCompile Include="script\LuaSettings.cpp" />
     <ClCompile Include="script\LuaSignalBridge.cpp" />
     <ClCompile Include="script\Script.cpp" />
+    <ClCompile Include="script\ScriptCapture.cpp" />
     <ClCompile Include="script\ScriptContext.cpp" />
     <ClCompile Include="script\ScriptEvent.cpp" />
     <ClCompile Include="script\ScriptStats.cpp" />
@@ -3070,6 +3071,7 @@ cmd /c "exit /b 0"</Command>
     <ClInclude Include="include\script\LuaSettings.h" />
     <ClInclude Include="include\script\LuaSignalBridge.h" />
     <ClInclude Include="include\script\script.h" />
+    <ClInclude Include="include\script\ScriptCapture.h" />
     <ClInclude Include="include\script\ScriptContext.h" />
     <ClInclude Include="include\script\ScriptEvent.h" />
     <ClInclude Include="include\script\ScriptStats.h" />

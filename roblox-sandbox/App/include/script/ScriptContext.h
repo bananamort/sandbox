@@ -156,6 +156,7 @@ namespace RBX
 
 		boost::scoped_ptr<Lua::YieldingThreads> yieldEvent;		// collects all threads that have yielded, and periodically resumes them
 
+
 		struct WaitingThread
 		{
 			Lua::ThreadRef thread;
@@ -178,6 +179,14 @@ namespace RBX
 		Time::Interval timoutSpan;	// The time that is allowed per heartbeat before scripts stop running (0 means no timeouts)
 		Time timoutTime;	// The system time when we should time-out scripts 
         rbx::atomic<int> timedout;     // == scripts should stop running
+
+		// WS5 forced coverage: run-once pump state. maybeRunForcedCoverage
+		// fires runForcedCoverage at the first instant with no waiters
+		// after 20s uptime, and only when RBX_FORCED_COVERAGE is set.
+		// (A consecutive-quiet counter never settles under perpetual
+		// short waits.) Declared here so init-list order matches.
+		bool forcedCoverageDone;
+		unsigned long forcedStartTick;
 		boost::scoped_ptr<boost::thread> timeoutThread;
 		boost::mutex timeoutMutex;
 		volatile bool endTimoutThread;
@@ -328,6 +337,8 @@ namespace RBX
 		void onHeartbeat(const Heartbeat& heartbeat);
 		void stepGc();
 		void resumeWaitingScripts(Time expirationTime);
+		void maybeRunForcedCoverage();
+		void runForcedCoverage();
 
 		static void sandboxThread(lua_State* thread);
 		static void setThreadIdentityAndSandbox(lua_State* thread, RBX::Security::Identities identity, shared_ptr<BaseScript> script);

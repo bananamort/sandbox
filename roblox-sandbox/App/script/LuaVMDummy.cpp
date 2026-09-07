@@ -1,7 +1,10 @@
 #include "stdafx.h"
+#include <cstdio>
 #include "script/LuaVM.h"
 
 #include "util/ProtectedString.h"
+#include "script/ScriptCapture.h"
+
 
 #include "../Lua-5.1.4/src/VM/include/lua.h"
 #include "../Lua-5.1.4/src/Compiler/include/luacode.h"
@@ -29,6 +32,12 @@ namespace LuaVM
         (void)modkey;
 
         const std::string& code = source.getSource();
+        {
+            char head[96];
+            snprintf(head, sizeof(head), "chunk=%s bytes=%u",
+                chunkname ? chunkname : "?", (unsigned)code.size());
+            RBX::ScriptCapture::emit("load", head);
+        }
         if (!code.empty())
         {
             lua_CompileOptions opts = {};

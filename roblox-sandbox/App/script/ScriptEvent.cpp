@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include <cstdio>
 
 #include "Script/ScriptEvent.h"
 #include "Script/ScriptContext.h"
@@ -8,6 +9,7 @@
 #include "rbx/rbxTime.h"
 #include "script/LuaSettings.h"
 #include "FastLog.h"
+#include "script/ScriptCapture.h"
 
 DYNAMIC_FASTFLAGVARIABLE(FixYieldThrottling, false)
 
@@ -28,6 +30,9 @@ void YieldingThreads::queueWaiter(lua_State *L)
 
 void YieldingThreads::queueWaiter(lua_State *L, LUA_NUMBER delay)
 {
+	char head[64];
+	snprintf(head, sizeof(head), "delay=%.3f", (double)delay);
+	RBX::ScriptCapture::emit("schedulerQueue", head);
 	RBXASSERT(!RobloxExtraSpace::get(L)->yieldCaptured);
 	RobloxExtraSpace::get(L)->yieldCaptured = true;
 
@@ -62,6 +67,9 @@ void YieldingThreads::resume(double wallTime, Time expirationTime, bool& throttl
 
 		if (thread)
 		{
+			char head[64];
+			snprintf(head, sizeof(head), "elapsed=%.3f", elapsedTime.seconds());
+			RBX::ScriptCapture::emit("schedulerResume", head);
 			lua_pushnumber(thread, elapsedTime.seconds());
 			lua_pushnumber(thread, wallTime);
 

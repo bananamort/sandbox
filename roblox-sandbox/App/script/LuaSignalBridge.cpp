@@ -4,6 +4,8 @@
 
 #include "Script/Script.h"
 #include "Script/ScriptContext.h"
+#include "script/ScriptCapture.h"
+#include "rbx/threadsafe.h"
 #include "Script/LuaInstanceBridge.h"
 #include "Script/LuaAtomicClasses.h"
 #include "script/LuaEnum.h"
@@ -153,6 +155,9 @@ public:
 
 			return;
 		}
+
+		RBX::ScriptCapture::emit("signalFire",
+			descriptor->owner.name + std::string(".") + descriptor->name);
 
 		if (ThreadRef functionThread = function.lock())
 		{
@@ -319,6 +324,22 @@ public:
 	}
 };
 
+namespace {
+    struct ForcedConnect {
+        std::string name;
+        bool fired;
+        boost::function<void()> fire;
+    };
+    RBX::mutex& forcedLock() {
+        static RBX::mutex instance;
+        return instance;
+    }
+    std::vector<ForcedConnect>& forcedConnects() {
+        static std::vector<ForcedConnect> records;
+        return records;
+    }
+}
+
 int EventBridge::connect(lua_State *L) 
 {
 	RobloxExtraSpace* space = RobloxExtraSpace::get(L);
@@ -351,6 +372,19 @@ int EventBridge::connect(lua_State *L)
 		}
 		connection = ei.descriptor->connectGeneric(source.get(), wrapper);
 		wrapper->slot.assignConnection(connection);
+		std::string connName = ei.descriptor->owner.name + std::string(".") + ei.descriptor->name;
+		RBX::ScriptCapture::emit("signalConnect", connName);
+		if (RBX::ScriptCapture::active()) {
+			RBX::mutex::scoped_lock guard(forcedLock());
+			ForcedConnect rec;
+			rec.name = connName;
+			rec.fired = false;
+			rec.fire = [wrapper]() {
+				RBX::Reflection::EventArguments empty;
+				wrapper->slot.doEventFire(empty);
+			};
+			forcedConnects().push_back(rec);
+		}
 	}
 
 	// Return a proxy to the connection object
@@ -425,6 +459,33 @@ int SignalConnectionBridge::disconnect(lua_State *L) {
 	getObject(L, 1).disconnect();
 
 	return 0;
+}
+
+void RunForcedCoverageConnects()
+{
+	std::vector<ForcedConnect> records;
+	{
+		RBX::mutex::scoped_lock guard(forcedLock());
+		records = forcedConnects();
+	}
+	for (size_t i = 0; i < records.size(); ++i)
+	{
+		{
+			RBX::mutex::scoped_lock guard(forcedLock());
+			if (i >= forcedConnects().size() || forcedConnects()[i].fired)
+				continue;
+			forcedConnects()[i].fired = true;
+		}
+		try
+		{
+			records[i].fire();
+			RBX::ScriptCapture::emit("forcedFire", records[i].name);
+		}
+		catch (std::exception& e)
+		{
+			RBX::ScriptCapture::emit("forcedFireError", records[i].name + std::string("|") + e.what());
+		}
+	}
 }
 
 		// The default implementation for on_tostring is available in LuaBridge.cpp. This is a specialization.

@@ -1,5 +1,7 @@
 #include "stdafx.h"
+#include <cstdio>
 #include "Script/ScriptContext.h"
+#include "script/ScriptCapture.h"
 #include "Script/CoreScript.h"
 #include "Script/DebuggerManager.h"
 #include "Script/LuaArguments.h"
@@ -462,6 +464,7 @@ namespace RBX
 				FASTLOG1(FLog::DataModelJobs, "Waiting scripts start, data model: %p", d);
 				DataModel::scoped_write_request request(d);	// TODO: Promote this to DataModelJob
 				sc->resumeWaitingScripts(Time::nowFast() + stepBudget);
+				sc->maybeRunForcedCoverage();
 				FASTLOG1(FLog::DataModelJobs, "Waiting scripts finish, data model: %p", d);
 			}
 			
@@ -916,6 +919,23 @@ bool ScriptContext::openState(size_t idx)
         loadLibraryProtected(globalState, luaopen_os_rbx);
 
 		Enums::declareAllEnums(globalState);
+
+		// WS5 spine 1: globals inventory for the capture stream.
+		{
+			std::string names;
+			size_t count = 0;
+			lua_pushnil(globalState);
+			while (lua_next(globalState, LUA_GLOBALSINDEX) != 0) {
+				if (lua_type(globalState, -2) == LUA_TSTRING) {
+					if (count++) names += ',';
+					names += lua_tostring(globalState, -2);
+				}
+				lua_pop(globalState, 1);
+			}
+			char head[64];
+			snprintf(head, sizeof(head), "count=%u globals=", (unsigned)count);
+			RBX::ScriptCapture::emit("openState", std::string(head) + names);
+		}
 	}
 
 	if (!yieldEvent)
@@ -1068,6 +1088,8 @@ ScriptContext::ScriptContext()
 ,robloxPlace(false)
 ,nextPendingScripts(RBX::Time::now<Time::Fast>())
 ,timedout(false)
+,forcedCoverageDone(false)
+,forcedStartTick(0)
 ,startScriptReentrancy(0)
 ,endTimoutThread(false)
 ,checkTimeout(false)
@@ -1594,7 +1616,18 @@ void ScriptContext::resume(ThreadRef thread, boost::function1<size_t, lua_State*
 	// TODO: Exception handling. If this throws, what kind of cleanup do we need to do???
 	int argCount = pushArguments(thread);
 
+	{
+		char head[64];
+		snprintf(head, sizeof(head), "nargs=%d", argCount);
+		RBX::ScriptCapture::emit("resumeEnter", head);
+	}
+
 	Result resumeResult = resume(thread, argCount);
+	{
+		char head[64];
+		snprintf(head, sizeof(head), "result=%d top=%d", (int)resumeResult, lua_gettop(thread));
+		RBX::ScriptCapture::emit("resumeExit", head);
+	}
 	if (resumeResult == Success || resumeResult == Yield)
 	{
 		// Collect all the return arguments into a Tuple. A yielded
@@ -2643,6 +2676,67 @@ void ScriptContext::onHeartbeat(const Heartbeat& heartbeat)
 	}
 
 	FASTLOG(FLog::ScriptContext, "Script context heartbeat finish");
+}
+
+static void censusBudgetHook(lua_State* L, lua_Debug* ar)
+{
+	(void)L;
+	(void)ar;
+	throw std::runtime_error("forced coverage budget exceeded");
+}
+
+void ScriptContext::maybeRunForcedCoverage()
+{
+	if (forcedCoverageDone)
+		return;
+	static bool enabled = ::GetEnvironmentVariableA("RBX_FORCED_COVERAGE", NULL, 0) != 0;
+	if (!enabled)
+		return;
+	unsigned long now = ::GetTickCount();
+	if (forcedStartTick == 0)
+		forcedStartTick = now;
+	if (now - forcedStartTick < 20000)
+		return;
+	if (yieldEvent && yieldEvent->waiterCount() > 0)
+		return;
+	forcedCoverageDone = true;
+	runForcedCoverage();
+}
+
+void ScriptContext::runForcedCoverage()
+{
+	RBX::ScriptCapture::emit("forced", "pump-start");
+	RBX::Lua::RunForcedCoverageConnects();
+	for (GlobalStates::const_iterator it = globalStates.begin(); it != globalStates.end(); ++it)
+	{
+		lua_State* gs = it->state;
+		if (!gs)
+			continue;
+		int fired = 0;
+		lua_pushnil(gs);
+		while (lua_next(gs, LUA_GLOBALSINDEX) != 0 && fired < 300)
+		{
+			if (lua_type(gs, -1) == LUA_TFUNCTION && !lua_iscfunction(gs, -1))
+			{
+				std::string name = lua_type(gs, -2) == LUA_TSTRING ? lua_tostring(gs, -2) : "?";
+				lua_pushvalue(gs, -1);
+				lua_sethook(gs, censusBudgetHook, LUA_MASKCOUNT, 5000);
+				int status = lua_pcall(gs, 0, 0, 0);
+				lua_sethook(gs, NULL, 0, 0);
+				std::string detail = RBX::format("fn=%s status=%d", name.c_str(), status);
+				if (status != 0)
+				{
+					const char* err = lua_tostring(gs, -1);
+					detail += err ? std::string("|err=") + err : std::string("|err=?");
+					lua_pop(gs, 1);
+				}
+				RBX::ScriptCapture::emit("forcedCall", detail);
+				++fired;
+			}
+			lua_pop(gs, 1);
+		}
+	}
+	RBX::ScriptCapture::emit("forced", "pump-end");
 }
 
 void ScriptContext::resumeWaitingScripts(const Time expirationTime)
