@@ -356,7 +356,7 @@ namespace RBX { namespace Lua {
 		name = PropertyNameCorrection(object, name, L);
 
 		RBX::ScriptCapture::emit("bridgeGet",
-			object->getDescriptor().name + std::string(".") + name);
+			std::string(object->getDescriptor().name.c_str()) + "." + name);
 
 		RBX::Security::Context& securityContext = RBX::Security::Context::current();
 
@@ -970,7 +970,7 @@ void Bridge< shared_ptr<Instance>, false >::on_newindex(shared_ptr<Instance>& ob
 	name = PropertyNameCorrection(object, name, L);
 
 	RBX::ScriptCapture::emit("bridgeSet",
-		object->getDescriptor().name + std::string(".") + name);
+		std::string(object->getDescriptor().name.c_str()) + "." + name);
 
 	if (PropertyDescriptor* prop = object->findPropertyDescriptor(name))
 	{

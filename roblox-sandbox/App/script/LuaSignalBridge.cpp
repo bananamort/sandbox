@@ -157,7 +157,7 @@ public:
 		}
 
 		RBX::ScriptCapture::emit("signalFire",
-			descriptor->owner.name + std::string(".") + descriptor->name);
+			std::string(descriptor->owner.name.c_str()) + "." + descriptor->name.c_str());
 
 		if (ThreadRef functionThread = function.lock())
 		{
@@ -372,7 +372,7 @@ int EventBridge::connect(lua_State *L)
 		}
 		connection = ei.descriptor->connectGeneric(source.get(), wrapper);
 		wrapper->slot.assignConnection(connection);
-		std::string connName = ei.descriptor->owner.name + std::string(".") + ei.descriptor->name;
+		std::string connName = std::string(ei.descriptor->owner.name.c_str()) + "." + ei.descriptor->name.c_str();
 		RBX::ScriptCapture::emit("signalConnect", connName);
 		if (RBX::ScriptCapture::active()) {
 			RBX::mutex::scoped_lock guard(forcedLock());
