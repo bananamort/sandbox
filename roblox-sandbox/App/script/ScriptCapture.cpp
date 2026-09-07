@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "script/ScriptCapture.h"
 
+#include "../Lua-5.1.4/src/VM/include/lua.h"
 #include "rbx/threadsafe.h"
 #include "boost/shared_ptr.hpp"
 #include "reflection/Type.h"
@@ -144,11 +145,16 @@ namespace RBX
 			case LUA_TBOOLEAN:
 				return lua_toboolean(L, idx) ? "true" : "false";
 			case LUA_TNUMBER:
+			case LUA_TINTEGER:
 				{
 					char buf[32];
 					snprintf(buf, sizeof(buf), "%g", lua_tonumber(L, idx));
 					return buf;
 				}
+#if !LUA_VECTOR_DOUBLE
+			case LUA_TVECTOR:
+				return "vector";
+#endif
 			case LUA_TSTRING:
 				{
 					size_t len = 0;
