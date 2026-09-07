@@ -29,9 +29,13 @@ from pathlib import Path
 
 REQUIRED = [
     "openState", "load", "loadSource", "resumeEnter", "resumeExit",
-    "bridgeGet", "bridgeGetValue", "schedulerQueue", "schedulerResume",
-    "forced", "forcedCall", "coverage", "trace",
+    "bridgeGet", "schedulerQueue", "schedulerResume", "forced",
+    "forcedCall", "coverage", "trace",
 ]
+
+# Hooks verified for payload shape whenever present (a workload may
+# legitimately perform no property reads in-window).
+CONDITIONAL = ["bridgeGetValue"]
 
 KEYS = {"seq", "ts_ms", "tid", "hook", "detail"}
 
@@ -74,6 +78,9 @@ def main(path):
     for hook in REQUIRED:
         if not seen.get(hook):
             errors.append("missing hook: %s" % hook)
+    for hook in CONDITIONAL:
+        if hook not in seen:
+            print("note: optional hook absent: %s" % hook)
     # load/loadSource pairing with non-empty sources
     loads = {}
     for rec in records:
