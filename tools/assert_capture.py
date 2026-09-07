@@ -101,9 +101,9 @@ def main(path):
                 errors.append("load without source: %s" % chunk)
             elif not sources[chunk].strip():
                 errors.append("empty source: %s" % chunk)
-    # operand payloads present
+    # operand payloads present (pipe-separated Class.name | obj= | value)
     for rec in records:
-        if rec["hook"] == "bridgeGetValue" and "=" not in rec["detail"]:
+        if rec["hook"] == "bridgeGetValue" and rec["detail"].count(" | ") < 2:
             errors.append("bridgeGetValue without value")
             break
     for rec in records:

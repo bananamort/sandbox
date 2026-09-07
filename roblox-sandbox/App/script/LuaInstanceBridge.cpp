@@ -368,7 +368,8 @@ namespace RBX { namespace Lua {
 			pushLuaValue(Property(*prop, object.get()), L, securityContext);
 			RBX::ScriptCapture::emit("bridgeGetValue",
 				std::string(object->getDescriptor().name.c_str()) + "." + name +
-				"=" + RBX::ScriptCapture::luaValueString(L, -1));
+				" | obj=" + object->getFullName() +
+				" | " + RBX::ScriptCapture::luaValueString(L, -1));
 			return 1;
 		}
 
@@ -974,7 +975,8 @@ void Bridge< shared_ptr<Instance>, false >::on_newindex(shared_ptr<Instance>& ob
 
 	RBX::ScriptCapture::emit("bridgeSet",
 		std::string(object->getDescriptor().name.c_str()) + "." + name +
-		"=" + RBX::ScriptCapture::luaValueString(L, 3));
+		" | obj=" + object->getFullName() +
+		" | " + RBX::ScriptCapture::luaValueString(L, 3));
 
 	if (PropertyDescriptor* prop = object->findPropertyDescriptor(name))
 	{
@@ -1053,6 +1055,21 @@ int ObjectBridge::callMemberFunction(lua_State *L)
 	// Make sure the function is truly a member of the object
 	if (!desc->isMemberOf(instance.get()))
 		throw RBX::runtime_error("The function %s is not a member of \"%s\"", desc->name.c_str(), instance->getDescriptor().name.c_str());
+
+	{
+		std::string detail = std::string(desc->owner.name.c_str()) + "." + desc->name.c_str() +
+			" | obj=" + instance->getFullName() + " | args=";
+		int top = lua_gettop(L);
+		for (int i = 2; i <= top && i < 10; ++i)
+		{
+			if (i > 2)
+				detail += ",";
+			detail += RBX::ScriptCapture::luaValueString(L, i);
+		}
+		if (top > 9)
+			detail += ",...";
+		RBX::ScriptCapture::emit("memberCall", detail);
+	}
 
 	if (desc->getKind() == FunctionDescriptor::Kind_Custom)
 		return desc->executeCustom(instance.get(), L);
@@ -1214,6 +1231,21 @@ int ObjectBridge::callMemberYieldFunction(lua_State *L) {
 	// Make sure the function is truly a member of the object
 	if (!desc->isMemberOf(instance.get()))
 		throw RBX::runtime_error("The function %s is not a member of \"%s\"", desc->name.c_str(), instance->getDescriptor().name.c_str());
+
+	{
+		std::string detail = std::string(desc->owner.name.c_str()) + "." + desc->name.c_str() +
+			" | obj=" + instance->getFullName() + " | args=";
+		int top = lua_gettop(L);
+		for (int i = 2; i <= top && i < 10; ++i)
+		{
+			if (i > 2)
+				detail += ",";
+			detail += RBX::ScriptCapture::luaValueString(L, i);
+		}
+		if (top > 9)
+			detail += ",...";
+		RBX::ScriptCapture::emit("memberCall", detail);
+	}
 
 	//Construct a shared_ptr object to keep track of the thread for resuming it later
 	shared_ptr<YieldFunctionStateObject> functionObject(new YieldFunctionStateObject(desc, instance, L));

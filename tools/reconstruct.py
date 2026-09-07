@@ -2,6 +2,7 @@
 """Offline behavior reconstruction from a WS5 capture log.
 
 Usage: python3 tools/reconstruct.py <capture.jsonl> [--out reconstruction.md]
+       [--emit-replay DIR]
 
 Reads the single capture stream and rebuilds what the scripts did:
   - chunks: every loaded chunk with source size, identity, coverage
@@ -28,6 +29,20 @@ from collections import OrderedDict
 from pathlib import Path
 
 
+LITERAL_RE = re.compile(
+    r'^(?:"(?:[^"\\\n]|\\["\\/nrt])*"|true|false|nil|-?\d+(\.\d+)?([eE][+-]?\d+)?)$')
+IDENT_PATH_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)*$")
+FN_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+
+
+def to_literal(rendered):
+    """(literal, ok): runnable Luau literal or nil+False for complex values."""
+    s = rendered.strip()
+    if LITERAL_RE.match(s):
+        return s, True
+    return "nil", False
+
+
 def parse_detail_path(path):
     records = []
     with open(path, encoding="utf-8") as f:
@@ -43,11 +58,82 @@ def parse_detail_path(path):
     return records, []
 
 
+def split_detail(det):
+    """Split pipe-separated detail into fields."""
+    return [f.strip() for f in det.split(" | ")]
+
+
+def emit_replay(records, chunks, outdir):
+    """Regenerate a runnable stimulus replay: straight-line Luau that
+    re-issues every observed property write and member call with logged
+    literal values, in order. Non-literal values become nil with a comment
+    recording what was observed. Returns (code_lines, errors)."""
+    errors = []
+    code = []
+    code.append("-- replay generated from capture.jsonl: re-issues observed")
+    code.append("-- property writes and member calls in order. Run inside")
+    code.append("-- the sandbox DataModel context (game global present).")
+    for rec in records:
+        hook, det = rec.get("hook"), rec.get("detail", "")
+        if hook == "bridgeSet":
+            parts = split_detail(det)
+            if len(parts) != 3:
+                errors.append("malformed bridgeSet: %s" % det[:120])
+                continue
+            what, objf, val = parts
+            if not objf.startswith("obj="):
+                errors.append("bridgeSet without obj: %s" % det[:120])
+                continue
+            m = re.match(r"^(\S+)\.([A-Za-z_][A-Za-z0-9_]*)$", what)
+            path = "game." + objf[4:] if objf[4:] else "game"
+            if not m or not IDENT_PATH_RE.match(path):
+                code.append("-- non-replayable set: %s" % det[:200])
+                continue
+            lit, ok = to_literal(val)
+            prop = m.group(2)
+            if ok:
+                code.append("%s.%s = %s" % (path, prop, lit))
+            else:
+                code.append("-- %s.%s = %s (non-literal, skipped)" % (path, prop, val[:120]))
+        elif hook == "memberCall":
+            parts = split_detail(det)
+            if len(parts) != 3:
+                errors.append("malformed memberCall: %s" % det[:120])
+                continue
+            what, objf, argsf = parts
+            m = re.match(r"^(\S+)\.([A-Za-z_][A-Za-z0-9_]*)$", what)
+            path = "game." + objf[4:] if objf.startswith("obj=") and objf[4:] else None
+            args = argsf[5:] if argsf.startswith("args=") else None
+            if not m or path is None or args is None or not IDENT_PATH_RE.match(path):
+                code.append("-- non-replayable call: %s" % det[:200])
+                continue
+            lits = []
+            bad = []
+            if args.strip():
+                for a in args.split(","):
+                    lit, ok = to_literal(a)
+                    lits.append(lit)
+                    if not ok:
+                        bad.append(a.strip()[:60])
+            if bad:
+                code.append("-- %s:%s(%s) (non-literal args %s, nulled)" % (
+                    path, m.group(2), ", ".join(lits), ";".join(bad)))
+            code.append("%s:%s(%s)" % (path, m.group(2), ", ".join(lits)))
+        elif hook == "signalFire":
+            code.append("-- observed event: %s" % det[:200])
+        elif hook == "http":
+            code.append("-- observed egress: %s" % det.split("\n", 1)[0][:200])
+    return code, errors
+
+
 def main(argv):
     path = argv[1]
     out_path = None
     if "--out" in argv:
         out_path = argv[argv.index("--out") + 1]
+    replay_dir = None
+    if "--emit-replay" in argv:
+        replay_dir = argv[argv.index("--emit-replay") + 1]
     records, errors = parse_detail_path(path)
     if records is None:
         for e in errors:
@@ -131,6 +217,18 @@ def main(argv):
         Path(out_path).write_text(text, encoding="utf-8")
     else:
         sys.stdout.write(text)
+    if replay_dir:
+        rp = Path(replay_dir)
+        rp.mkdir(parents=True, exist_ok=True)
+        code, rerrs = emit_replay(records, chunks, rp)
+        errors.extend(rerrs)
+        rp.joinpath("replay.lua").write_text("\n".join(code) + "\n", encoding="utf-8")
+        ncode = sum(1 for ln in code
+                    if ln.strip() and not ln.strip().startswith("--"))
+        print("replay: %d code lines" % ncode)
+        want_code = any(r.get("hook") in ("bridgeSet", "memberCall") for r in records)
+        if want_code and ncode == 0:
+            errors.append("events present but replay has no code lines")
     for e in errors:
         print("RECONSTRUCT_FAIL: %s" % e)
     return 1 if errors else 0

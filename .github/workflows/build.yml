@@ -441,7 +441,7 @@ jobs:
           if (-not (Test-Path bin/capture.jsonl)) { Write-Host "::error::no capture.jsonl produced"; exit 1 }
           python tools/assert_capture.py bin/capture.jsonl
           if ($LASTEXITCODE -ne 0) { exit 1 }
-          python tools/reconstruct.py bin/capture.jsonl --out bin/reconstruction.md
+          python tools/reconstruct.py bin/capture.jsonl --out bin/reconstruction.md --emit-replay bin/replay
           if ($LASTEXITCODE -ne 0) { exit 1 }
           Write-Host "CAPTURE_OK"
       - name: Publish Release
