@@ -181,10 +181,10 @@ namespace RBX
         rbx::atomic<int> timedout;     // == scripts should stop running
 
 		// WS5 forced coverage: run-once pump state. maybeRunForcedCoverage
-		// fires runForcedCoverage at the first instant with no waiters
-		// after 20s uptime, and only when RBX_FORCED_COVERAGE is set.
-		// (A consecutive-quiet counter never settles under perpetual
-		// short waits.) Declared here so init-list order matches.
+		// fires runForcedCoverage at the first waiter-free instant after
+		// 20s uptime, or unconditionally after 60s (perpetual short-wait
+		// loops never quiesce), and only when RBX_FORCED_COVERAGE is set.
+		// Declared here so init-list order matches.
 		bool forcedCoverageDone;
 		unsigned long forcedStartTick;
 		boost::scoped_ptr<boost::thread> timeoutThread;

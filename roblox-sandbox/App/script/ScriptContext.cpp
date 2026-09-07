@@ -2695,9 +2695,14 @@ void ScriptContext::maybeRunForcedCoverage()
 	unsigned long now = ::GetTickCount();
 	if (forcedStartTick == 0)
 		forcedStartTick = now;
-	if (now - forcedStartTick < 20000)
+	unsigned long uptime = now - forcedStartTick;
+	if (uptime < 20000)
 		return;
-	if (yieldEvent && yieldEvent->waiterCount() > 0)
+	// Fire at the first instant with no waiters (true quiesce), or
+	// unconditionally after 60s: perpetual short-wait loops keep a
+	// waiter queued forever, and the pump is bounded and safe.
+	bool quiet = !yieldEvent || yieldEvent->waiterCount() == 0;
+	if (!quiet && uptime < 60000)
 		return;
 	forcedCoverageDone = true;
 	runForcedCoverage();
