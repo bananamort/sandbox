@@ -1089,7 +1089,7 @@ ScriptContext::ScriptContext()
 ,nextPendingScripts(RBX::Time::now<Time::Fast>())
 ,timedout(false)
 ,forcedCoverageDone(false)
-,forcedStartTick(0)
+,forcedStartTick(::GetTickCount())
 ,startScriptReentrancy(0)
 ,endTimoutThread(false)
 ,checkTimeout(false)
@@ -2692,17 +2692,14 @@ void ScriptContext::maybeRunForcedCoverage()
 	static bool enabled = ::GetEnvironmentVariableA("RBX_FORCED_COVERAGE", NULL, 0) != 0;
 	if (!enabled)
 		return;
-	unsigned long now = ::GetTickCount();
-	if (forcedStartTick == 0)
-		forcedStartTick = now;
-	unsigned long uptime = now - forcedStartTick;
-	if (uptime < 20000)
+	unsigned long uptime = ::GetTickCount() - forcedStartTick;
+	if (uptime < 15000)
 		return;
 	// Fire at the first instant with no waiters (true quiesce), or
 	// unconditionally after 60s: perpetual short-wait loops keep a
 	// waiter queued forever, and the pump is bounded and safe.
 	bool quiet = !yieldEvent || yieldEvent->waiterCount() == 0;
-	if (!quiet && uptime < 60000)
+	if (!quiet && uptime < 40000)
 		return;
 	forcedCoverageDone = true;
 	runForcedCoverage();
