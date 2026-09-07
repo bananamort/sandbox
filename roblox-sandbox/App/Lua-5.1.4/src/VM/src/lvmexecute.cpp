@@ -317,11 +317,9 @@ void rbx_dumpTrace(void* ctx, void (*out)(void*, const char*, int, int, int, uns
         return;
     int64_t total = g_traceNext;
     int64_t count = total < kRbxTraceSize ? total : kRbxTraceSize;
-    // Bound the drain so the gate's JSON parse stays in budget; the ring
-    // already keeps the most recent window, drain the newest slice of it.
-    const int64_t kRbxDrainMax = 200000;
-    if (count > kRbxDrainMax)
-        count = kRbxDrainMax;
+    // No drain cap: the ring itself bounds memory (oldest overwritten),
+    // and every record it holds is drained. Bounding parse cost is the
+    // gate's job (streaming), never the product's.
     int64_t first = total - count;
     EnterCriticalSection(&rbxCoverLock());
     std::vector<const RbxCoverEntry*>& byIndex = rbxCoverByIndex();
