@@ -18,6 +18,13 @@
 
 #include <string.h>
 
+#include <windows.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string>
+#include <unordered_map>
+#include <vector>
+
 LUAU_FASTFLAGVARIABLE(LuauDirectFieldGet)
 LUAU_FLAGVERSION(LuauDirectFieldGet, 3)
 
@@ -165,6 +172,197 @@ LUAU_FASTFLAG(LuauFastpcall)
 #define VM_HAS_NATIVE 1
 
 volatile int rbxHookActive = 0;
+volatile int rbxCaptureActive = 0;
+
+// Executed-offset coverage for the capture stream. Keyed by Proto*
+// with full validation (source string + layout ints) so a freed proto
+// whose memory is reused can never merge into a stale entry. Updated
+// once per interpreter iteration while capturing; dumped once at pump
+// end. Locking: single CRITICAL_SECTION, initialized before the flag
+// goes up (see rbx_setCaptureActive), so marking never races init.
+struct RbxCoverEntry {
+    std::string chunk;
+    int linedefined;
+    int numparams;
+    int sizecode;
+    int index;
+    std::vector<unsigned char> bits;
+};
+static int g_coverNextIndex = 0;
+
+static CRITICAL_SECTION g_coverCS;
+static LONG g_coverInit = 0;
+
+// Compact per-instruction trace ring. Fixed 20-byte records, lock-free
+// single-writer appends (one atomic bump per record; threads share the
+// ring, order is approximate under concurrency which is fine for a
+// timeline). No formatting, allocation, or I/O in the hot path — the
+// drain at pump end resolves proto indices and emits JSONL. Overwrites
+// oldest when full: bounded 20MB, lazily allocated on capture start.
+struct RbxTraceRec {
+    uint8_t op;
+    uint8_t reserved[3];
+    int32_t line;
+    uint32_t w0;
+    uint32_t w1;
+    int32_t proto;
+};
+static const int64_t kRbxTraceSize = 1048576;
+static RbxTraceRec* g_traceBuf = NULL;
+static volatile LONG64 g_traceNext = 0;
+
+static CRITICAL_SECTION& rbxCoverLock()
+{
+    return g_coverCS;
+}
+
+static std::unordered_map<Proto*, RbxCoverEntry>& rbxCoverMap()
+{
+    static std::unordered_map<Proto*, RbxCoverEntry> map;
+    return map;
+}
+
+// Dense index -> entry for trace resolution. Element pointers into the
+// node-based map stay valid across rehash; ABA replacement reuses the
+// slot, so very long runs may rarely misattribute a stale record.
+static std::vector<const RbxCoverEntry*>& rbxCoverByIndex()
+{
+    static std::vector<const RbxCoverEntry*> vec;
+    return vec;
+}
+
+void rbx_setCaptureActive(int on)
+{
+    // One-time init, race-free: only the first caller initializes, and
+    // the flag goes up after, so no marker can run before init completes.
+    if (InterlockedCompareExchange(&g_coverInit, 1, 0) == 0)
+    {
+        InitializeCriticalSection(&g_coverCS);
+        g_traceBuf = (RbxTraceRec*)malloc(sizeof(RbxTraceRec) * (size_t)kRbxTraceSize);
+    }
+    rbxCaptureActive = on ? 1 : 0;
+}
+
+static int rbxCoverMarkIndex(lua_State* L, const Instruction* pc, Proto** outProto, int* outOff)
+{
+    if (!isLua(L->ci))
+        return -1;
+    Closure* func = clvalue(L->ci->func);
+    Proto* p = FFlag::LuauCIProto ? L->ci->p : func->l.p;
+    if (!p || !p->source)
+        return -1;
+    int off = pcRel(pc, p);
+    if (off < 0 || off >= p->sizecode)
+        return -1;
+
+    const char* src = getstr(p->source);
+    size_t srclen = p->source->len;
+
+    EnterCriticalSection(&rbxCoverLock());
+    std::unordered_map<Proto*, RbxCoverEntry>& map = rbxCoverMap();
+    std::unordered_map<Proto*, RbxCoverEntry>::iterator it = map.find(p);
+    if (it != map.end() &&
+        it->second.sizecode == p->sizecode &&
+        it->second.linedefined == p->linedefined &&
+        it->second.numparams == p->numparams &&
+        it->second.chunk.size() == srclen &&
+        memcmp(it->second.chunk.data(), src, srclen) == 0)
+    {
+        it->second.bits[(size_t)off] = 1;
+        if (outProto)
+            *outProto = p;
+        if (outOff)
+            *outOff = off;
+        int index = it->second.index;
+        LeaveCriticalSection(&rbxCoverLock());
+        return index;
+    }
+    {
+        RbxCoverEntry fresh;
+        fresh.chunk.assign(src, srclen);
+        fresh.linedefined = p->linedefined;
+        fresh.numparams = p->numparams;
+        fresh.sizecode = p->sizecode;
+        fresh.index = g_coverNextIndex++;
+        fresh.bits.assign((size_t)p->sizecode, 0);
+        fresh.bits[(size_t)off] = 1;
+        map[p] = fresh;
+        rbxCoverByIndex().push_back(&map.find(p)->second);
+        if (outProto)
+            *outProto = p;
+        if (outOff)
+            *outOff = off;
+        int index = fresh.index;
+        LeaveCriticalSection(&rbxCoverLock());
+        return index;
+    }
+}
+
+static void rbxTraceRecord(uint8_t op, int line, uint32_t w0, uint32_t w1, int proto)
+{
+    if (!g_traceBuf)
+        return;
+    int64_t slot = InterlockedIncrement64(&g_traceNext) - 1;
+    RbxTraceRec& r = g_traceBuf[(size_t)(slot & (kRbxTraceSize - 1))];
+    r.op = op;
+    r.line = line;
+    r.w0 = w0;
+    r.w1 = w1;
+    r.proto = proto;
+}
+
+void rbx_dumpTrace(void* ctx, void (*out)(void*, const char*, int, int, int, unsigned, unsigned))
+{
+    if (!g_traceBuf)
+        return;
+    int64_t total = g_traceNext;
+    int64_t count = total < kRbxTraceSize ? total : kRbxTraceSize;
+    // Bound the drain so the gate's JSON parse stays in budget; the ring
+    // already keeps the most recent window, drain the newest slice of it.
+    const int64_t kRbxDrainMax = 200000;
+    if (count > kRbxDrainMax)
+        count = kRbxDrainMax;
+    int64_t first = total - count;
+    EnterCriticalSection(&rbxCoverLock());
+    std::vector<const RbxCoverEntry*>& byIndex = rbxCoverByIndex();
+    for (int64_t i = first; i < total; ++i)
+    {
+        const RbxTraceRec& r = g_traceBuf[(size_t)(i & (kRbxTraceSize - 1))];
+        if (r.proto < 0 || (size_t)r.proto >= byIndex.size() || !byIndex[(size_t)r.proto])
+            continue;
+        const RbxCoverEntry* e = byIndex[(size_t)r.proto];
+        out(ctx, e->chunk.c_str(), e->linedefined, (int)r.op, r.line, r.w0, r.w1);
+    }
+    LeaveCriticalSection(&rbxCoverLock());
+}
+
+void rbx_dumpCoverage(void* ctx, void (*out)(void*, const char*, int, int, int, const char*))
+{
+    EnterCriticalSection(&rbxCoverLock());
+    std::unordered_map<Proto*, RbxCoverEntry>& map = rbxCoverMap();
+    for (std::unordered_map<Proto*, RbxCoverEntry>::iterator it = map.begin(); it != map.end(); ++it)
+    {
+        const RbxCoverEntry& e = it->second;
+        int exec = 0;
+        std::string offs;
+        for (int i = 0; i < e.sizecode; ++i)
+        {
+            if (!e.bits[(size_t)i])
+                continue;
+            ++exec;
+            if (offs.size() < 2048)
+            {
+                if (!offs.empty())
+                    offs += ',';
+                char num[16];
+                snprintf(num, sizeof(num), "%d", i);
+                offs += num;
+            }
+        }
+        out(ctx, e.chunk.c_str(), e.linedefined, e.sizecode, exec, offs.c_str());
+    }
+    LeaveCriticalSection(&rbxCoverLock());
+}
 
 // Real 5.1.4-style hook dispatch, polled once per interpreter iteration
 // from the dispatch label below (MSVC switch dispatch reaches it every
@@ -412,6 +610,22 @@ reentry:
             // allow hook to put thread into error/yield state
             if (L->status != 0)
                 goto exit;
+        }
+
+        // Capture-mode coverage: one map mark per instruction. Runs only
+        // with a capture file open (opt-in sandbox mode, never production).
+        // The trace record rides the same validated proto for free.
+        if (LUAU_UNLIKELY(rbxCaptureActive))
+        {
+            Proto* tp = NULL;
+            int toff = 0;
+            int tidx = rbxCoverMarkIndex(L, pc, &tp, &toff);
+            if (tidx >= 0 && tp)
+            {
+                int line = (tp->lineinfo) ? luaG_getline(tp, toff) : 0;
+                uint32_t w1 = (pc + 1 < tp->code + tp->sizecode) ? (uint32_t)pc[1] : 0;
+                rbxTraceRecord(LUAU_INSN_OP(*pc), line, (uint32_t)*pc, w1, tidx);
+            }
         }
 
 #if !VM_USE_CGOTO

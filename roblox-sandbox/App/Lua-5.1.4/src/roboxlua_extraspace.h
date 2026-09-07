@@ -23,6 +23,19 @@ namespace RBX { class BaseScript; class ScriptContext; namespace Lua { class Con
 struct RobloxExtraSpace;
 extern std::set<RobloxExtraSpace*>& allExtraSpaces();
 
+namespace RobloxExtraSpaceImpl {
+// Process-wide guard for allExtraSpaces(). Entries are created on engine
+// threads (onNewState/onNewThread) and now also destroyed on GC threads
+// (userthread -> onFreeThread), so every mutation and every iteration
+// must hold this. Callbacks run under it must never touch the set.
+void rbx_extraSpacesLock();
+void rbx_extraSpacesUnlock();
+struct ExtraSpacesGuard {
+    ExtraSpacesGuard() { rbx_extraSpacesLock(); }
+    ~ExtraSpacesGuard() { rbx_extraSpacesUnlock(); }
+};
+}
+
 // Per-thread state. Engine code does `RobloxExtraSpace::get(L)->identity = X`,
 // so the namespace struct must have identity/yieldCaptured as accessible
 // bitfields and the methods the engine calls (setContext, context,
@@ -83,6 +96,7 @@ struct RobloxExtraSpace {
     void getNode(void** outNode) const;  // returns typed pointer
     template <typename Func>
     void forEachThread(Func func) {
+        RobloxExtraSpaceImpl::ExtraSpacesGuard guard;
         for (auto* es : allExtraSpaces()) {
             if (es && es->scriptContext == this->scriptContext) {
                 func(es);
@@ -137,6 +151,7 @@ inline void setRobloxExtraSpaceYieldCaptured(lua_State* L, bool captured) {
 
 template<typename F>
 inline void forEachExtraSpace(F&& f) {
+    RobloxExtraSpaceImpl::ExtraSpacesGuard guard;
     for (auto* es : allExtraSpaces()) {
         if (es) f(es);
     }

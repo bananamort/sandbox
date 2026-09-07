@@ -733,6 +733,18 @@ LUA_API RbxHookState* rbx_hookstate(lua_State* L);
 // Nonzero while any thread has hooks installed; the VM loop polls hooks
 // only then, so untraced execution pays one predictable branch.
 LUA_API volatile int rbxHookActive;
+// Nonzero while a capture file is open; the VM loop marks executed
+// offsets for coverage. Capture-only sandbox mode, never production.
+LUA_API volatile int rbxCaptureActive;
+// Engine entry points (defined in lvmexecute.cpp).
+LUA_API void rbx_setCaptureActive(int on);
+// Dump per-proto coverage: out(ctx, chunk, linedefined, sizecode,
+// execCount, commaOffsets) once per executed proto.
+LUA_API void rbx_dumpCoverage(void* ctx, void (*out)(void*, const char*, int, int, int, const char*));
+// Dump the instruction trace ring oldest-first: out(ctx, chunk,
+// linedefined, op, line, w0, w1) per record. Skips records whose proto
+// index no longer resolves.
+LUA_API void rbx_dumpTrace(void* ctx, void (*out)(void*, const char*, int, int, int, unsigned, unsigned));
 // Frame selection for the 3-arg query helpers below. Real port: walks
 // the CallInfo chain in ldebug.cpp (was a no-op stub).
 LUA_API int lua_getstack(lua_State* L, int level, lua_Debug* ar);

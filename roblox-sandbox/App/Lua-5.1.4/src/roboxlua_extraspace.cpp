@@ -1,6 +1,7 @@
 // roboxlua_extraspace.cpp — real lifecycle implementation
 #include "roboxlua_extraspace.h"
 #include "VM/include/lua.h"
+#include <windows.h>
 #include <cassert>
 #include <unordered_map>
 #include <algorithm>
@@ -27,6 +28,21 @@ std::set<RobloxExtraSpace*>& allExtraSpaces() {
 }
 
 namespace RobloxExtraSpaceImpl {
+
+static CRITICAL_SECTION g_esLock;
+static LONG g_esLockInit = 0;
+
+void rbx_extraSpacesLock()
+{
+    if (InterlockedCompareExchange(&g_esLockInit, 1, 0) == 0)
+        InitializeCriticalSection(&g_esLock);
+    EnterCriticalSection(&g_esLock);
+}
+
+void rbx_extraSpacesUnlock()
+{
+    LeaveCriticalSection(&g_esLock);
+}
 
 void onFreeThread(lua_State* L);
 
@@ -64,7 +80,9 @@ void onNewState(lua_State* L) {
     es->hook.lastdepth = -1;
     lua_callbacks(L)->userthread = &rbx_userthread;
     lua_setthreaddata(L, es);
+    rbx_extraSpacesLock();
     allExtraSpaces().insert(es);
+    rbx_extraSpacesUnlock();
 }
 
 void onCloseState(lua_State* L) {
@@ -105,7 +123,9 @@ void onNewThread(lua_State* L, lua_State* parent) {
     es->legacyShared = parent_es ? parent_es->legacyShared : nullptr;
     if (parent_es) parent_es->children.push_back(es);
     lua_setthreaddata(L, es);
+    rbx_extraSpacesLock();
     allExtraSpaces().insert(es);
+    rbx_extraSpacesUnlock();
 }
 
 void onFreeThread(lua_State* L) {
@@ -121,7 +141,9 @@ void onFreeThread(lua_State* L) {
             if (child) child->parent = nullptr;
         }
         es->children.clear();
+        rbx_extraSpacesLock();
         allExtraSpaces().erase(es);
+        rbx_extraSpacesUnlock();
         delete es;
         lua_setthreaddata(L, nullptr);
     }
@@ -143,6 +165,7 @@ void onYield(lua_State* L) {
 // thread's context pointer whose context matches.
 void RobloxExtraSpace::eraseRefsFromAllNodes() {
     if (!this->scriptContext) return;
+    RobloxExtraSpaceImpl::ExtraSpacesGuard guard;
     for (auto* es : allExtraSpaces()) {
         if (es && es->scriptContext == this->scriptContext) {
             es->scriptContext = nullptr;
@@ -156,6 +179,7 @@ void RobloxExtraSpace::eraseRefsFromAllNodes() {
 int RobloxExtraSpace::getThreadCount() const {
     if (!this->scriptContext) return 0;
     int n = 0;
+    RobloxExtraSpaceImpl::ExtraSpacesGuard guard;
     for (auto* es : allExtraSpaces()) {
         if (es && es->scriptContext == this->scriptContext) n++;
     }

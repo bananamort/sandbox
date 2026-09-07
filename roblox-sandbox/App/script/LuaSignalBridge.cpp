@@ -156,8 +156,16 @@ public:
 			return;
 		}
 
-		RBX::ScriptCapture::emit("signalFire",
-			std::string(descriptor->owner.name.c_str()) + "." + descriptor->name.c_str());
+		std::string detail = std::string(descriptor->owner.name.c_str()) + "." + descriptor->name.c_str() + " args=";
+		for (size_t i = 0; i < arguments.size() && i < 8; ++i)
+		{
+			if (i)
+				detail += ",";
+			detail += RBX::ScriptCapture::valueString(arguments[i]);
+		}
+		if (arguments.size() > 8)
+			detail += ",...";
+		RBX::ScriptCapture::emit("signalFire", detail);
 
 		if (ThreadRef functionThread = function.lock())
 		{
@@ -373,7 +381,7 @@ int EventBridge::connect(lua_State *L)
 		connection = ei.descriptor->connectGeneric(source.get(), wrapper);
 		wrapper->slot.assignConnection(connection);
 		std::string connName = std::string(ei.descriptor->owner.name.c_str()) + "." + ei.descriptor->name.c_str();
-		RBX::ScriptCapture::emit("signalConnect", connName);
+		RBX::ScriptCapture::emit("signalConnect", connName + " fn=" + RBX::ScriptCapture::luaValueString(L, 2));
 		if (RBX::ScriptCapture::active()) {
 			RBX::mutex::scoped_lock guard(forcedLock());
 			ForcedConnect rec;

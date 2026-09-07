@@ -1617,16 +1617,37 @@ void ScriptContext::resume(ThreadRef thread, boost::function1<size_t, lua_State*
 	int argCount = pushArguments(thread);
 
 	{
-		char head[64];
-		snprintf(head, sizeof(head), "nargs=%d", argCount);
-		RBX::ScriptCapture::emit("resumeEnter", head);
+		std::string detail = RBX::format("nargs=%d args=", argCount);
+		for (int i = 0; i < argCount && i < 8; ++i)
+		{
+			if (i)
+				detail += ",";
+			detail += RBX::ScriptCapture::luaValueString(thread, stackSize + 1 + i);
+		}
+		if (argCount > 8)
+			detail += ",...";
+		RBX::ScriptCapture::emit("resumeEnter", detail);
 	}
 
 	Result resumeResult = resume(thread, argCount);
 	{
-		char head[64];
-		snprintf(head, sizeof(head), "result=%d top=%d", (int)resumeResult, lua_gettop(thread));
-		RBX::ScriptCapture::emit("resumeExit", head);
+		int top = lua_gettop(thread);
+		std::string detail = RBX::format("result=%d top=%d rets=", (int)resumeResult, top);
+		if (resumeResult == Success || resumeResult == Yield)
+		{
+			int returnCount = top - stackSize + 1;
+			if (returnCount < 0)
+				returnCount = 0;
+			for (int i = 0; i < returnCount && i < 8; ++i)
+			{
+				if (i)
+					detail += ",";
+				detail += RBX::ScriptCapture::luaValueString(thread, stackSize + i);
+			}
+			if (returnCount > 8)
+				detail += ",...";
+		}
+		RBX::ScriptCapture::emit("resumeExit", detail);
 	}
 	if (resumeResult == Success || resumeResult == Yield)
 	{
@@ -2770,8 +2791,9 @@ void ScriptContext::runForcedCoverage()
 			moved = true;
 		}
 		lua_pushnil(ts);
-		while (lua_next(ts, LUA_GLOBALSINDEX) != 0 && fired < 300)
+		while (lua_next(ts, LUA_GLOBALSINDEX) != 0)
 		{
+			if (fired >= 300) { lua_pop(ts, 2); break; }
 			if (lua_type(ts, -1) == LUA_TFUNCTION && !lua_iscfunction(ts, -1))
 			{
 				std::string name = lua_type(ts, -2) == LUA_TSTRING ? lua_tostring(ts, -2) : "?";
@@ -2792,6 +2814,8 @@ void ScriptContext::runForcedCoverage()
 		}
 	}
 	RBX::ScriptCapture::emit("forced", "pump-end");
+	RBX::ScriptCapture::dumpCoverage();
+	RBX::ScriptCapture::dumpTrace();
 }
 
 void ScriptContext::resumeWaitingScripts(const Time expirationTime)

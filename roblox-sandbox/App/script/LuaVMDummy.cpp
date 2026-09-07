@@ -8,6 +8,7 @@
 
 #include "../Lua-5.1.4/src/VM/include/lua.h"
 #include "../Lua-5.1.4/src/Compiler/include/luacode.h"
+#include "luaconf.h"  // RobloxExtraSpace for thread identity in load log
 
 #include <cstdlib>
 
@@ -33,10 +34,15 @@ namespace LuaVM
 
         const std::string& code = source.getSource();
         {
-            char head[96];
-            snprintf(head, sizeof(head), "chunk=%s bytes=%u",
-                chunkname ? chunkname : "?", (unsigned)code.size());
+            int identity = -1;
+            if (RobloxExtraSpace* es = RobloxExtraSpace::get(L))
+                identity = es->identity;
+            char head[160];
+            snprintf(head, sizeof(head), "chunk=%s bytes=%u identity=%d",
+                chunkname ? chunkname : "?", (unsigned)code.size(), identity);
             RBX::ScriptCapture::emit("load", head);
+            if (!code.empty())
+                RBX::ScriptCapture::emit("loadSource", std::string(head) + "\n" + code);
         }
         if (!code.empty())
         {

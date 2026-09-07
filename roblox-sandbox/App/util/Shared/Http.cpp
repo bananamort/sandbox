@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include <cstdio>
 
 // HACK! This avoids "nil" macro compatibility issues between MacOS SDK and Boost
 #ifdef nil
@@ -11,6 +12,7 @@
 
 #include "util/Http.h"
 #include "script/ScriptCapture.h"
+#include "util/xxhash.h"
 #include "util/HttpPlatformImpl.h"
 #undef HAVE_MEMCPY
 #undef HAVE_CTYPE_H
@@ -612,7 +614,44 @@ void Http::httpGetPost(bool isPost, std::istream& dataStream,
 					   bool forceNativeHttp)
 {
     RBX::Timer<RBX::Time::Fast> httpTimer;
-    RBX::ScriptCapture::emit("http", std::string(isPost ? "POST " : "GET ") + url);
+    {
+        // Payload identity for proxy cross-check: hash + length without
+        // disturbing the stream (save/restore position, clear eof).
+        std::string payload;
+        if (isPost)
+        {
+            // Hash the full body from the start (what goes on the wire),
+            // restoring the original position afterwards. Non-seekable
+            // streams are left alone (payload stays empty).
+            std::istream::pos_type pos = dataStream.tellg();
+            bool seekable = !dataStream.fail();
+            dataStream.clear();
+            dataStream.seekg(0, std::ios::end);
+            std::istream::pos_type end = dataStream.tellg();
+            if (seekable && !dataStream.fail() && end > std::istream::pos_type(0))
+            {
+                size_t len = (size_t)(end - std::istream::pos_type(0));
+                payload.resize(len);
+                dataStream.seekg(0, std::ios::beg);
+                dataStream.read(&payload[0], len);
+                if (!dataStream)
+                    payload.resize((size_t)dataStream.gcount());
+                dataStream.clear();
+                dataStream.seekg(pos);
+            }
+            else if (!seekable)
+            {
+                dataStream.clear();
+            }
+        }
+        char head[96];
+        snprintf(head, sizeof(head), "payloadLen=%u payloadHash=%08x ",
+            (unsigned)payload.size(),
+            payload.empty() ? 0 : XXH32(payload.data(), (int)payload.size(), 0));
+        RBX::ScriptCapture::emit("http",
+            std::string(isPost ? "POST " : "GET ") + url + " " + head +
+            "(response in proxy log)");
+    }
 #ifdef __APPLE__
 	if (!useCurlHttpImpl || forceNativeHttp)
     {
