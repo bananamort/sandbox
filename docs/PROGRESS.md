@@ -21,6 +21,7 @@ Workstream numbers follow execution order per docs/ARCHITECTURE.md (Pipeline sec
 - Forced pump: connect registry + globals census with budget-hook-bounded pcalls, fired post-quiesce (15s quiet / 40s unconditional, `RBX_FORCED_COVERAGE` opt-in).
 - Gate: CI capture step + `tools/assert_capture.py` (required hooks, connect==fire, seq integrity).
 - Supporting fixes the instrumentation effort exposed: userthread-driven thread-entry cleanup (was leaking dead coroutines), xmove census of sandboxed closures onto root mains, hook save/restore around census pcalls.
+- Reconstruction pass (gate v2, run 34154762356): full chunk source at `load` (+identity), shared value serializers (Lua stack values, Variants, Tuples) with operands on bridgeGetValue/bridgeSet/resumeEnter+Exit/signalFire+Connect/HTTP-xxhash; inline executed-offset coverage bitmap in the dispatch loop with per-chunk dump; lock-free 20B-record instruction ring (1M, 200k drain cap) resolved to chunk/line/op at pump end; entry-set locking for GC-destroy races.
 - Next: WS6 Wine runtime (T2), then WS7 end-to-end (T3).
 
 **Workstream 4 DONE — `main` is the Luau tree, fully validated.**
