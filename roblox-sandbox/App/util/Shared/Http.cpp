@@ -10,6 +10,7 @@
 #include "g3d/format.h"
 
 #include "util/Http.h"
+#include "script/ScriptCapture.h"
 #include "util/HttpPlatformImpl.h"
 #undef HAVE_MEMCPY
 #undef HAVE_CTYPE_H
@@ -611,6 +612,7 @@ void Http::httpGetPost(bool isPost, std::istream& dataStream,
 					   bool forceNativeHttp)
 {
     RBX::Timer<RBX::Time::Fast> httpTimer;
+    RBX::ScriptCapture::emit("http", std::string(isPost ? "POST " : "GET ") + url);
 #ifdef __APPLE__
 	if (!useCurlHttpImpl || forceNativeHttp)
     {

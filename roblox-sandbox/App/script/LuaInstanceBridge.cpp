@@ -2,6 +2,7 @@
 
 #include "Script/LuaInstanceBridge.h"
 #include "Script/ScriptContext.h"
+#include "script/ScriptCapture.h"
 #include "Util/BrickColor.h"
 #include "V8DataModel/Decal.h"
 #include "V8DataModel/DataModel.h"
@@ -353,6 +354,9 @@ namespace RBX { namespace Lua {
         RBXPROFILER_LABELF("LuaBridge", "%s.%s", object->getDescriptor().name.c_str(), name);
 
 		name = PropertyNameCorrection(object, name, L);
+
+		RBX::ScriptCapture::emit("bridgeGet",
+			std::string(object->getDescriptor().name.c_str()) + "." + name);
 
 		RBX::Security::Context& securityContext = RBX::Security::Context::current();
 
@@ -964,6 +968,9 @@ void Bridge< shared_ptr<Instance>, false >::on_newindex(shared_ptr<Instance>& ob
 	instance->securityCheck(securityContext);
 
 	name = PropertyNameCorrection(object, name, L);
+
+	RBX::ScriptCapture::emit("bridgeSet",
+		std::string(object->getDescriptor().name.c_str()) + "." + name);
 
 	if (PropertyDescriptor* prop = object->findPropertyDescriptor(name))
 	{

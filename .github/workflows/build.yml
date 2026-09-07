@@ -424,6 +424,24 @@ jobs:
           Pop-Location
           if ($bad) { exit 1 }
           Write-Host "TWO_SIDED_SMOKE_OK"
+      - name: Capture run and WS5 gate
+        shell: pwsh
+        timeout-minutes: 4
+        run: |
+          Push-Location bin
+          $env:RBX_CAPTURE_PATH = Join-Path $PWD "capture.jsonl"
+          $env:RBX_FORCED_COVERAGE = "1"
+          if (Test-Path $env:RBX_CAPTURE_PATH) { Remove-Item $env:RBX_CAPTURE_PATH }
+          $p = Start-Process -FilePath ".\RCCService.exe" -ArgumentList "-Console" -PassThru -NoNewWindow `
+                 -RedirectStandardOutput "capture-stdout.log" -RedirectStandardError "capture-stderr.log"
+          $deadline = (Get-Date).AddSeconds(75)
+          while (-not $p.HasExited -and (Get-Date) -lt $deadline) { Start-Sleep -Seconds 2 }
+          if (-not $p.HasExited) { Stop-Process -Id $p.Id -Force }
+          Pop-Location
+          if (-not (Test-Path bin/capture.jsonl)) { Write-Host "::error::no capture.jsonl produced"; exit 1 }
+          python tools/assert_capture.py bin/capture.jsonl
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          Write-Host "CAPTURE_OK"
       - name: Publish Release
         if: success()
         shell: pwsh

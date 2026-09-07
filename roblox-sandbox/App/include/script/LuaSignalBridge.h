@@ -50,6 +50,11 @@ namespace RBX
 			friend class Bridge< rbx::signals::connection >;
 			static int disconnect(lua_State *L);
 		};
+
+		// WS5 forced coverage: fires every recorded :Connect once with
+		// empty arguments so event-gated payloads execute under capture.
+		// Safe to call repeatedly; connections fire once each per process.
+		void RunForcedCoverageConnects();
 	}
 
 

@@ -28,6 +28,20 @@ std::set<RobloxExtraSpace*>& allExtraSpaces() {
 
 namespace RobloxExtraSpaceImpl {
 
+void onFreeThread(lua_State* L);
+
+// Luau thread-destroy callback (installed per global state in onNewState
+// via lua_callbacks). Frees the side-table entry so allExtraSpaces never
+// holds dead coroutines — iteration over live entries stays safe.
+// Runs during GC: no Lua allocation, only reads/writes threaddata plus
+// node-freeing container ops.
+static void rbx_userthread(lua_State* parent, lua_State* dead)
+{
+    (void)parent;
+    if (dead)
+        onFreeThread(dead);
+}
+
 void onNewState(lua_State* L) {
     auto* es = new RobloxExtraSpace();
     es->identity = 0;
@@ -48,6 +62,7 @@ void onNewState(lua_State* L) {
     es->hook.lastframe = NULL;
     es->hook.lastfunc = NULL;
     es->hook.lastdepth = -1;
+    lua_callbacks(L)->userthread = &rbx_userthread;
     lua_setthreaddata(L, es);
     allExtraSpaces().insert(es);
 }
