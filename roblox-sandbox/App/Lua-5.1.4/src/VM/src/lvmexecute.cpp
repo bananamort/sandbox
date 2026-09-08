@@ -211,6 +211,24 @@ static const int64_t kRbxTraceSize = 1048576;
 static RbxTraceRec* g_traceBuf = NULL;
 static volatile LONG64 g_traceNext = 0;
 
+// Sparse constant-resolution ring. Only const-carrying ops allocate a
+// record, resolved live at record time from the executing Proto's own
+// constant table (guaranteed live: we are running it). Strings copy up
+// to 111 bytes inline with a truncation flag — no heap, no fallback.
+// 124 bytes x 64K entries ≈ 8MB, lazily allocated on capture start.
+struct RbxConstRec {
+    int32_t proto;
+    int32_t off;
+    uint8_t op;
+    uint8_t kind;      // 0=nil,1=bool,2=number,3=string,4=import,5=other
+    uint8_t truncated;
+    uint8_t reserved;
+    char val[112];
+};
+static const int64_t kRbxConstSize = 65536;
+static RbxConstRec* g_constBuf = NULL;
+static volatile LONG64 g_constNext = 0;
+
 static CRITICAL_SECTION& rbxCoverLock()
 {
     return g_coverCS;
@@ -239,6 +257,7 @@ void rbx_setCaptureActive(int on)
     {
         InitializeCriticalSection(&g_coverCS);
         g_traceBuf = (RbxTraceRec*)malloc(sizeof(RbxTraceRec) * (size_t)kRbxTraceSize);
+        g_constBuf = (RbxConstRec*)malloc(sizeof(RbxConstRec) * (size_t)kRbxConstSize);
     }
     rbxCaptureActive = on ? 1 : 0;
 }
@@ -311,6 +330,158 @@ static void rbxTraceRecord(uint8_t op, int line, uint32_t w0, uint32_t w1, int p
     r.proto = proto;
 }
 
+// Render one constant-table value into a const record. Caller validated
+// idx against sizek; the Proto is live (we are executing it).
+static void rbxRenderConst(const TValue* o, RbxConstRec* r)
+{
+    if (ttisnil(o))
+    {
+        r->kind = 0;
+        r->val[0] = 0;
+    }
+    else if (ttisboolean(o))
+    {
+        r->kind = 1;
+        strcpy(r->val, bvalue(o) ? "true" : "false");
+    }
+    else if (ttisnumber(o))
+    {
+        r->kind = 2;
+        snprintf(r->val, sizeof(r->val), "%g", nvalue(o));
+    }
+    else if (ttisstring(o))
+    {
+        TString* ts = tsvalue(o);
+        size_t n = ts->len < sizeof(r->val) - 1 ? ts->len : sizeof(r->val) - 1;
+        memcpy(r->val, getstr(ts), n);
+        r->val[n] = 0;
+        r->truncated = (ts->len > n || (const char*)memchr(r->val, 0, n) != NULL) ? 1 : 0;
+        r->kind = 3;
+    }
+    else
+    {
+        r->kind = 5;
+        snprintf(r->val, sizeof(r->val), "tag=%d", ttype(o));
+    }
+}
+
+// Resolve the constant operand of a const-carrying op from the live
+// constant table. Runs at record time (never at drain: protos may be
+// freed by then). Out-of-range indices record nothing — the instruction
+// itself is already in the trace ring.
+static void rbxConstRecord(Proto* p, int off, uint8_t op, uint32_t w0, uint32_t w1, bool hasAux, int proto)
+{
+    if (!g_constBuf || !p)
+        return;
+    int64_t slot = -1;
+    RbxConstRec* r = NULL;
+    switch (op)
+    {
+    case LOP_LOADK:
+        // D-carried index only; no aux word involved.
+        break;
+    case LOP_LOADKX:
+    case LOP_GETGLOBAL:
+    case LOP_SETGLOBAL:
+    case LOP_GETTABLEKS:
+    case LOP_SETTABLEKS:
+    case LOP_NAMECALL:
+    case LOP_GETIMPORT:
+        // Aux-word ops: without the word there is nothing valid to
+        // resolve (never fabricate index 0).
+        if (!hasAux)
+            return;
+        break;
+    case LOP_LOADN:
+        slot = InterlockedIncrement64(&g_constNext) - 1;
+        r = &g_constBuf[(size_t)(slot & (kRbxConstSize - 1))];
+        r->proto = proto;
+        r->off = off;
+        r->op = op;
+        r->kind = 2;
+        r->truncated = 0;
+        snprintf(r->val, sizeof(r->val), "%d", LUAU_INSN_D(w0));
+        return;
+    case LOP_LOADB:
+        slot = InterlockedIncrement64(&g_constNext) - 1;
+        r = &g_constBuf[(size_t)(slot & (kRbxConstSize - 1))];
+        r->proto = proto;
+        r->off = off;
+        r->op = op;
+        r->kind = 1;
+        r->truncated = 0;
+        strcpy(r->val, LUAU_INSN_B(w0) ? "true" : "false");
+        return;
+    default:
+        return;
+    }
+    int idx = -1;
+    if (op == LOP_LOADK)
+        idx = LUAU_INSN_D(w0);
+    else
+        idx = (int)w1;
+    if (op == LOP_GETIMPORT)
+    {
+        // AUX packs count(2b) + three 10-bit constant-string indices.
+        int count = (int)(w1 >> 30);
+        if (count < 1 || count > 3)
+            return;
+        slot = InterlockedIncrement64(&g_constNext) - 1;
+        r = &g_constBuf[(size_t)(slot & (kRbxConstSize - 1))];
+        r->proto = proto;
+        r->off = off;
+        r->op = op;
+        r->kind = 4;
+        r->truncated = 0;
+        size_t pos = 0;
+        for (int i = 0; i < count; ++i)
+        {
+            int id = (int)((w1 >> (20 - 10 * i)) & 1023);
+            if (i)
+            {
+                if (pos + 1 >= sizeof(r->val))
+                {
+                    r->truncated = 1;
+                    break;
+                }
+                r->val[pos++] = '.';
+            }
+            if (id < 0 || id >= p->sizek || !ttisstring(&p->k[id]))
+            {
+                if (pos + 1 >= sizeof(r->val))
+                {
+                    r->truncated = 1;
+                    break;
+                }
+                r->val[pos++] = '?';
+                continue;
+            }
+            TString* ts = tsvalue(&p->k[id]);
+            size_t n = ts->len;
+            if (pos + n >= sizeof(r->val))
+            {
+                n = sizeof(r->val) - 1 - pos;
+                r->truncated = 1;
+            }
+            memcpy(r->val + pos, getstr(ts), n);
+            pos += n;
+            if (r->truncated)
+                break;
+        }
+        r->val[pos] = 0;
+        return;
+    }
+    if (idx < 0 || idx >= p->sizek)
+        return;
+    slot = InterlockedIncrement64(&g_constNext) - 1;
+    r = &g_constBuf[(size_t)(slot & (kRbxConstSize - 1))];
+    r->proto = proto;
+    r->off = off;
+    r->op = op;
+    r->truncated = 0;
+    rbxRenderConst(&p->k[idx], r);
+}
+
 void rbx_dumpTrace(void* ctx, void (*out)(void*, const char*, int, int, int, unsigned, unsigned))
 {
     if (!g_traceBuf)
@@ -334,30 +505,59 @@ void rbx_dumpTrace(void* ctx, void (*out)(void*, const char*, int, int, int, uns
     LeaveCriticalSection(&rbxCoverLock());
 }
 
-void rbx_dumpCoverage(void* ctx, void (*out)(void*, const char*, int, int, int, const char*))
+static const char* rbxConstKindName(uint8_t kind)
+{
+    switch (kind)
+    {
+    case 0: return "nil";
+    case 1: return "bool";
+    case 2: return "number";
+    case 3: return "string";
+    case 4: return "import";
+    default: return "other";
+    }
+}
+
+void rbx_dumpConsts(void* ctx, void (*out)(void*, const char*, int, int, int, const char*, const char*, int))
+{
+    if (!g_constBuf)
+        return;
+    int64_t total = g_constNext;
+    int64_t count = total < kRbxConstSize ? total : kRbxConstSize;
+    int64_t first = total - count;
+    EnterCriticalSection(&rbxCoverLock());
+    std::vector<const RbxCoverEntry*>& byIndex = rbxCoverByIndex();
+    for (int64_t i = first; i < total; ++i)
+    {
+        const RbxConstRec& r = g_constBuf[(size_t)(i & (kRbxConstSize - 1))];
+        if (r.proto < 0 || (size_t)r.proto >= byIndex.size() || !byIndex[(size_t)r.proto])
+            continue;
+        const RbxCoverEntry* e = byIndex[(size_t)r.proto];
+        out(ctx, e->chunk.c_str(), e->linedefined, (int)r.op, rbxConstKindName(r.kind), r.val, r.truncated ? 1 : 0);
+    }
+    LeaveCriticalSection(&rbxCoverLock());
+}
+
+void rbx_dumpCoverage(void* ctx, void (*out)(void*, const char*, int, int, int, const int*, int))
 {
     EnterCriticalSection(&rbxCoverLock());
     std::unordered_map<Proto*, RbxCoverEntry>& map = rbxCoverMap();
+    std::vector<int> offs;
     for (std::unordered_map<Proto*, RbxCoverEntry>::iterator it = map.begin(); it != map.end(); ++it)
     {
         const RbxCoverEntry& e = it->second;
-        int exec = 0;
-        std::string offs;
+        offs.clear();
+        int execTotal = 0;
         for (int i = 0; i < e.sizecode; ++i)
         {
             if (!e.bits[(size_t)i])
                 continue;
-            ++exec;
-            if (offs.size() < 2048)
-            {
-                if (!offs.empty())
-                    offs += ',';
-                char num[16];
-                snprintf(num, sizeof(num), "%d", i);
-                offs += num;
-            }
+            ++execTotal;
+            if ((int)offs.size() >= 2048)
+                continue;
+            offs.push_back(i);
         }
-        out(ctx, e.chunk.c_str(), e.linedefined, e.sizecode, exec, offs.c_str());
+        out(ctx, e.chunk.c_str(), e.linedefined, e.sizecode, execTotal, offs.empty() ? NULL : &offs[0], (int)offs.size());
     }
     LeaveCriticalSection(&rbxCoverLock());
 }
@@ -612,7 +812,7 @@ reentry:
 
         // Capture-mode coverage: one map mark per instruction. Runs only
         // with a capture file open (opt-in sandbox mode, never production).
-        // The trace record rides the same validated proto for free.
+        // The trace and const records ride the same validated proto.
         if (LUAU_UNLIKELY(rbxCaptureActive))
         {
             Proto* tp = NULL;
@@ -620,9 +820,15 @@ reentry:
             int tidx = rbxCoverMarkIndex(L, pc, &tp, &toff);
             if (tidx >= 0 && tp)
             {
+                uint8_t op = LUAU_INSN_OP(*pc);
                 int line = (tp->lineinfo) ? luaG_getline(tp, toff) : 0;
-                uint32_t w1 = (pc + 1 < tp->code + tp->sizecode) ? (uint32_t)pc[1] : 0;
-                rbxTraceRecord(LUAU_INSN_OP(*pc), line, (uint32_t)*pc, w1, tidx);
+                // Aux-word ops always carry the word (compiler invariant);
+                // at the very end of code there is nothing to read, so
+                // pass validity explicitly instead of fabricating index 0.
+                bool hasAux = (pc + 1 < tp->code + tp->sizecode);
+                uint32_t w1 = hasAux ? (uint32_t)pc[1] : 0;
+                rbxTraceRecord(op, line, (uint32_t)*pc, w1, tidx);
+                rbxConstRecord(tp, toff, op, (uint32_t)*pc, w1, hasAux, tidx);
             }
         }
 

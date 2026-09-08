@@ -934,7 +934,9 @@ bool ScriptContext::openState(size_t idx)
 			}
 			char head[64];
 			snprintf(head, sizeof(head), "count=%u globals=", (unsigned)count);
-			RBX::ScriptCapture::emit("openState", std::string(head) + names);
+			std::vector<RBX::ScriptCapture::Field> fields;
+			fields.push_back({"count", RBX::ScriptCapture::FieldVal::num((long long)count)});
+			RBX::ScriptCapture::emitFields("openState", std::string(head) + names, fields);
 		}
 	}
 
@@ -1618,21 +1620,27 @@ void ScriptContext::resume(ThreadRef thread, boost::function1<size_t, lua_State*
 
 	{
 		std::string detail = RBX::format("nargs=%d args=", argCount);
+		std::vector<RBX::ScriptCapture::FieldVal> args;
 		for (int i = 0; i < argCount && i < 8; ++i)
 		{
 			if (i)
 				detail += ",";
 			detail += RBX::ScriptCapture::luaValueString(thread, stackSize + 1 + i);
+			args.push_back(RBX::ScriptCapture::luaValueField(thread, stackSize + 1 + i));
 		}
 		if (argCount > 8)
 			detail += ",...";
-		RBX::ScriptCapture::emit("resumeEnter", detail);
+		std::vector<RBX::ScriptCapture::Field> fields;
+		fields.push_back({"nargs", RBX::ScriptCapture::FieldVal::num(argCount)});
+		fields.push_back({"args", RBX::ScriptCapture::FieldVal::arr(args)});
+		RBX::ScriptCapture::emitFields("resumeEnter", detail, fields);
 	}
 
 	Result resumeResult = resume(thread, argCount);
 	{
 		int top = lua_gettop(thread);
 		std::string detail = RBX::format("result=%d top=%d rets=", (int)resumeResult, top);
+		std::vector<RBX::ScriptCapture::FieldVal> rets;
 		if (resumeResult == Success || resumeResult == Yield)
 		{
 			int returnCount = top - stackSize + 1;
@@ -1643,11 +1651,15 @@ void ScriptContext::resume(ThreadRef thread, boost::function1<size_t, lua_State*
 				if (i)
 					detail += ",";
 				detail += RBX::ScriptCapture::luaValueString(thread, stackSize + i);
+				rets.push_back(RBX::ScriptCapture::luaValueField(thread, stackSize + i));
 			}
 			if (returnCount > 8)
 				detail += ",...";
 		}
-		RBX::ScriptCapture::emit("resumeExit", detail);
+		std::vector<RBX::ScriptCapture::Field> fields;
+		fields.push_back({"result", RBX::ScriptCapture::FieldVal::num((int)resumeResult)});
+		fields.push_back({"rets", RBX::ScriptCapture::FieldVal::arr(rets)});
+		RBX::ScriptCapture::emitFields("resumeExit", detail, fields);
 	}
 	if (resumeResult == Success || resumeResult == Yield)
 	{
@@ -2761,13 +2773,19 @@ void ScriptContext::runForcedCoverage()
 		int status = lua_pcall(exec, 0, 0, 0);
 		lua_sethook(exec, oldHook, oldMask, oldCount);
 		std::string detail = RBX::format("fn=%s status=%d", name.c_str(), status);
+		std::string err;
 		if (status != 0)
 		{
-			const char* err = lua_tostring(exec, -1);
-			detail += err ? std::string("|err=") + err : std::string("|err=?");
+			const char* e = lua_tostring(exec, -1);
+			err = e ? e : "?";
+			detail += "|err=" + err;
 			lua_pop(exec, 1);
 		}
-		RBX::ScriptCapture::emit("forcedCall", detail);
+		std::vector<RBX::ScriptCapture::Field> fields;
+		fields.push_back({"fn", RBX::ScriptCapture::FieldVal::str(name)});
+		fields.push_back({"status", RBX::ScriptCapture::FieldVal::num(status)});
+		fields.push_back({"err", RBX::ScriptCapture::FieldVal::str(err)});
+		RBX::ScriptCapture::emitFields("forcedCall", detail, fields);
 		++fired;
 	};
 
@@ -2816,6 +2834,7 @@ void ScriptContext::runForcedCoverage()
 	RBX::ScriptCapture::emit("forced", "pump-end");
 	RBX::ScriptCapture::dumpCoverage();
 	RBX::ScriptCapture::dumpTrace();
+	RBX::ScriptCapture::dumpConsts();
 }
 
 void ScriptContext::resumeWaitingScripts(const Time expirationTime)

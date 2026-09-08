@@ -37,12 +37,21 @@ namespace LuaVM
             int identity = -1;
             if (RobloxExtraSpace* es = RobloxExtraSpace::get(L))
                 identity = es->identity;
+            const char* cn = chunkname ? chunkname : "?";
             char head[160];
             snprintf(head, sizeof(head), "chunk=%s bytes=%u identity=%d",
-                chunkname ? chunkname : "?", (unsigned)code.size(), identity);
-            RBX::ScriptCapture::emit("load", head);
+                cn, (unsigned)code.size(), identity);
+            std::vector<RBX::ScriptCapture::Field> loadFields;
+            loadFields.push_back({"chunk", RBX::ScriptCapture::FieldVal::str(cn)});
+            loadFields.push_back({"bytes", RBX::ScriptCapture::FieldVal::num((long long)code.size())});
+            loadFields.push_back({"identity", RBX::ScriptCapture::FieldVal::num(identity)});
+            RBX::ScriptCapture::emitFields("load", head, loadFields);
             if (!code.empty())
-                RBX::ScriptCapture::emit("loadSource", std::string(head) + "\n" + code);
+            {
+                std::vector<RBX::ScriptCapture::Field> srcFields(loadFields);
+                srcFields.push_back({"source", RBX::ScriptCapture::FieldVal::str(code)});
+                RBX::ScriptCapture::emitFields("loadSource", std::string(head) + "\n" + code, srcFields);
+            }
         }
         if (!code.empty())
         {

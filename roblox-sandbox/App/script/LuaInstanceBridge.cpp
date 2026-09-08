@@ -366,10 +366,20 @@ namespace RBX { namespace Lua {
 		{
 			object->securityCheck(securityContext);
 			pushLuaValue(Property(*prop, object.get()), L, securityContext);
-			RBX::ScriptCapture::emit("bridgeGetValue",
-				std::string(object->getDescriptor().name.c_str()) + "." + name +
-				" | obj=" + object->getFullName() +
-				" | " + RBX::ScriptCapture::luaValueString(L, -1));
+			std::string cls = object->getDescriptor().name.c_str();
+			std::string obj = object->getFullName();
+			RBX::ScriptCapture::TypedValue tv = RBX::ScriptCapture::luaValueTyped(L, -1);
+			std::vector<RBX::ScriptCapture::Field> fields;
+			fields.push_back({"class", RBX::ScriptCapture::FieldVal::str(cls)});
+			fields.push_back({"prop", RBX::ScriptCapture::FieldVal::str(name)});
+			fields.push_back({"obj", RBX::ScriptCapture::FieldVal::str(obj)});
+			fields.push_back({"vkind", RBX::ScriptCapture::FieldVal::str(tv.kind)});
+			fields.push_back({"value", RBX::ScriptCapture::FieldVal::str(tv.raw)});
+			fields.push_back({"truncated", RBX::ScriptCapture::FieldVal::boolean(tv.truncated)});
+			RBX::ScriptCapture::emitFields("bridgeGetValue",
+				cls + "." + name +
+				" | obj=" + obj +
+				" | " + RBX::ScriptCapture::luaValueString(L, -1), fields);
 			return 1;
 		}
 
@@ -973,10 +983,20 @@ void Bridge< shared_ptr<Instance>, false >::on_newindex(shared_ptr<Instance>& ob
 
 	name = PropertyNameCorrection(object, name, L);
 
-	RBX::ScriptCapture::emit("bridgeSet",
-		std::string(object->getDescriptor().name.c_str()) + "." + name +
-		" | obj=" + object->getFullName() +
-		" | " + RBX::ScriptCapture::luaValueString(L, 3));
+	std::string cls = object->getDescriptor().name.c_str();
+	std::string obj = object->getFullName();
+	RBX::ScriptCapture::TypedValue tv = RBX::ScriptCapture::luaValueTyped(L, 3);
+	std::vector<RBX::ScriptCapture::Field> fields;
+	fields.push_back({"class", RBX::ScriptCapture::FieldVal::str(cls)});
+	fields.push_back({"prop", RBX::ScriptCapture::FieldVal::str(name)});
+	fields.push_back({"obj", RBX::ScriptCapture::FieldVal::str(obj)});
+	fields.push_back({"vkind", RBX::ScriptCapture::FieldVal::str(tv.kind)});
+	fields.push_back({"value", RBX::ScriptCapture::FieldVal::str(tv.raw)});
+	fields.push_back({"truncated", RBX::ScriptCapture::FieldVal::boolean(tv.truncated)});
+	RBX::ScriptCapture::emitFields("bridgeSet",
+		cls + "." + name +
+		" | obj=" + obj +
+		" | " + RBX::ScriptCapture::luaValueString(L, 3), fields);
 
 	if (PropertyDescriptor* prop = object->findPropertyDescriptor(name))
 	{
@@ -1057,18 +1077,28 @@ int ObjectBridge::callMemberFunction(lua_State *L)
 		throw RBX::runtime_error("The function %s is not a member of \"%s\"", desc->name.c_str(), instance->getDescriptor().name.c_str());
 
 	{
-		std::string detail = std::string(desc->owner.name.c_str()) + "." + desc->name.c_str() +
-			" | obj=" + instance->getFullName() + " | args=";
+		std::string cls = desc->owner.name.c_str();
+		std::string fn = desc->name.c_str();
+		std::string obj = instance->getFullName();
+		std::string detail = cls + "." + fn +
+			" | obj=" + obj + " | args=";
+		std::vector<RBX::ScriptCapture::FieldVal> args;
 		int top = lua_gettop(L);
 		for (int i = 2; i <= top && i < 10; ++i)
 		{
 			if (i > 2)
 				detail += ",";
 			detail += RBX::ScriptCapture::luaValueString(L, i);
+			args.push_back(RBX::ScriptCapture::luaValueField(L, i));
 		}
 		if (top > 9)
 			detail += ",...";
-		RBX::ScriptCapture::emit("memberCall", detail);
+		std::vector<RBX::ScriptCapture::Field> fields;
+		fields.push_back({"class", RBX::ScriptCapture::FieldVal::str(cls)});
+		fields.push_back({"func", RBX::ScriptCapture::FieldVal::str(fn)});
+		fields.push_back({"obj", RBX::ScriptCapture::FieldVal::str(obj)});
+		fields.push_back({"args", RBX::ScriptCapture::FieldVal::arr(args)});
+		RBX::ScriptCapture::emitFields("memberCall", detail, fields);
 	}
 
 	if (desc->getKind() == FunctionDescriptor::Kind_Custom)
@@ -1233,18 +1263,28 @@ int ObjectBridge::callMemberYieldFunction(lua_State *L) {
 		throw RBX::runtime_error("The function %s is not a member of \"%s\"", desc->name.c_str(), instance->getDescriptor().name.c_str());
 
 	{
-		std::string detail = std::string(desc->owner.name.c_str()) + "." + desc->name.c_str() +
-			" | obj=" + instance->getFullName() + " | args=";
+		std::string cls = desc->owner.name.c_str();
+		std::string fn = desc->name.c_str();
+		std::string obj = instance->getFullName();
+		std::string detail = cls + "." + fn +
+			" | obj=" + obj + " | args=";
+		std::vector<RBX::ScriptCapture::FieldVal> args;
 		int top = lua_gettop(L);
 		for (int i = 2; i <= top && i < 10; ++i)
 		{
 			if (i > 2)
 				detail += ",";
 			detail += RBX::ScriptCapture::luaValueString(L, i);
+			args.push_back(RBX::ScriptCapture::luaValueField(L, i));
 		}
 		if (top > 9)
 			detail += ",...";
-		RBX::ScriptCapture::emit("memberCall", detail);
+		std::vector<RBX::ScriptCapture::Field> fields;
+		fields.push_back({"class", RBX::ScriptCapture::FieldVal::str(cls)});
+		fields.push_back({"func", RBX::ScriptCapture::FieldVal::str(fn)});
+		fields.push_back({"obj", RBX::ScriptCapture::FieldVal::str(obj)});
+		fields.push_back({"args", RBX::ScriptCapture::FieldVal::arr(args)});
+		RBX::ScriptCapture::emitFields("memberCall", detail, fields);
 	}
 
 	//Construct a shared_ptr object to keep track of the thread for resuming it later

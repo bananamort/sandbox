@@ -32,7 +32,9 @@ void YieldingThreads::queueWaiter(lua_State *L, LUA_NUMBER delay)
 {
 	char head[64];
 	snprintf(head, sizeof(head), "delay=%.3f", (double)delay);
-	RBX::ScriptCapture::emit("schedulerQueue", head);
+	std::vector<RBX::ScriptCapture::Field> fields;
+	fields.push_back({"delay", RBX::ScriptCapture::FieldVal::dbl((double)delay)});
+	RBX::ScriptCapture::emitFields("schedulerQueue", head, fields);
 	RBXASSERT(!RobloxExtraSpace::get(L)->yieldCaptured);
 	RobloxExtraSpace::get(L)->yieldCaptured = true;
 
@@ -69,7 +71,9 @@ void YieldingThreads::resume(double wallTime, Time expirationTime, bool& throttl
 		{
 			char head[64];
 			snprintf(head, sizeof(head), "elapsed=%.3f", elapsedTime.seconds());
-			RBX::ScriptCapture::emit("schedulerResume", head);
+			std::vector<RBX::ScriptCapture::Field> fields;
+			fields.push_back({"elapsed", RBX::ScriptCapture::FieldVal::dbl(elapsedTime.seconds())});
+			RBX::ScriptCapture::emitFields("schedulerResume", head, fields);
 			lua_pushnumber(thread, elapsedTime.seconds());
 			lua_pushnumber(thread, wallTime);
 

@@ -5,24 +5,22 @@ Usage: python3 tools/assert_capture.py <path/to/capture.jsonl>
 
 Requires (each must appear at least once):
   openState, load, loadSource, resumeEnter, resumeExit, bridgeGet,
-  bridgeGetValue, schedulerQueue, schedulerResume, forced, forcedCall,
+  schedulerQueue, schedulerResume, forced, forcedCall,
   coverage, trace
-Payload content (not just hook names):
-  - every load with bytes>0 has a loadSource with matching chunk header
-    and non-empty source text
-  - every bridgeGetValue carries a value after '='
-  - every resumeEnter/resumeExit carries nargs/result fields
-  - every signal name matches on its first token (details carry
-    fn=/args= suffixes)
+Payload content, read from typed record keys (never parsed out of
+detail text):
+  - every load with bytes>0 has a loadSource with matching chunk and
+    non-empty source text
+  - every bridgeGetValue carries class/prop/obj/value keys
+  - every resumeEnter/resumeExit carries nargs/result keys
+  - every signalConnect event has a matching signalFire or forcedFire
   - at least one coverage record shows exec>0
 Consistency:
-  - every signalConnect name has a matching signalFire or forcedFire
   - every line parses as JSON with seq/ts_ms/tid/hook/detail keys
   - seq values are strictly increasing from 1
 Exits 1 listing violations.
 """
 import json
-import re
 import sys
 from pathlib import Path
 
@@ -30,7 +28,7 @@ from pathlib import Path
 REQUIRED = [
     "openState", "load", "loadSource", "resumeEnter", "resumeExit",
     "bridgeGet", "schedulerQueue", "schedulerResume", "forced",
-    "forcedCall", "coverage", "trace",
+    "forcedCall", "coverage", "trace", "const",
 ]
 
 # Hooks verified for payload shape whenever present (a workload may
@@ -38,10 +36,6 @@ REQUIRED = [
 CONDITIONAL = ["bridgeGetValue"]
 
 KEYS = {"seq", "ts_ms", "tid", "hook", "detail"}
-
-
-def name_of(detail):
-    return detail.split(None, 1)[0] if detail else ""
 
 
 def main(path):
@@ -59,7 +53,7 @@ def main(path):
         except ValueError:
             errors.append("line %d: invalid JSON" % i)
             continue
-        if set(rec.keys()) != KEYS:
+        if not KEYS.issubset(set(rec.keys())):
             errors.append("line %d: keys %s" % (i, sorted(rec.keys())))
             continue
         records.append(rec)
@@ -81,57 +75,85 @@ def main(path):
     for hook in CONDITIONAL:
         if hook not in seen:
             print("note: optional hook absent: %s" % hook)
-    # load/loadSource pairing with non-empty sources
+    # load/loadSource pairing with non-empty sources, from typed keys
     loads = {}
     for rec in records:
         if rec["hook"] == "load":
-            m = re.search(r"chunk=(\S+) bytes=(\d+)", rec["detail"])
-            if m:
-                loads[m.group(1)] = int(m.group(2))
+            if "chunk" not in rec or "bytes" not in rec:
+                errors.append("load without typed chunk/bytes")
+                break
+            loads[rec["chunk"]] = rec["bytes"]
     sources = {}
     for rec in records:
         if rec["hook"] == "loadSource":
-            head, _, body = rec["detail"].partition("\n")
-            m = re.search(r"chunk=(\S+) bytes=(\d+)", head)
-            if m:
-                sources[m.group(1)] = body
+            if "chunk" not in rec or "source" not in rec:
+                errors.append("loadSource without typed chunk/source")
+                break
+            sources[rec["chunk"]] = rec["source"]
     for chunk, nbytes in loads.items():
         if nbytes > 0:
             if chunk not in sources:
                 errors.append("load without source: %s" % chunk)
             elif not sources[chunk].strip():
                 errors.append("empty source: %s" % chunk)
-    # operand payloads present (pipe-separated Class.name | obj= | value)
+    # operand payloads present as typed keys
     for rec in records:
-        if rec["hook"] == "bridgeGetValue" and rec["detail"].count(" | ") < 2:
-            errors.append("bridgeGetValue without value")
+        if rec["hook"] == "bridgeGetValue":
+            for k in ("class", "prop", "obj", "vkind", "value"):
+                if k not in rec:
+                    errors.append("bridgeGetValue without key: %s" % k)
+                    break
             break
     for rec in records:
-        if rec["hook"] == "resumeEnter" and "nargs=" not in rec["detail"]:
+        if rec["hook"] == "resumeEnter" and "nargs" not in rec:
             errors.append("resumeEnter without nargs")
             break
     for rec in records:
-        if rec["hook"] == "resumeExit" and "result=" not in rec["detail"]:
+        if rec["hook"] == "resumeExit" and "result" not in rec:
             errors.append("resumeExit without result")
             break
-    # coverage shows real execution
+    for rec in records:
+        if rec["hook"] == "memberCall":
+            for k in ("class", "func", "obj", "args"):
+                if k not in rec:
+                    errors.append("memberCall without key: %s" % k)
+                    break
+            break
+    for rec in records:
+        if rec["hook"] == "const":
+            for k in ("chunk", "proto", "op", "kind", "value"):
+                if k not in rec:
+                    errors.append("const without key: %s" % k)
+                    break
+            break
+    for rec in records:
+        if rec["hook"] == "signalFire":
+            for k in ("event", "args"):
+                if k not in rec:
+                    errors.append("signalFire without key: %s" % k)
+                    break
+            break
+    # coverage shows real execution, from typed exec/total
     covered = False
     for rec in records:
         if rec["hook"] == "coverage":
-            m = re.search(r"exec=(\d+)/(\d+)", rec["detail"])
-            if m and int(m.group(1)) > 0:
+            if "exec" not in rec or "sizecode" not in rec:
+                errors.append("coverage without typed exec/sizecode")
+                break
+            if rec["exec"] > 0:
                 covered = True
                 break
     if "coverage" in seen and not covered:
         errors.append("no coverage record with exec>0")
-    # connect/fire matching on name token (details carry suffixes)
+    # connect/fire matching on typed event names
     fired = set()
     for rec in records:
         if rec["hook"] in ("signalFire", "forcedFire"):
-            fired.add(name_of(rec["detail"]))
+            if "event" in rec:
+                fired.add(rec["event"])
     for rec in records:
-        if rec["hook"] == "signalConnect" and name_of(rec["detail"]) not in fired:
-            errors.append("unfired connect: %s" % name_of(rec["detail"]))
+        if rec["hook"] == "signalConnect" and rec.get("event") not in fired:
+            errors.append("unfired connect: %s" % rec.get("event"))
     print("records=%d hooks=%s" % (len(records), sorted(seen.keys())))
     return errors
 

@@ -740,11 +740,20 @@ LUA_API volatile int rbxCaptureActive;
 LUA_API void rbx_setCaptureActive(int on);
 // Dump per-proto coverage: out(ctx, chunk, linedefined, sizecode,
 // execCount, commaOffsets) once per executed proto.
-LUA_API void rbx_dumpCoverage(void* ctx, void (*out)(void*, const char*, int, int, int, const char*));
+// Dump per-proto coverage: out(ctx, chunk, linedefined, sizecode,
+// execTotal, offsets, noffsets) once per executed proto. Offsets
+// arrive as an int array (capped), execTotal is the true executed
+// count, never joined text.
+LUA_API void rbx_dumpCoverage(void* ctx, void (*out)(void*, const char*, int, int, int, const int*, int));
 // Dump the instruction trace ring oldest-first: out(ctx, chunk,
 // linedefined, op, line, w0, w1) per record. Skips records whose proto
 // index no longer resolves.
 LUA_API void rbx_dumpTrace(void* ctx, void (*out)(void*, const char*, int, int, int, unsigned, unsigned));
+// Dump the constant-resolution ring: out(ctx, chunk, linedefined, op,
+// kind, value, truncated) per const-carrying instruction observed.
+// kind is one of nil/bool/number/string/import/other; value is the
+// resolved payload (dotted path for imports).
+LUA_API void rbx_dumpConsts(void* ctx, void (*out)(void*, const char*, int, int, const char*, const char*, int));
 // Frame selection for the 3-arg query helpers below. Real port: walks
 // the CallInfo chain in ldebug.cpp (was a no-op stub).
 LUA_API int lua_getstack(lua_State* L, int level, lua_Debug* ar);

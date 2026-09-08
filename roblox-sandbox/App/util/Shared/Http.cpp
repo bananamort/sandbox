@@ -644,13 +644,19 @@ void Http::httpGetPost(bool isPost, std::istream& dataStream,
                 dataStream.clear();
             }
         }
+        unsigned payloadHash = payload.empty() ? 0 : XXH32(payload.data(), (int)payload.size(), 0);
         char head[96];
         snprintf(head, sizeof(head), "payloadLen=%u payloadHash=%08x ",
-            (unsigned)payload.size(),
-            payload.empty() ? 0 : XXH32(payload.data(), (int)payload.size(), 0));
-        RBX::ScriptCapture::emit("http",
-            std::string(isPost ? "POST " : "GET ") + url + " " + head +
-            "(response in proxy log)");
+            (unsigned)payload.size(), payloadHash);
+        std::string method = isPost ? "POST" : "GET";
+        std::vector<RBX::ScriptCapture::Field> fields;
+        fields.push_back({"method", RBX::ScriptCapture::FieldVal::str(method)});
+        fields.push_back({"url", RBX::ScriptCapture::FieldVal::str(url)});
+        fields.push_back({"payloadLen", RBX::ScriptCapture::FieldVal::num((long long)payload.size())});
+        fields.push_back({"payloadHash", RBX::ScriptCapture::FieldVal::num(payloadHash)});
+        RBX::ScriptCapture::emitFields("http",
+            method + " " + url + " " + head +
+            "(response in proxy log)", fields);
     }
 #ifdef __APPLE__
 	if (!useCurlHttpImpl || forceNativeHttp)

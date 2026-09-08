@@ -156,16 +156,22 @@ public:
 			return;
 		}
 
-		std::string detail = std::string(descriptor->owner.name.c_str()) + "." + descriptor->name.c_str() + " args=";
+		std::string ev = std::string(descriptor->owner.name.c_str()) + "." + descriptor->name.c_str();
+		std::string detail = ev + " args=";
+		std::vector<RBX::ScriptCapture::FieldVal> args;
 		for (size_t i = 0; i < arguments.size() && i < 8; ++i)
 		{
 			if (i)
 				detail += ",";
 			detail += RBX::ScriptCapture::valueString(arguments[i]);
+			args.push_back(RBX::ScriptCapture::valueField(arguments[i]));
 		}
 		if (arguments.size() > 8)
 			detail += ",...";
-		RBX::ScriptCapture::emit("signalFire", detail);
+		std::vector<RBX::ScriptCapture::Field> fields;
+		fields.push_back({"event", RBX::ScriptCapture::FieldVal::str(ev)});
+		fields.push_back({"args", RBX::ScriptCapture::FieldVal::arr(args)});
+		RBX::ScriptCapture::emitFields("signalFire", detail, fields);
 
 		if (ThreadRef functionThread = function.lock())
 		{
@@ -381,7 +387,12 @@ int EventBridge::connect(lua_State *L)
 		connection = ei.descriptor->connectGeneric(source.get(), wrapper);
 		wrapper->slot.assignConnection(connection);
 		std::string connName = std::string(ei.descriptor->owner.name.c_str()) + "." + ei.descriptor->name.c_str();
-		RBX::ScriptCapture::emit("signalConnect", connName + " fn=" + RBX::ScriptCapture::luaValueString(L, 2));
+		RBX::ScriptCapture::TypedValue fn = RBX::ScriptCapture::luaValueTyped(L, 2);
+		std::vector<RBX::ScriptCapture::Field> fields;
+		fields.push_back({"event", RBX::ScriptCapture::FieldVal::str(connName)});
+		fields.push_back({"fnkind", RBX::ScriptCapture::FieldVal::str(fn.kind)});
+		fields.push_back({"fn", RBX::ScriptCapture::FieldVal::str(fn.raw)});
+		RBX::ScriptCapture::emitFields("signalConnect", connName + " fn=" + RBX::ScriptCapture::luaValueString(L, 2), fields);
 		if (RBX::ScriptCapture::active()) {
 			RBX::mutex::scoped_lock guard(forcedLock());
 			ForcedConnect rec;
@@ -487,11 +498,16 @@ void RunForcedCoverageConnects()
 		try
 		{
 			records[i].fire();
-			RBX::ScriptCapture::emit("forcedFire", records[i].name);
+			std::vector<RBX::ScriptCapture::Field> fields;
+			fields.push_back({"event", RBX::ScriptCapture::FieldVal::str(records[i].name)});
+			RBX::ScriptCapture::emitFields("forcedFire", records[i].name, fields);
 		}
 		catch (std::exception& e)
 		{
-			RBX::ScriptCapture::emit("forcedFireError", records[i].name + std::string("|") + e.what());
+			std::vector<RBX::ScriptCapture::Field> fields;
+			fields.push_back({"event", RBX::ScriptCapture::FieldVal::str(records[i].name)});
+			fields.push_back({"err", RBX::ScriptCapture::FieldVal::str(e.what())});
+			RBX::ScriptCapture::emitFields("forcedFireError", records[i].name + std::string("|") + e.what(), fields);
 		}
 	}
 }

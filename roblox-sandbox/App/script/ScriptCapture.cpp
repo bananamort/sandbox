@@ -94,14 +94,94 @@ namespace RBX
 			::fflush(f);
 		}
 
+		void writeFieldVal(FILE* f, const FieldVal& v)
+		{
+			switch (v.kind)
+			{
+			case FieldVal::Str:
+				writeJsonString(f, v.s.c_str());
+				break;
+			case FieldVal::Int:
+				::fprintf(f, "%lld", v.i);
+				break;
+			case FieldVal::Dbl:
+				{
+					char buf[32];
+					snprintf(buf, sizeof(buf), "%g", v.d);
+					::fputs(buf, f);
+				}
+				break;
+			case FieldVal::Bool:
+				::fputs(v.b ? "true" : "false", f);
+				break;
+			case FieldVal::Nil:
+				::fputs("null", f);
+				break;
+			case FieldVal::Arr:
+				::fputc('[', f);
+				for (size_t i = 0; i < v.a.size(); ++i)
+				{
+					if (i)
+						::fputc(',', f);
+					writeFieldVal(f, v.a[i]);
+				}
+				::fputc(']', f);
+				break;
+			case FieldVal::Obj:
+				::fputc('{', f);
+				for (size_t i = 0; i < v.o.size(); ++i)
+				{
+					if (i)
+						::fputc(',', f);
+					writeJsonString(f, v.o[i].key);
+					::fputc(':', f);
+					writeFieldVal(f, v.o[i].val);
+				}
+				::fputc('}', f);
+				break;
+			}
+		}
+
+		void emitFields(const char* hook, const std::string& detail,
+			const std::vector<Field>& fields)
+		{
+			emitFields(hook, detail.c_str(), fields);
+		}
+
+		void emitFields(const char* hook, const char* detail,
+			const std::vector<Field>& fields)
+		{
+			if (!hook || !detail)
+				return;
+			RBX::mutex::scoped_lock guard(lock());
+			FILE* f = sink();
+			if (!f)
+				return;
+			::fprintf(f, "{\"seq\":%ld,\"ts_ms\":%lu,\"tid\":%lu,\"hook\":\"%s\",",
+				++g_seq, (unsigned long)::GetTickCount(), (unsigned long)::GetCurrentThreadId(), hook);
+			::fputs("\"detail\":", f);
+			writeJsonString(f, detail);
+			for (size_t i = 0; i < fields.size(); ++i)
+			{
+				::fputc(',', f);
+				writeJsonString(f, fields[i].key);
+				::fputc(':', f);
+				writeFieldVal(f, fields[i].val);
+			}
+			::fputs("}\n", f);
+			::fflush(f);
+		}
+
 		namespace
 		{
 			// Strings longer than this are truncated with a <N more> marker.
 			const size_t kMaxString = 512;
 
-			std::string quotedTruncated(const char* s, size_t len)
+			// Escaped inner text shared by the quoted renderer and the
+			// typed raw payload, so both stay byte-identical.
+			std::string escapeInner(const char* s, size_t len, bool* truncated)
 			{
-				std::string out = "\"";
+				std::string out;
 				size_t n = len < kMaxString ? len : kMaxString;
 				for (size_t i = 0; i < n; ++i)
 				{
@@ -121,14 +201,82 @@ namespace RBX
 						out += esc;
 					}
 				}
-				out += "\"";
-				if (len > kMaxString)
-				{
-					char tail[32];
-					snprintf(tail, sizeof(tail), "...<%u more>", (unsigned)(len - kMaxString));
-					out += tail;
-				}
+				if (truncated)
+					*truncated = len > kMaxString;
 				return out;
+			}
+		}
+
+		TypedValue luaValueTyped(lua_State* L, int idx)
+		{
+			TypedValue t;
+			t.truncated = false;
+			if (!L)
+			{
+				t.kind = "nil";
+				return t;
+			}
+			if (idx <= 0 && idx > LUA_REGISTRYINDEX)
+				idx = lua_gettop(L) + idx + 1;
+			switch (lua_type(L, idx))
+			{
+			case LUA_TNIL:
+				t.kind = "nil";
+				return t;
+			case LUA_TBOOLEAN:
+				t.kind = "bool";
+				t.raw = lua_toboolean(L, idx) ? "true" : "false";
+				return t;
+			case LUA_TNUMBER:
+			case LUA_TINTEGER:
+				{
+					t.kind = "number";
+					char buf[32];
+					snprintf(buf, sizeof(buf), "%g", lua_tonumber(L, idx));
+					t.raw = buf;
+					return t;
+				}
+#if !LUA_VECTOR_DOUBLE
+			case LUA_TVECTOR:
+				t.kind = "vector";
+				return t;
+#endif
+			case LUA_TSTRING:
+				{
+					size_t len = 0;
+					const char* s = lua_tolstring(L, idx, &len);
+					if (!s)
+					{
+						t.kind = "nil";
+						return t;
+					}
+					t.kind = "string";
+					t.raw = escapeInner(s, len, &t.truncated);
+					return t;
+				}
+			case LUA_TFUNCTION:
+				t.kind = "function";
+				return t;
+			case LUA_TTHREAD:
+				t.kind = "thread";
+				return t;
+			case LUA_TTABLE:
+				t.kind = "table";
+				return t;
+			case LUA_TUSERDATA:
+			case LUA_TLIGHTUSERDATA:
+				t.kind = "userdata";
+				if (lua_getmetatable(L, idx))
+				{
+					lua_getfield(L, -1, "__type");
+					if (lua_type(L, -1) == LUA_TSTRING)
+						t.raw = lua_tostring(L, -1);
+					lua_pop(L, 2);
+				}
+				return t;
+			default:
+				t.kind = "?";
+				return t;
 			}
 		}
 
@@ -136,102 +284,146 @@ namespace RBX
 		{
 			if (!L)
 				return "null-state";
-			if (idx <= 0 && idx > LUA_REGISTRYINDEX)
-				idx = lua_gettop(L) + idx + 1;
-			switch (lua_type(L, idx))
+			TypedValue t = luaValueTyped(L, idx);
+			if (t.kind == "string")
 			{
-			case LUA_TNIL:
-				return "nil";
-			case LUA_TBOOLEAN:
-				return lua_toboolean(L, idx) ? "true" : "false";
-			case LUA_TNUMBER:
-			case LUA_TINTEGER:
+				std::string out = "\"" + t.raw + "\"";
+				if (t.truncated)
 				{
-					char buf[32];
-					snprintf(buf, sizeof(buf), "%g", lua_tonumber(L, idx));
-					return buf;
-				}
-#if !LUA_VECTOR_DOUBLE
-			case LUA_TVECTOR:
-				return "vector";
-#endif
-			case LUA_TSTRING:
-				{
+					// Length suffix needs the original length, which the
+					// truncating renderer already computed; recompute here
+					// from the stack value so output stays identical.
 					size_t len = 0;
-					const char* s = lua_tolstring(L, idx, &len);
-					return s ? quotedTruncated(s, len) : "null-string";
+					if (lua_tolstring(L, idx, &len) && len > kMaxString)
+					{
+						char tail[32];
+						snprintf(tail, sizeof(tail), "...<%u more>", (unsigned)(len - kMaxString));
+						out += tail;
+					}
 				}
-			case LUA_TFUNCTION:
-				return "function";
-			case LUA_TTHREAD:
-				return "thread";
-			case LUA_TTABLE:
-				return "table";
-			case LUA_TUSERDATA:
-			case LUA_TLIGHTUSERDATA:
-				if (lua_getmetatable(L, idx))
-				{
-					std::string t = "userdata";
-					lua_getfield(L, -1, "__type");
-					if (lua_type(L, -1) == LUA_TSTRING)
-						t = "userdata:" + std::string(lua_tostring(L, -1));
-					lua_pop(L, 2);
-					return t;
-				}
-				return "userdata";
-			default:
-				return "?";
+				return out;
 			}
+			if (t.kind == "bool" || t.kind == "number")
+				return t.raw;
+			if (t.kind == "userdata")
+				return t.raw.empty() ? "userdata" : "userdata:" + t.raw;
+			if (t.kind == "nil")
+			{
+				// Preserve the legacy null-string marker for a NULL
+				// payload; plain nil stays "nil".
+				size_t len = 0;
+				if (lua_type(L, idx) == LUA_TSTRING && !lua_tolstring(L, idx, &len))
+					return "null-string";
+				return "nil";
+			}
+			return t.kind == "?" ? "?" : t.kind;
 		}
 
-		std::string valueString(const Reflection::Variant& v)
+		TypedValue valueTyped(const Reflection::Variant& v)
 		{
+			TypedValue t;
+			t.truncated = false;
 			if (v.isType<void>())
-				return "nil";
+			{
+				t.kind = "nil";
+				return t;
+			}
 			if (v.isType<bool>())
-				return v.cast<bool>() ? "true" : "false";
+			{
+				t.kind = "bool";
+				t.raw = v.cast<bool>() ? "true" : "false";
+				return t;
+			}
 			if (v.isType<int>())
 			{
+				t.kind = "number";
 				char buf[32];
 				snprintf(buf, sizeof(buf), "%d", v.cast<int>());
-				return buf;
+				t.raw = buf;
+				return t;
 			}
 			if (v.isType<long>())
 			{
+				t.kind = "number";
 				char buf[32];
 				snprintf(buf, sizeof(buf), "%ld", v.cast<long>());
-				return buf;
+				t.raw = buf;
+				return t;
 			}
 			if (v.isType<float>())
 			{
+				t.kind = "number";
 				char buf[32];
 				snprintf(buf, sizeof(buf), "%g", (double)v.cast<float>());
-				return buf;
+				t.raw = buf;
+				return t;
 			}
 			if (v.isType<double>())
 			{
+				t.kind = "number";
 				char buf[32];
 				snprintf(buf, sizeof(buf), "%g", v.cast<double>());
-				return buf;
+				t.raw = buf;
+				return t;
 			}
 			if (v.isType<std::string>())
 			{
 				const std::string& s = v.cast<std::string>();
-				return quotedTruncated(s.c_str(), s.size());
+				t.kind = "string";
+				t.raw = escapeInner(s.c_str(), s.size(), &t.truncated);
+				return t;
 			}
 			if (v.isType<RBX::ProtectedString>())
 			{
 				const std::string& s = v.cast<RBX::ProtectedString>().getSource();
-				return "source" + quotedTruncated(s.c_str(), s.size());
+				t.kind = "source";
+				t.raw = escapeInner(s.c_str(), s.size(), &t.truncated);
+				return t;
 			}
 			if (v.isType<boost::shared_ptr<Instance> >())
 			{
 				boost::shared_ptr<Instance> inst = v.cast<boost::shared_ptr<Instance> >();
-				if (!inst)
-					return "Instance<null>";
-				return "Instance<" + inst->getClassNameStr() + ":" + inst->getName() + ">";
+				t.kind = "instance";
+				if (inst)
+					t.raw = inst->getClassNameStr() + ":" + inst->getName();
+				return t;
 			}
-			return std::string("<") + v.type().tag.c_str() + ">";
+			t.kind = v.type().tag.c_str();
+			return t;
+		}
+
+		std::string valueString(const Reflection::Variant& v)
+		{
+			TypedValue t = valueTyped(v);
+			if (t.kind == "string")
+			{
+				std::string out = "\"" + t.raw + "\"";
+				if (t.truncated)
+				{
+					const std::string& s = v.cast<std::string>();
+					char tail[32];
+					snprintf(tail, sizeof(tail), "...<%u more>", (unsigned)(s.size() - kMaxString));
+					out += tail;
+				}
+				return out;
+			}
+			if (t.kind == "source")
+			{
+				std::string out = "source\"" + t.raw + "\"";
+				if (t.truncated)
+				{
+					const std::string& s = v.cast<RBX::ProtectedString>().getSource();
+					char tail[32];
+					snprintf(tail, sizeof(tail), "...<%u more>", (unsigned)(s.size() - kMaxString));
+					out += tail;
+				}
+				return out;
+			}
+			if (t.kind == "instance")
+				return t.raw.empty() ? "Instance<null>" : "Instance<" + t.raw + ">";
+			if (t.kind == "nil" || t.kind == "bool" || t.kind == "number")
+				return t.raw.empty() ? "nil" : t.raw;
+			return "<" + t.kind + ">";
 		}
 
 		std::string tupleString(const Reflection::Tuple& t, size_t maxVals)
@@ -255,13 +447,30 @@ namespace RBX
 
 		namespace
 		{
-			void coverageOut(void* ctx, const char* chunk, int linedefined, int sizecode, int exec, const char* offs)
+			void coverageOut(void* ctx, const char* chunk, int linedefined, int sizecode, int exec, const int* offs, int noffs)
 			{
 				(void)ctx;
+				std::string offText;
+				std::vector<FieldVal> offArr;
+				for (int i = 0; i < noffs; ++i)
+				{
+					if (i)
+						offText += ',';
+					char num[16];
+					snprintf(num, sizeof(num), "%d", offs[i]);
+					offText += num;
+					offArr.push_back(FieldVal::num(offs[i]));
+				}
 				char head[128];
-				snprintf(head, sizeof(head), "chunk=%s proto=%d exec=%d/%d offs=",
-					chunk ? chunk : "?", linedefined, exec, sizecode);
-				emit("coverage", std::string(head) + (offs ? offs : ""));
+				snprintf(head, sizeof(head), "chunk=%s proto=%d exec=%d/%d offs=%s",
+					chunk ? chunk : "?", linedefined, exec, sizecode, offText.c_str());
+				std::vector<Field> fields;
+				fields.push_back({"chunk", FieldVal::str(chunk ? chunk : "?")});
+				fields.push_back({"proto", FieldVal::num(linedefined)});
+				fields.push_back({"sizecode", FieldVal::num(sizecode)});
+				fields.push_back({"exec", FieldVal::num(exec)});
+				fields.push_back({"offs", FieldVal::arr(offArr)});
+				emitFields("coverage", head, fields);
 			}
 
 			void traceOut(void* ctx, const char* chunk, int linedefined, int op, int line, unsigned w0, unsigned w1)
@@ -270,7 +479,14 @@ namespace RBX
 				char head[192];
 				snprintf(head, sizeof(head), "chunk=%s proto=%d op=%d line=%d w0=%u w1=%u",
 					chunk ? chunk : "?", linedefined, op, line, w0, w1);
-				emit("trace", head);
+				std::vector<Field> fields;
+				fields.push_back({"chunk", FieldVal::str(chunk ? chunk : "?")});
+				fields.push_back({"proto", FieldVal::num(linedefined)});
+				fields.push_back({"op", FieldVal::num(op)});
+				fields.push_back({"line", FieldVal::num(line)});
+				fields.push_back({"w0", FieldVal::num((long long)w0)});
+				fields.push_back({"w1", FieldVal::num((long long)w1)});
+				emitFields("trace", head, fields);
 			}
 		}
 
@@ -282,6 +498,30 @@ namespace RBX
 		void dumpTrace()
 		{
 			rbx_dumpTrace(NULL, traceOut);
+		}
+
+		namespace
+		{
+			void constOut(void* ctx, const char* chunk, int linedefined, int op, const char* kind, const char* value, int truncated)
+			{
+				(void)ctx;
+				char head[128];
+				snprintf(head, sizeof(head), "chunk=%s proto=%d op=%d %s=",
+					chunk ? chunk : "?", linedefined, op, kind ? kind : "?");
+				std::vector<Field> fields;
+				fields.push_back({"chunk", FieldVal::str(chunk ? chunk : "?")});
+				fields.push_back({"proto", FieldVal::num(linedefined)});
+				fields.push_back({"op", FieldVal::num(op)});
+				fields.push_back({"kind", FieldVal::str(kind ? kind : "?")});
+				fields.push_back({"value", FieldVal::str(value ? value : "")});
+				fields.push_back({"truncated", FieldVal::boolean(truncated != 0)});
+				emitFields("const", std::string(head) + (value ? value : ""), fields);
+			}
+		}
+
+		void dumpConsts()
+		{
+			rbx_dumpConsts(NULL, constOut);
 		}
 	}
 }
