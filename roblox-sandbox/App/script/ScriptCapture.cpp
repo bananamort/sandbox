@@ -502,16 +502,17 @@ namespace RBX
 
 		namespace
 		{
-			void constOut(void* ctx, const char* chunk, int linedefined, int op, const char* kind, const char* value, int truncated)
+			void constOut(void* ctx, const char* chunk, int linedefined, int op, int off, const char* kind, const char* value, int truncated)
 			{
 				(void)ctx;
 				char head[128];
-				snprintf(head, sizeof(head), "chunk=%s proto=%d op=%d %s=",
-					chunk ? chunk : "?", linedefined, op, kind ? kind : "?");
+				snprintf(head, sizeof(head), "chunk=%s proto=%d op=%d off=%d %s=",
+					chunk ? chunk : "?", linedefined, op, off, kind ? kind : "?");
 				std::vector<Field> fields;
 				fields.push_back({"chunk", FieldVal::str(chunk ? chunk : "?")});
 				fields.push_back({"proto", FieldVal::num(linedefined)});
 				fields.push_back({"op", FieldVal::num(op)});
+				fields.push_back({"off", FieldVal::num(off)});
 				fields.push_back({"kind", FieldVal::str(kind ? kind : "?")});
 				fields.push_back({"value", FieldVal::str(value ? value : "")});
 				fields.push_back({"truncated", FieldVal::boolean(truncated != 0)});

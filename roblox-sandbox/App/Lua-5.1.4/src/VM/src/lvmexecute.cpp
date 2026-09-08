@@ -533,7 +533,7 @@ void rbx_dumpConsts(void* ctx, void (*out)(void*, const char*, int, int, int, co
         if (r.proto < 0 || (size_t)r.proto >= byIndex.size() || !byIndex[(size_t)r.proto])
             continue;
         const RbxCoverEntry* e = byIndex[(size_t)r.proto];
-        out(ctx, e->chunk.c_str(), e->linedefined, (int)r.op, rbxConstKindName(r.kind), r.val, r.truncated ? 1 : 0);
+        out(ctx, e->chunk.c_str(), e->linedefined, (int)r.op, r.off, rbxConstKindName(r.kind), r.val, r.truncated ? 1 : 0);
     }
     LeaveCriticalSection(&rbxCoverLock());
 }

@@ -121,7 +121,7 @@ def main(path):
             break
     for rec in records:
         if rec["hook"] == "const":
-            for k in ("chunk", "proto", "op", "kind", "value"):
+            for k in ("chunk", "proto", "op", "off", "kind", "value"):
                 if k not in rec:
                     errors.append("const without key: %s" % k)
                     break
