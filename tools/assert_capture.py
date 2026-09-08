@@ -6,7 +6,7 @@ Usage: python3 tools/assert_capture.py <path/to/capture.jsonl>
 Requires (each must appear at least once):
   openState, load, loadSource, resumeEnter, resumeExit, bridgeGet,
   schedulerQueue, schedulerResume, forced, forcedCall,
-  coverage, trace
+  coverage, trace, const, lift
 Payload content, read from typed record keys (never parsed out of
 detail text):
   - every load with bytes>0 has a loadSource with matching chunk and
@@ -28,7 +28,7 @@ from pathlib import Path
 REQUIRED = [
     "openState", "load", "loadSource", "resumeEnter", "resumeExit",
     "bridgeGet", "schedulerQueue", "schedulerResume", "forced",
-    "forcedCall", "coverage", "trace", "const",
+    "forcedCall", "coverage", "trace", "const", "lift",
 ]
 
 # Hooks verified for payload shape whenever present (a workload may
@@ -154,6 +154,17 @@ def main(path):
     for rec in records:
         if rec["hook"] == "signalConnect" and rec.get("event") not in fired:
             errors.append("unfired connect: %s" % rec.get("event"))
+    # lifter ran clean: typed ok flag (reconstruction.lua written
+    # by the in-engine lifter from accumulated typed feed)
+    for rec in records:
+        if rec["hook"] == "lift":
+            if "ok" not in rec or "chunks" not in rec:
+                errors.append("lift without typed ok/chunks")
+                break
+            if rec["ok"] is not True or rec["chunks"] < 1:
+                errors.append("lift failed: ok=%r chunks=%r" % (rec.get("ok"), rec.get("chunks")))
+                break
+            break
     print("records=%d hooks=%s" % (len(records), sorted(seen.keys())))
     return errors
 

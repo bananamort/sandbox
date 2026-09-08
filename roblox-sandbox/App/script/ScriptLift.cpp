@@ -23,12 +23,22 @@ namespace RBX
 				return instance;
 			}
 
+			struct ConstRec
+			{
+				int proto;
+				int off;
+				int op;
+				std::string kind;
+				std::string value;
+			};
+
 			struct ChunkData
 			{
 				std::string source;
 				int exec;
 				int total;
 				bool hasCoverage;
+				std::vector<ConstRec> consts;
 				ChunkData() : exec(0), total(0), hasCoverage(false) {}
 			};
 
@@ -50,15 +60,14 @@ namespace RBX
 		void noteConst(const std::string& chunk, int proto, int off, int op,
 			const std::string& kind, const std::string& value)
 		{
-			(void)chunk;
-			(void)proto;
-			(void)off;
-			(void)op;
-			(void)kind;
-			(void)value;
-			// T1.6.11 consumes these for substitution; v1 records the
-			// observation path only (accumulation without use would warn
-			// as unused, so the parameters are explicitly sunk here).
+			RBX::mutex::scoped_lock guard(lock());
+			ConstRec r;
+			r.proto = proto;
+			r.off = off;
+			r.op = op;
+			r.kind = kind;
+			r.value = value;
+			chunks()[chunk].consts.push_back(r);
 		}
 
 		void noteCoverage(const std::string& chunk, int proto, int exec, int total)
@@ -118,7 +127,10 @@ namespace RBX
 			::fclose(f);
 			char head[128];
 			snprintf(head, sizeof(head), "chunks=%d ok=%d", nchunks, ok ? 1 : 0);
-			RBX::ScriptCapture::emit("lift", head);
+			std::vector<RBX::ScriptCapture::Field> fields;
+			fields.push_back({"chunks", RBX::ScriptCapture::FieldVal::num(nchunks)});
+			fields.push_back({"ok", RBX::ScriptCapture::FieldVal::boolean(ok)});
+			RBX::ScriptCapture::emitFields("lift", head, fields);
 			return ok && nchunks > 0;
 		}
 	}

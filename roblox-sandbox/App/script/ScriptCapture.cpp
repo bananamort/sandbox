@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "script/ScriptCapture.h"
+#include "script/ScriptLift.h"
 
 #include "../Lua-5.1.4/src/VM/include/lua.h"
 #include "rbx/threadsafe.h"
@@ -148,6 +149,11 @@ namespace RBX
 			emitFields(hook, detail.c_str(), fields);
 		}
 
+		namespace
+		{
+			void feedLift(const char* hook, const std::vector<Field>& fields);
+		}
+
 		void emitFields(const char* hook, const char* detail,
 			const std::vector<Field>& fields)
 		{
@@ -170,6 +176,79 @@ namespace RBX
 			}
 			::fputs("}\n", f);
 			::fflush(f);
+			// Fan-out to the lifter lives here, centrally, so hook sites
+			// stay single-purpose. Shapes are enforced by the CI gate;
+			// a malformed record feeds nothing (and fails the build).
+			feedLift(hook, fields);
+		}
+
+		namespace
+		{
+			const FieldVal* findField(const std::vector<Field>& fields, const char* key)
+			{
+				for (size_t i = 0; i < fields.size(); ++i)
+				{
+					if (!strcmp(fields[i].key, key))
+						return &fields[i].val;
+				}
+				return NULL;
+			}
+
+			long long fieldInt(const std::vector<Field>& fields, const char* key, bool& ok)
+			{
+				const FieldVal* v = findField(fields, key);
+				if (!v || v->kind != FieldVal::Int)
+				{
+					ok = false;
+					return 0;
+				}
+				return v->i;
+			}
+
+			const char* fieldStr(const std::vector<Field>& fields, const char* key, bool& ok)
+			{
+				const FieldVal* v = findField(fields, key);
+				if (!v || v->kind != FieldVal::Str)
+				{
+					ok = false;
+					return "";
+				}
+				return v->s.c_str();
+			}
+
+			void feedLift(const char* hook, const std::vector<Field>& fields)
+			{
+				if (!strcmp(hook, "loadSource"))
+				{
+					bool ok = true;
+					const char* chunk = fieldStr(fields, "chunk", ok);
+					const char* source = fieldStr(fields, "source", ok);
+					if (ok)
+						RBX::ScriptLift::noteChunk(chunk, source);
+				}
+				else if (!strcmp(hook, "const"))
+				{
+					bool ok = true;
+					const char* chunk = fieldStr(fields, "chunk", ok);
+					long long proto = fieldInt(fields, "proto", ok);
+					long long off = fieldInt(fields, "off", ok);
+					long long op = fieldInt(fields, "op", ok);
+					const char* kind = fieldStr(fields, "kind", ok);
+					const char* value = fieldStr(fields, "value", ok);
+					if (ok)
+						RBX::ScriptLift::noteConst(chunk, (int)proto, (int)off, (int)op, kind, value);
+				}
+				else if (!strcmp(hook, "coverage"))
+				{
+					bool ok = true;
+					const char* chunk = fieldStr(fields, "chunk", ok);
+					long long proto = fieldInt(fields, "proto", ok);
+					long long exec = fieldInt(fields, "exec", ok);
+					long long sizecode = fieldInt(fields, "sizecode", ok);
+					if (ok)
+						RBX::ScriptLift::noteCoverage(chunk, (int)proto, (int)exec, (int)sizecode);
+				}
+			}
 		}
 
 		namespace

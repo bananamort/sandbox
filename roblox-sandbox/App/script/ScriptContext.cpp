@@ -2,6 +2,7 @@
 #include <cstdio>
 #include "Script/ScriptContext.h"
 #include "script/ScriptCapture.h"
+#include "script/ScriptLift.h"
 #include "Script/CoreScript.h"
 #include "Script/DebuggerManager.h"
 #include "Script/LuaArguments.h"
@@ -2835,6 +2836,18 @@ void ScriptContext::runForcedCoverage()
 	RBX::ScriptCapture::dumpCoverage();
 	RBX::ScriptCapture::dumpTrace();
 	RBX::ScriptCapture::dumpConsts();
+	{
+		// Reconstruction runs from the accumulated typed feed (never
+		// from rendered text) beside the capture file.
+		char path[MAX_PATH];
+		if (::GetEnvironmentVariableA("RBX_CAPTURE_PATH", path, MAX_PATH) != 0)
+		{
+			std::string out = path;
+			std::string::size_type slash = out.find_last_of("\\/");
+			std::string dir = (slash == std::string::npos) ? "" : out.substr(0, slash + 1);
+			RBX::ScriptLift::reconstruct(dir + "reconstruction.lua");
+		}
+	}
 }
 
 void ScriptContext::resumeWaitingScripts(const Time expirationTime)
