@@ -368,14 +368,11 @@ namespace RBX { namespace Lua {
 			pushLuaValue(Property(*prop, object.get()), L, securityContext);
 			std::string cls = object->getDescriptor().name.c_str();
 			std::string obj = object->getFullName();
-			RBX::ScriptCapture::TypedValue tv = RBX::ScriptCapture::luaValueTyped(L, -1);
 			std::vector<RBX::ScriptCapture::Field> fields;
 			fields.push_back({"class", RBX::ScriptCapture::FieldVal::str(cls)});
 			fields.push_back({"prop", RBX::ScriptCapture::FieldVal::str(name)});
 			fields.push_back({"obj", RBX::ScriptCapture::FieldVal::str(obj)});
-			fields.push_back({"vkind", RBX::ScriptCapture::FieldVal::str(tv.kind)});
-			fields.push_back({"value", RBX::ScriptCapture::FieldVal::str(tv.raw)});
-			fields.push_back({"truncated", RBX::ScriptCapture::FieldVal::boolean(tv.truncated)});
+			fields.push_back({"value", RBX::ScriptCapture::luaValueField(L, -1)});
 			RBX::ScriptCapture::emitFields("bridgeGetValue",
 				cls + "." + name +
 				" | obj=" + obj +
@@ -985,14 +982,11 @@ void Bridge< shared_ptr<Instance>, false >::on_newindex(shared_ptr<Instance>& ob
 
 	std::string cls = object->getDescriptor().name.c_str();
 	std::string obj = object->getFullName();
-	RBX::ScriptCapture::TypedValue tv = RBX::ScriptCapture::luaValueTyped(L, 3);
 	std::vector<RBX::ScriptCapture::Field> fields;
 	fields.push_back({"class", RBX::ScriptCapture::FieldVal::str(cls)});
 	fields.push_back({"prop", RBX::ScriptCapture::FieldVal::str(name)});
 	fields.push_back({"obj", RBX::ScriptCapture::FieldVal::str(obj)});
-	fields.push_back({"vkind", RBX::ScriptCapture::FieldVal::str(tv.kind)});
-	fields.push_back({"value", RBX::ScriptCapture::FieldVal::str(tv.raw)});
-	fields.push_back({"truncated", RBX::ScriptCapture::FieldVal::boolean(tv.truncated)});
+	fields.push_back({"value", RBX::ScriptCapture::luaValueField(L, 3)});
 	RBX::ScriptCapture::emitFields("bridgeSet",
 		cls + "." + name +
 		" | obj=" + obj +

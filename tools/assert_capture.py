@@ -96,13 +96,29 @@ def main(path):
                 errors.append("load without source: %s" % chunk)
             elif not sources[chunk].strip():
                 errors.append("empty source: %s" % chunk)
-    # operand payloads present as typed keys
+    # operand payloads present as typed keys; values are objects
+    # {kind, value, truncated}, never rendered text
     for rec in records:
         if rec["hook"] == "bridgeGetValue":
-            for k in ("class", "prop", "obj", "vkind", "value"):
+            for k in ("class", "prop", "obj", "value"):
                 if k not in rec:
                     errors.append("bridgeGetValue without key: %s" % k)
                     break
+            else:
+                v = rec["value"]
+                if not isinstance(v, dict) or "kind" not in v or "value" not in v:
+                    errors.append("bridgeGetValue value not an object")
+            break
+    for rec in records:
+        if rec["hook"] == "bridgeSet":
+            for k in ("class", "prop", "obj", "value"):
+                if k not in rec:
+                    errors.append("bridgeSet without key: %s" % k)
+                    break
+            else:
+                v = rec["value"]
+                if not isinstance(v, dict) or "kind" not in v or "value" not in v:
+                    errors.append("bridgeSet value not an object")
             break
     for rec in records:
         if rec["hook"] == "resumeEnter" and "nargs" not in rec:

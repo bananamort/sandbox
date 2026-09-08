@@ -110,6 +110,9 @@ def emit_replay(records, outdir):
                     code.append("-- non-replayable set: %s.%s" % (rec["class"], rec["prop"]))
                     continue
                 v = rec.get("value", {})
+                if not isinstance(v, dict):
+                    errors.append("bridgeSet value not an object")
+                    continue
                 l, ok = lit(v.get("kind"), v.get("raw", ""))
                 if ok:
                     code.append("%s.%s = %s" % (path, rec["prop"], l))
@@ -130,7 +133,13 @@ def emit_replay(records, outdir):
                     continue
                 lits = []
                 bad = []
-                for a in args if isinstance(args, list) else []:
+                if not isinstance(args, list):
+                    errors.append("memberCall args not an array")
+                    continue
+                for a in args:
+                    if not isinstance(a, dict):
+                        errors.append("memberCall arg not an object")
+                        continue
                     l, ok = lit(a.get("kind"), a.get("raw", ""))
                     lits.append(l)
                     if not ok:
