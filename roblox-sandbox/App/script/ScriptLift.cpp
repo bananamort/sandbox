@@ -199,7 +199,7 @@ namespace RBX
 					arr.size = r->value.size();
 					replacement = names.alloc<Luau::AstExprConstantString>(
 						node->location, arr,
-						Luau::AstExprConstantString::QuotedSimple);
+						Luau::AstExprConstantString::QuoteStyle::QuotedSimple);
 				}
 				if (replacement)
 				{
@@ -219,6 +219,9 @@ namespace RBX
 			Luau::Allocator& names;
 			std::map<int, std::vector<const ConstRec*> >& getByLine;
 		};
+
+		static bool replaceExpr(Luau::AstStatBlock* block, Luau::AstExpr* target,
+			Luau::AstExpr* with);
 
 		static bool replaceInExpr(Luau::AstExpr*& slot, Luau::AstExpr* target,
 			Luau::AstExpr* with)
@@ -252,7 +255,7 @@ namespace RBX
 				return replaceInExpr(n->index, target, with);
 			}
 			else if (Luau::AstExprFunction* fn = slot->as<Luau::AstExprFunction>())
-				return replaceExpr(fn->body, target, with);
+				return replaceExprImpl(fn->body, target, with);
 			else if (Luau::AstExprTable* tb = slot->as<Luau::AstExprTable>())
 			{
 				for (size_t i = 0; i < tb->items.size; ++i)
@@ -304,6 +307,12 @@ namespace RBX
 		static bool replaceExpr(Luau::AstStatBlock* block, Luau::AstExpr* target,
 			Luau::AstExpr* with)
 		{
+			return replaceExprImpl(block, target, with);
+		}
+
+		static bool replaceExprImpl(Luau::AstStatBlock* block, Luau::AstExpr* target,
+			Luau::AstExpr* with)
+		{
 			for (size_t i = 0; i < block->body.size; ++i)
 			{
 				Luau::AstStat* st = block->body.data[i];
@@ -349,7 +358,7 @@ namespace RBX
 						return true;
 					if (replaceInExpr(f->to, target, with))
 						return true;
-					if (replaceExpr(f->body, target, with))
+					if (replaceExprImpl(f->body, target, with))
 						return true;
 				}
 				else if (Luau::AstStatForIn* fi = st->as<Luau::AstStatForIn>())
@@ -359,12 +368,12 @@ namespace RBX
 						if (replaceInExpr(fi->values.data[j], target, with))
 							return true;
 					}
-					if (replaceExpr(fi->body, target, with))
+					if (replaceExprImpl(fi->body, target, with))
 						return true;
 				}
 				else if (Luau::AstStatRepeat* rp = st->as<Luau::AstStatRepeat>())
 				{
-					if (replaceExpr(rp->body, target, with))
+					if (replaceExprImpl(rp->body, target, with))
 						return true;
 					if (replaceInExpr(rp->condition, target, with))
 						return true;
@@ -400,13 +409,13 @@ namespace RBX
 				{
 					if (replaceInExpr(cond->condition, target, with))
 						return true;
-					if (replaceExpr(cond->thenbody, target, with))
+					if (replaceExprImpl(cond->thenbody, target, with))
 						return true;
 					if (cond->elsebody)
 					{
 						if (Luau::AstStatBlock* eb = cond->elsebody->as<Luau::AstStatBlock>())
 						{
-							if (replaceExpr(eb, target, with))
+							if (replaceExprImpl(eb, target, with))
 								return true;
 						}
 						else if (Luau::AstStatIf* ei = cond->elsebody->as<Luau::AstStatIf>())
@@ -415,7 +424,7 @@ namespace RBX
 							Luau::AstStatBlock tmp(cond->elsebody->location, Luau::AstArray<Luau::AstStat*>());
 							tmp.body.data = &cond->elsebody;
 							tmp.body.size = 1;
-							if (replaceExpr(&tmp, target, with))
+							if (replaceExprImpl(&tmp, target, with))
 								return true;
 						}
 					}
@@ -424,7 +433,7 @@ namespace RBX
 				{
 					if (replaceInExpr(w->condition, target, with))
 						return true;
-					if (replaceExpr(w->body, target, with))
+					if (replaceExprImpl(w->body, target, with))
 						return true;
 				}
 			}
@@ -551,7 +560,7 @@ namespace RBX
 								res.root->body.data[i]->visit(&sub);
 							if (!sub.substTarget || !sub.substWith)
 								break;
-							if (!replaceExpr(res.root, sub.substTarget, sub.substWith))
+							if (!replaceExprImpl(res.root, sub.substTarget, sub.substWith))
 								break;
 							++nsubst;
 						}
