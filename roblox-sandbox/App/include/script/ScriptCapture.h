@@ -87,6 +87,16 @@ namespace RBX
 		TypedValue luaValueTyped(lua_State* L, int idx);
 		TypedValue valueTyped(const Reflection::Variant& v);
 
+		// Records a property write's pre-write value: reads the value at
+		// stack index 3 and stores it keyed by instance+prop for the
+		// matching bridgeGetValue to merge at read time. No emit here;
+		// emission happens at the anchored read.
+		void noteSetValue(lua_State* L, void* instance, const char* prop);
+
+		// Takes a value stored by noteSetValue, removing it. Returns
+		// false when no write was recorded (read of an untouched prop).
+		bool takeSetValue(void* instance, const char* prop, TypedValue& out);
+
 		// Typed value as a FieldVal object {kind, value, truncated} for
 		// machine-readable records. kind/value come straight from the
 		// TypedValue above — never re-parsed from rendered text.

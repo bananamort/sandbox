@@ -12,9 +12,12 @@ namespace RBX
 	namespace ScriptLift
 	{
 		void noteChunk(const std::string& chunk, const std::string& source);
-		void noteConst(const std::string& chunk, int proto, int off, int op,
+		void noteConst(const std::string& chunk, int proto, int off, int line, int op,
 			const std::string& kind, const std::string& value);
 		void noteCoverage(const std::string& chunk, int proto, int exec, int total);
+		// Executed source line for the annotate pass: constant-time lookup
+		// built from coverage bitmaps at reconstruct() time.
+		void noteExecLine(const std::string& chunk, int line);
 
 		// Parses every noted chunk and pretty-prints it to outPath with a
 		// coverage header per chunk. Returns false if any chunk fails to

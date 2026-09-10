@@ -1854,7 +1854,7 @@ RBX::Instance* ScriptDebugger::getScriptForLuaState(lua_State* L)
 
 bool ScriptDebugger::hasDifferentScriptInstances(lua_State* L)
 {
-	// Find the running function's script instance through public API only: through public API only: select
+	// Find the running function's script instance through public API only: select
 	// frame 0, push the running function, read its "script" fenv field
 	// (same source getScriptForLuaState uses), and compare against this
 	// debugger's script. Balanced: getScriptForLuaState leaves the pushed

@@ -753,7 +753,7 @@ LUA_API void rbx_dumpTrace(void* ctx, void (*out)(void*, const char*, int, int, 
 // kind, value, truncated) per const-carrying instruction observed.
 // kind is one of nil/bool/number/string/import/other; value is the
 // resolved payload (dotted path for imports).
-LUA_API void rbx_dumpConsts(void* ctx, void (*out)(void*, const char*, int, int, int, const char*, const char*, int));
+LUA_API void rbx_dumpConsts(void* ctx, void (*out)(void*, const char*, int, int, int, int, const char*, const char*, int));
 // Frame selection for the 3-arg query helpers below. Real port: walks
 // the CallInfo chain in ldebug.cpp (was a no-op stub).
 LUA_API int lua_getstack(lua_State* L, int level, lua_Debug* ar);

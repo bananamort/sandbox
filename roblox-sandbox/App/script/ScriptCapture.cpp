@@ -151,6 +151,54 @@ namespace RBX
 
 		namespace
 		{
+			struct SetKey
+			{
+				void* instance;
+				std::string prop;
+				bool operator<(const SetKey& o) const
+				{
+					if (instance != o.instance)
+						return instance < o.instance;
+					return prop < o.prop;
+				}
+			};
+
+			std::map<SetKey, TypedValue>& setValues()
+			{
+				static std::map<SetKey, TypedValue> map;
+				return map;
+			}
+		}
+
+		void noteSetValue(lua_State* L, void* instance, const char* prop)
+		{
+			if (!instance || !prop)
+				return;
+			RBX::mutex::scoped_lock guard(lock());
+			SetKey key;
+			key.instance = instance;
+			key.prop = prop;
+			setValues()[key] = luaValueTyped(L, 3);
+		}
+
+		bool takeSetValue(void* instance, const char* prop, TypedValue& out)
+		{
+			if (!instance || !prop)
+				return false;
+			RBX::mutex::scoped_lock guard(lock());
+			SetKey key;
+			key.instance = instance;
+			key.prop = prop;
+			std::map<SetKey, TypedValue>::iterator it = setValues().find(key);
+			if (it == setValues().end())
+				return false;
+			out = it->second;
+			setValues().erase(it);
+			return true;
+		}
+
+		namespace
+		{
 			void feedLift(const char* hook, const std::vector<Field>& fields);
 		}
 
@@ -218,6 +266,15 @@ namespace RBX
 
 			void feedLift(const char* hook, const std::vector<Field>& fields)
 			{
+				if (!strcmp(hook, "trace"))
+				{
+					bool ok = true;
+					const char* chunk = fieldStr(fields, "chunk", ok);
+					long long line = fieldInt(fields, "line", ok);
+					if (ok && line > 0)
+						RBX::ScriptLift::noteExecLine(chunk, (int)line);
+					return;
+				}
 				if (!strcmp(hook, "loadSource"))
 				{
 					bool ok = true;
@@ -232,11 +289,12 @@ namespace RBX
 					const char* chunk = fieldStr(fields, "chunk", ok);
 					long long proto = fieldInt(fields, "proto", ok);
 					long long off = fieldInt(fields, "off", ok);
+					long long line = fieldInt(fields, "line", ok);
 					long long op = fieldInt(fields, "op", ok);
 					const char* kind = fieldStr(fields, "kind", ok);
 					const char* value = fieldStr(fields, "value", ok);
 					if (ok)
-						RBX::ScriptLift::noteConst(chunk, (int)proto, (int)off, (int)op, kind, value);
+						RBX::ScriptLift::noteConst(chunk, (int)proto, (int)off, (int)line, (int)op, kind, value);
 				}
 				else if (!strcmp(hook, "coverage"))
 				{
@@ -581,17 +639,18 @@ namespace RBX
 
 		namespace
 		{
-			void constOut(void* ctx, const char* chunk, int linedefined, int op, int off, const char* kind, const char* value, int truncated)
+			void constOut(void* ctx, const char* chunk, int linedefined, int op, int off, int line, const char* kind, const char* value, int truncated)
 			{
 				(void)ctx;
-				char head[128];
-				snprintf(head, sizeof(head), "chunk=%s proto=%d op=%d off=%d %s=",
-					chunk ? chunk : "?", linedefined, op, off, kind ? kind : "?");
+				char head[160];
+				snprintf(head, sizeof(head), "chunk=%s proto=%d op=%d off=%d line=%d %s=",
+					chunk ? chunk : "?", linedefined, op, off, line, kind ? kind : "?");
 				std::vector<Field> fields;
 				fields.push_back({"chunk", FieldVal::str(chunk ? chunk : "?")});
 				fields.push_back({"proto", FieldVal::num(linedefined)});
 				fields.push_back({"op", FieldVal::num(op)});
 				fields.push_back({"off", FieldVal::num(off)});
+				fields.push_back({"line", FieldVal::num(line)});
 				fields.push_back({"kind", FieldVal::str(kind ? kind : "?")});
 				fields.push_back({"value", FieldVal::str(value ? value : "")});
 				fields.push_back({"truncated", FieldVal::boolean(truncated != 0)});

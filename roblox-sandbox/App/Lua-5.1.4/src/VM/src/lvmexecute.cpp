@@ -219,6 +219,7 @@ static volatile LONG64 g_traceNext = 0;
 struct RbxConstRec {
     int32_t proto;
     int32_t off;
+    int32_t line;
     uint8_t op;
     uint8_t kind;      // 0=nil,1=bool,2=number,3=string,4=import,5=other
     uint8_t truncated;
@@ -369,7 +370,7 @@ static void rbxRenderConst(const TValue* o, RbxConstRec* r)
 // constant table. Runs at record time (never at drain: protos may be
 // freed by then). Out-of-range indices record nothing — the instruction
 // itself is already in the trace ring.
-static void rbxConstRecord(Proto* p, int off, uint8_t op, uint32_t w0, uint32_t w1, bool hasAux, int proto)
+static void rbxConstRecord(Proto* p, int off, int line, uint8_t op, uint32_t w0, uint32_t w1, bool hasAux, int proto)
 {
     if (!g_constBuf || !p)
         return;
@@ -397,6 +398,7 @@ static void rbxConstRecord(Proto* p, int off, uint8_t op, uint32_t w0, uint32_t 
         r = &g_constBuf[(size_t)(slot & (kRbxConstSize - 1))];
         r->proto = proto;
         r->off = off;
+        r->line = line;
         r->op = op;
         r->kind = 2;
         r->truncated = 0;
@@ -407,6 +409,7 @@ static void rbxConstRecord(Proto* p, int off, uint8_t op, uint32_t w0, uint32_t 
         r = &g_constBuf[(size_t)(slot & (kRbxConstSize - 1))];
         r->proto = proto;
         r->off = off;
+        r->line = line;
         r->op = op;
         r->kind = 1;
         r->truncated = 0;
@@ -430,6 +433,7 @@ static void rbxConstRecord(Proto* p, int off, uint8_t op, uint32_t w0, uint32_t 
         r = &g_constBuf[(size_t)(slot & (kRbxConstSize - 1))];
         r->proto = proto;
         r->off = off;
+        r->line = line;
         r->op = op;
         r->kind = 4;
         r->truncated = 0;
@@ -518,7 +522,7 @@ static const char* rbxConstKindName(uint8_t kind)
     }
 }
 
-void rbx_dumpConsts(void* ctx, void (*out)(void*, const char*, int, int, int, const char*, const char*, int))
+void rbx_dumpConsts(void* ctx, void (*out)(void*, const char*, int, int, int, int, const char*, const char*, int))
 {
     if (!g_constBuf)
         return;
@@ -533,7 +537,7 @@ void rbx_dumpConsts(void* ctx, void (*out)(void*, const char*, int, int, int, co
         if (r.proto < 0 || (size_t)r.proto >= byIndex.size() || !byIndex[(size_t)r.proto])
             continue;
         const RbxCoverEntry* e = byIndex[(size_t)r.proto];
-        out(ctx, e->chunk.c_str(), e->linedefined, (int)r.op, r.off, rbxConstKindName(r.kind), r.val, r.truncated ? 1 : 0);
+        out(ctx, e->chunk.c_str(), e->linedefined, (int)r.op, r.off, r.line, rbxConstKindName(r.kind), r.val, r.truncated ? 1 : 0);
     }
     LeaveCriticalSection(&rbxCoverLock());
 }
@@ -828,7 +832,7 @@ reentry:
                 bool hasAux = (pc + 1 < tp->code + tp->sizecode);
                 uint32_t w1 = hasAux ? (uint32_t)pc[1] : 0;
                 rbxTraceRecord(op, line, (uint32_t)*pc, w1, tidx);
-                rbxConstRecord(tp, toff, op, (uint32_t)*pc, w1, hasAux, tidx);
+                rbxConstRecord(tp, toff, line, op, (uint32_t)*pc, w1, hasAux, tidx);
             }
         }
 

@@ -100,7 +100,7 @@ def main(path):
     # {kind, value, truncated}, never rendered text
     for rec in records:
         if rec["hook"] == "bridgeGetValue":
-            for k in ("class", "prop", "obj", "value"):
+            for k in ("class", "prop", "obj", "value", "setValue"):
                 if k not in rec:
                     errors.append("bridgeGetValue without key: %s" % k)
                     break
@@ -108,6 +108,9 @@ def main(path):
                 v = rec["value"]
                 if not isinstance(v, dict) or "kind" not in v or "value" not in v:
                     errors.append("bridgeGetValue value not an object")
+                sv = rec.get("setValue")
+                if sv is not None and (not isinstance(sv, dict) or "kind" not in sv or "value" not in sv):
+                    errors.append("bridgeGetValue setValue not an object")
             break
     for rec in records:
         if rec["hook"] == "bridgeSet":
@@ -137,7 +140,7 @@ def main(path):
             break
     for rec in records:
         if rec["hook"] == "const":
-            for k in ("chunk", "proto", "op", "off", "kind", "value"):
+            for k in ("chunk", "proto", "op", "off", "line", "kind", "value"):
                 if k not in rec:
                     errors.append("const without key: %s" % k)
                     break

@@ -368,11 +368,22 @@ namespace RBX { namespace Lua {
 			pushLuaValue(Property(*prop, object.get()), L, securityContext);
 			std::string cls = object->getDescriptor().name.c_str();
 			std::string obj = object->getFullName();
+			RBX::ScriptCapture::TypedValue readTv = RBX::ScriptCapture::luaValueTyped(L, -1);
+			RBX::ScriptCapture::TypedValue setTv;
+			bool hasSet = RBX::ScriptCapture::takeSetValue(object.get(), name, setTv);
 			std::vector<RBX::ScriptCapture::Field> fields;
 			fields.push_back({"class", RBX::ScriptCapture::FieldVal::str(cls)});
 			fields.push_back({"prop", RBX::ScriptCapture::FieldVal::str(name)});
 			fields.push_back({"obj", RBX::ScriptCapture::FieldVal::str(obj)});
 			fields.push_back({"value", RBX::ScriptCapture::luaValueField(L, -1)});
+			if (hasSet)
+			{
+				std::vector<RBX::ScriptCapture::Field> setObj;
+				setObj.push_back({"kind", RBX::ScriptCapture::FieldVal::str(setTv.kind)});
+				setObj.push_back({"value", RBX::ScriptCapture::FieldVal::str(setTv.raw)});
+				setObj.push_back({"truncated", RBX::ScriptCapture::FieldVal::boolean(setTv.truncated)});
+				fields.push_back({"setValue", RBX::ScriptCapture::FieldVal::obj(setObj)});
+			}
 			RBX::ScriptCapture::emitFields("bridgeGetValue",
 				cls + "." + name +
 				" | obj=" + obj +
@@ -994,6 +1005,7 @@ void Bridge< shared_ptr<Instance>, false >::on_newindex(shared_ptr<Instance>& ob
 
 	if (PropertyDescriptor* prop = object->findPropertyDescriptor(name))
 	{
+		RBX::ScriptCapture::noteSetValue(L, object.get(), name);
 		// Special-case the Parent property
 		const PropertyDescriptor& desc = *prop;
 		if (desc==Instance::propParent)
