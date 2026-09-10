@@ -70,6 +70,7 @@ def post(url, action, body, timeout):
     req.add_header("Content-Type", 'text/xml; charset="utf-8"')
     req.add_header("SOAPAction", '"%s"' % action)
     req.add_header("Content-Length", str(len(data)))
+    req.add_header("Connection", "close")
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
             return r.status, r.read().decode("utf-8", "replace")
@@ -81,12 +82,14 @@ def post(url, action, body, timeout):
 
 def cmd_probe(url, deadline):
     t0 = time.time()
+    attempt = 0
     while time.time() - t0 < deadline:
-        status, body = post(url, NS + "HelloWorld", hello_body(), 5)
+        attempt += 1
+        status, body = post(url, NS + "HelloWorld", hello_body(), 10)
         if status == 200 and "Hello World" in body:
-            print("PROBE_OK after %.1fs" % (time.time() - t0))
+            print("PROBE_OK after %.1fs (%d attempts)" % (time.time() - t0, attempt))
             return 0
-        time.sleep(2)
+        time.sleep(5)
     print("PROBE_FAIL: no HelloWorld reply within %ds" % deadline)
     return 1
 
