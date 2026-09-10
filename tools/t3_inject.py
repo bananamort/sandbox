@@ -95,7 +95,7 @@ def cmd_probe(url, deadline):
     return 1
 
 
-def cmd_open(url, job, name, path, logpath):
+def cmd_open(url, job, name, path, logpath, setup_path=None):
     try:
         with open(path, "r", encoding="utf-8") as f:
             source = f.read()
@@ -105,8 +105,19 @@ def cmd_open(url, job, name, path, logpath):
     if not source.strip():
         print("OPEN_FAIL: refusing to inject empty source %s" % path)
         return 1
-    print("opening job %r" % job)
-    status, body = post(url, NS + "OpenJob", open_body(job, name, source), 180)
+    setup_source = None
+    if setup_path:
+        try:
+            with open(setup_path, "r", encoding="utf-8") as f:
+                setup_source = f.read()
+        except OSError as e:
+            print("OPEN_FAIL: cannot read setup %s: %s" % (setup_path, e))
+            return 1
+        if not setup_source.strip():
+            print("OPEN_FAIL: refusing empty setup %s" % setup_path)
+            return 1
+    print("opening job %r with seed script" % job)
+    status, body = post(url, NS + "OpenJob", open_body(job, "t3seed", "return 1"), 180)
     if logpath:
         with open(logpath, "w", encoding="utf-8") as f:
             f.write("http=%r\n%s" % (status, body))
@@ -118,7 +129,29 @@ def cmd_open(url, job, name, path, logpath):
         print("OPEN_FAIL: job open rejected http=%r fault=%s" % (
             status, m.group(1)[:500] if m else body[:500]))
         return 1
-    print("job open; executing chunk %r (%d bytes)" % (name, len(source)))
+    print("job open; executing setup chunk")
+    status, body = post(url, NS + "Execute", exec_body(job, "t3setup", "return 1"), 180)
+    if status is None or status != 200 or "ExecuteResponse" not in body:
+        m = re.search(r"<faultstring>(.*?)</faultstring>", body or "", re.S)
+        print("SETUP_FAIL: seed execute rejected http=%r fault=%s" % (
+            status, m.group(1)[:300] if m else (body or "")[:300]))
+        return 1
+    if setup_source is not None:
+        print("job live; executing setup (%d bytes)" % len(setup_source))
+        status, body = post(url, NS + "Execute",
+                            exec_body(job, "t3setup", setup_source), 180)
+        if logpath:
+            with open(logpath.replace("open-", "setup-", 1)
+                      if "open-" in logpath else logpath + ".setup",
+                      "w", encoding="utf-8") as f:
+                f.write("http=%r\n%s" % (status, body))
+        m = re.search(r"<faultstring>(.*?)</faultstring>", body or "", re.S)
+        if status is None or status != 200 or "ExecuteResponse" not in body or m:
+            print("SETUP_FAIL: setup execute rejected http=%r fault=%s" % (
+                status, m.group(1)[:500] if m else (body or "")[:500]))
+            return 1
+        print("setup ok")
+    print("job live; executing chunk %r (%d bytes)" % (name, len(source)))
     status, body = post(url, NS + "Execute", exec_body(job, name, source), 180)
     if logpath:
         with open(logpath.replace("open-", "exec-", 1) if "open-" in logpath else logpath + ".exec",
@@ -189,6 +222,7 @@ def main(argv):
     ap.add_argument("--job", default="T3")
     ap.add_argument("--name", default="")
     ap.add_argument("--file", default="")
+    ap.add_argument("--setup-file", default="")
     ap.add_argument("--out", default="")
     ap.add_argument("--capture", default="")
     ap.add_argument("--expect-chunk", default="")
@@ -200,7 +234,8 @@ def main(argv):
         if not a.name or not a.file:
             print("OPEN_FAIL: --name and --file required")
             return 1
-        return cmd_open(url, a.job, a.name, a.file, a.out or None)
+        return cmd_open(url, a.job, a.name, a.file, a.out or None,
+                        a.setup_file or None)
     if a.verify:
         if not a.capture or not a.expect_chunk:
             print("T3_VERIFY_FAIL: --capture and --expect-chunk required")

@@ -91,18 +91,21 @@ jobs:
           try {
             python ..\tools\t3_inject.py --port 64990 --probe --deadline 90
             if ($LASTEXITCODE -ne 0) { exit 1 }
-            $job = "T3pair1"
-            python ..\tools\t3_inject.py --port 64990 --open --job $job --name "unobfuscated_1" --file ..\tests\scripts\unobfuscated_1.lua --out open-u1.xml
+            python ..\tools\t3_inject.py --port 64990 --open --job T3setup1 --name "t3setup" --file ..\tests\scripts\t3_setup_pair1.lua --out open-setup1.xml
             if ($LASTEXITCODE -ne 0) { exit 1 }
-            python ..\tools\t3_inject.py --port 64990 --open --job $job --name "obfuscated_1" --file ..\tests\scripts\obfuscated_1.lua --out open-o1.xml
+            python ..\tools\t3_inject.py --port 64990 --open --job T3u1 --name "unobfuscated_1" --file ..\tests\scripts\unobfuscated_1.lua --out open-u1.xml
             if ($LASTEXITCODE -ne 0) { exit 1 }
-            Write-Host "both injected; holding for forced-coverage window"
+            python ..\tools\t3_inject.py --port 64990 --open --job T3o1 --name "obfuscated_1" --file ..\tests\scripts\obfuscated_1.lua --out open-o1.xml
+            if ($LASTEXITCODE -ne 0) { exit 1 }
+            Write-Host "all injected; holding for forced-coverage window"
             Start-Sleep -Seconds 60
           } finally {
             if (-not $rcc.HasExited) { Stop-Process -Id $rcc.Id -Force }
             Pop-Location
           }
           if (-not (Test-Path bin/capture.jsonl)) { Write-Host "::error::no capture.jsonl produced"; exit 1 }
+          python tools/t3_inject.py --verify --capture bin/capture.jsonl --expect-chunk "=t3setup"
+          if ($LASTEXITCODE -ne 0) { exit 1 }
           python tools/t3_inject.py --verify --capture bin/capture.jsonl --expect-chunk "=unobfuscated_1"
           if ($LASTEXITCODE -ne 0) { exit 1 }
           python tools/t3_inject.py --verify --capture bin/capture.jsonl --expect-chunk "=obfuscated_1"
@@ -130,10 +133,9 @@ jobs:
           try {
             python ..\tools\t3_inject.py --port 64991 --probe --deadline 90
             if ($LASTEXITCODE -ne 0) { exit 1 }
-            $job = "T3pair2"
-            python ..\tools\t3_inject.py --port 64991 --open --job $job --name "unobfuscated_2" --file ..\tests\scripts\unobfuscated_2.lua --out open-u2.xml
+            python ..\tools\t3_inject.py --port 64991 --open --job T3u2 --name "unobfuscated_2" --file ..\tests\scripts\unobfuscated_2.lua --out open-u2.xml
             if ($LASTEXITCODE -ne 0) { exit 1 }
-            python ..\tools\t3_inject.py --port 64991 --open --job $job --name "obfuscated_2" --file ..\tests\scripts\obfuscated_2.lua --out open-o2.xml
+            python ..\tools\t3_inject.py --port 64991 --open --job T3o2 --name "obfuscated_2" --file ..\tests\scripts\obfuscated_2.lua --out open-o2.xml
             if ($LASTEXITCODE -ne 0) { exit 1 }
             Write-Host "both injected; holding for forced-coverage window"
             Start-Sleep -Seconds 60
