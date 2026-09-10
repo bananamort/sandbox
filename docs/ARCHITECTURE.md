@@ -6,8 +6,8 @@ A sandbox script-environment logger built from the 2016 Roblox engine source (`r
 
 ## Decisions
 
-**1. Runtime is Wine on Linux executing genuine Win32 binaries.**
-All sandbox control — VM hooks, egress interception, script injection, time control — is implemented in source we recompile; Wine only runs the artifact. Win32 semantics stay intact (SEH, CRT, registry layout, DX9 shader compilation). A native Linux port partially exists in-tree (root `CMakeLists.txt` builds `libroblox.so` including the GLES renderer) but would need new GL-context and platform glue for zero fidelity gain while Wine is available.
+**1. Runtime is genuine Win32 binaries on Windows CI; Wine on Linux is DEFERRED.**
+All sandbox control — VM hooks, egress interception, script injection, time control — is implemented in source we recompile. Validation runs on `windows-latest` runners today (build + smoke + two-sided handshake + capture gate, all green). The Wine-on-Linux plan (prefix, winetricks CRT, Xvfb) is deferred: headless Windows needs no display server (Win32 windows/D3D initialize against the software rasterizer path), WARP/reference rasterizer gives a real consistent D3D stack for renderer-sniffing scripts, and CI already covers everything asked of WS6 so far. Revisit only if interactive long runs, renderer fidelity beyond WARP, or CI quota pressure demands it — as an explicit user decision here first. A native Linux port partially exists in-tree (root `CMakeLists.txt` builds `libroblox.so` including the GLES renderer) but would need new GL-context and platform glue for zero fidelity gain.
 
 **2. Everything targets Win32.**
 Authentic profile, and Lua cannot meaningfully probe bitness (numbers are doubles either way). x64 stays out of scope until forced; if that day comes, core libraries are already x64-proven via the Xbox One (Durango) configurations.
@@ -34,7 +34,7 @@ Replace DirectShow `strmbase.lib` and rebuild zlib/curl from bundled sources onl
 FMOD version is read from `fmod/include/fmod*.h`; the matching win32 `fmod_vc.lib` + `fmod.dll` land in `fmod/win32/lib/`. TBB library names come from the linker inputs of both targets; Intel TBB 4.1 lands in `TBB_4_1/`. `Log/` and `RobloxInstall/` are absent yet tolerated by include paths — touch them only on compiler evidence. Mesa is present, x86.
 
 **10. Builds and tests run only on GitHub Actions. Never locally.**
-`windows-latest` (VS2022/v143 and SDK preinstalled) for MSVC builds; `ubuntu-latest` + Wine + Xvfb jobs join when runtime phases start. Local machines do analysis, prune scripts, solution surgery, and manifest checks — nothing that compiles.
+`windows-latest` (VS2022/v143 and SDK preinstalled) for MSVC builds and all runtime validation (headless; software rasterizer covers the display-less case). Local machines do analysis, prune scripts, solution surgery, and manifest checks — nothing that compiles.
 
 **11. No fallbacks. If a fallback looks necessary, the implementation is wrong; fix the root cause.**
 Forbidden: silent catches, degraded-mode continuations, compatibility shims, heuristic fallbacks. Changing strategy after demonstrated failure (e.g., abandoning v143) is allowed — as an explicit user decision whose replacement clears the same gates with nothing masked.
@@ -82,7 +82,7 @@ Workstreams are numbered by execution order. Gates are pass/fail; link and run g
 - **3 Build enablement**: CI links `ReleaseRcc|Win32` and `Release|Win32` into `RCCService.exe` + `RobloxPlayerBetaRaw.exe`; `RCCService -Console` smoke-runs. CI infrastructure itself may run alongside 2 for signal, but any fix touching engine source waits until the docs covering that area are certified
 - **4 Luau graft**: globals-inventory dump identical before and after; era test corpus compiles and runs under Luau
 - **5 Instrumentation**: hooks emit expected event streams on known-good scripts; parity checklist shows no behavioral delta
-- **6 Wine runtime**: harness runs headless under Xvfb; proxy intercepts all egress
+- **6 Wine runtime**: DEFERRED (see 1) — remaining scope, if ever revived, is Windows headless client validation only (launch `RobloxPlayerBetaRaw.exe` against the local proxy, assert past window creation with no loader-class crash)
 - **7 End-to-end validation**: real obfuscated targets reconstruct; anti-probe suite passes; probes that detect the sandbox are logged as fidelity findings
 
 Order: **1 → 2 → 3 → (4 ∥ 5) → 6 → 7**. No engine source file is modified before its documentation exists and passes review — this applies to every workstream, including conformance fixes during build enablement.
