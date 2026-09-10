@@ -77,7 +77,8 @@ def post(url, action, body, timeout):
     except urllib.error.HTTPError as e:
         return e.code, e.read().decode("utf-8", "replace")
     except Exception as e:
-        return None, "TRANSPORT_FAIL: %r" % e
+        import traceback
+        return None, "TRANSPORT_FAIL: %r\n%s" % (e, traceback.format_exc()[-800:])
 
 
 def cmd_probe(url, deadline):

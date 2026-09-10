@@ -156,6 +156,31 @@ jobs:
           Copy-Item bin/capture.jsonl tests/output/pair2/capture.jsonl
           Copy-Item bin/replay/replay.lua tests/output/pair2/replay.lua
           Write-Host "T3_PAIR2_OK"
+      - name: Diagnose RCCService crash (minidump stack)
+        if: failure()
+        shell: pwsh
+        run: |
+          $logsDir = Join-Path $env:LOCALAPPDATA "Roblox\logs"
+          Write-Host "diag| logs dir: $logsDir"
+          $dumps = @()
+          if (Test-Path $logsDir) {
+            $dumps = Get-ChildItem -Path $logsDir -Recurse -Include *.dmp -ErrorAction SilentlyContinue |
+              Sort-Object LastWriteTime -Descending
+            $dumps | ForEach-Object { Write-Host "diag| dump: $($_.FullName) ($($_.Length) bytes)" }
+          } else { Write-Host "diag| logs dir missing" }
+          $cdb = "C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\cdb.exe"
+          if (-not (Test-Path $cdb)) { Write-Host "diag| cdb not present, skipping stack analysis" }
+          elseif ($dumps.Count -eq 0) { Write-Host "diag| no dumps found" }
+          else {
+            $dump = $dumps[0].FullName
+            Push-Location bin
+            try {
+              $env:_NT_SYMBOL_PATH = "srv*;D:\a\sandbox\sandbox\bin"
+              & "$cdb" -z "$dump" -c "!analyze -v;q" 2>&1 |
+                ForEach-Object { Write-Host "stack| $_" }
+            } catch { Write-Host "diag| cdb failed: $_" }
+            Pop-Location
+          }
       - name: Upload T3 outputs
         if: always()
         uses: actions/upload-artifact@v4
@@ -166,4 +191,15 @@ jobs:
             bin/t3-stdout.log
             bin/t3-stderr.log
             bin/open-*.xml
+            bin/exec-*.xml
+          if-no-files-found: warn
+      - name: Upload crash artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: crash-logs
+          path: |
+            bin/t3-stdout.log
+            bin/t3-stderr.log
+            ${{ env.LOCALAPPDATA }}\Roblox\logs\
           if-no-files-found: warn
