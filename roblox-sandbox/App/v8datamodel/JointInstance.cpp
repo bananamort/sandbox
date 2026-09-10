@@ -261,7 +261,7 @@ void JointInstance::handleWorldChanged()
 void JointInstance::setName(const std::string& value)
 {
 	FASTLOG1(FLog::JointInstanceLifetime, "JointInstance %p named", this);
-	FASTLOGS(FLog::JointInstanceLifetime, "Name: %s", value);
+	FASTLOGS(FLog::JointInstanceLifetime, "Name: %s", value.c_str());
 	Super::setName(value);
 }
 

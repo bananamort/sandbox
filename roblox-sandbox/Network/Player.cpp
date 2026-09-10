@@ -2925,7 +2925,7 @@ void Player::loadChatInfoInternal(weak_ptr<Player> weakPlayer) {
         	RBXASSERT(doc.HasMember(kChat));
         
         	chatFilterTypeString = doc[kChat].GetString();
-        	FASTLOGS(FLog::Network, "loadChatInfoInternal.chatFilterType: %s", chatFilterTypeString);
+        	FASTLOGS(FLog::Network, "loadChatInfoInternal.chatFilterType: %s", chatFilterTypeString.c_str());
 			            
 			Player::ChatFilterType chatFilterType;
 			bool chatFilterTypeValid = false;

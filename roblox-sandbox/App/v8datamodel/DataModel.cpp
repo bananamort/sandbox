@@ -1143,7 +1143,7 @@ struct DataModel::LegacyLock::Implementation : boost::noncopyable
 			if (job->taskType == DataModelJob::Write)
 				writeTransfer.reset(new DataModel::scoped_write_transfer(dataModel));
 
-			FASTLOG2(FLog::LegacyLock, "LegacyLock::Acquired type(%d), job (%s), events (%p)", job->taskType, events.get());
+			FASTLOG2(FLog::LegacyLock, "LegacyLock::Acquired type(%d), job (%p), events (%p)", job->taskType, events.get());
 		}
 		else
 		{

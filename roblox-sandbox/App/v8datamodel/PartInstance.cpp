@@ -479,7 +479,7 @@ void PartInstance::setName(const std::string& value)
 	Super::setName(value);
 
 	FASTLOG1(FLog::PartInstanceLifetime, "PartInstance %p named", this);
-	FASTLOGS(FLog::PartInstanceLifetime, "Name: %s", value);
+	FASTLOGS(FLog::PartInstanceLifetime, "Name: %s", value.c_str());
 
 	if (value == "HumanoidRootPart")
 	{

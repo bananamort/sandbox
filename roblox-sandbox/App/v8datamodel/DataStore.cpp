@@ -120,7 +120,7 @@ namespace RBX {
     
     void DataStore::runResumeFunction(std::string key, boost::function<void(Reflection::Variant)> resumeFunction)
     {
-        FASTLOGS(FLog::DataStore, "Returning fetched value for key %s", key);
+        FASTLOGS(FLog::DataStore, "Returning fetched value for key %s", key.c_str());
         resumeFunction(cachedKeys[key].getVariant());
     }
 
@@ -134,14 +134,14 @@ namespace RBX {
 		if (!checkAccess(key, &errorFunction))
 			return;
 
-		FASTLOGS(FLog::DataStore, "GetAsync on key %s", key);
+		FASTLOGS(FLog::DataStore, "GetAsync on key %s", key.c_str());
 		CachedKeys::iterator it = cachedKeys.find(key);
 
 		Time now = Time::nowFast();
 
 		if (it != cachedKeys.end() && (now - it->second.getTime()).seconds() < DFInt::DataStoreTouchTimeoutInSeconds)
 		{
-			FASTLOGS(FLog::DataStore, "Got cached version, returning %s", it->second.getSerialized());
+			FASTLOGS(FLog::DataStore, "Got cached version, returning %s", it->second.getSerialized().c_str());
 
 			getParentDataStoreService()->reportCachedRequestGet();
 			
@@ -161,11 +161,11 @@ namespace RBX {
 
     void logLongValue(const std::string& value)
     {
-        FASTLOGS(FLog::DataStore, "Value: %s", value);
+        FASTLOGS(FLog::DataStore, "Value: %s", value.c_str());
         if(value.length() > 200)
         {
             std::string tail = value.substr(value.size() - 200);
-            FASTLOGS(FLog::DataStore, "Value end: %s", tail);
+            FASTLOGS(FLog::DataStore, "Value end: %s", tail.c_str());
             FASTLOG1(FLog::DataStore, "Value length: %u", value.length());
         }
     }
@@ -210,7 +210,7 @@ namespace RBX {
 		postData << RBX::Http::urlEncode(v);
 		request.postData = postData.str();
 
-		FASTLOGS(FLog::DataStore, "SetAsync on key: %s", key);
+		FASTLOGS(FLog::DataStore, "SetAsync on key: %s", key.c_str());
 		logLongValue(v);
 		FASTLOG(FLog::DataStore, "Url encoded:");
 		logLongValue(request.postData);
@@ -253,7 +253,7 @@ namespace RBX {
 		if (!checkAccess(key, &errorFunction))
 			return;
 
-		FASTLOGS(FLog::DataStore, "Updating key %s", key);
+		FASTLOGS(FLog::DataStore, "Updating key %s", key.c_str());
 
 		shared_ptr<Lua::WeakFunctionRef> transform = rbx::make_shared<Lua::WeakFunctionRef>(transformFunc);
 
@@ -292,7 +292,7 @@ namespace RBX {
 		shared_ptr<Reflection::Tuple> args = rbx::make_shared<Reflection::Tuple>();
 		args->values.push_back(it->second.getVariant());
 
-		FASTLOGS(FLog::DataStore, "Running transform function, input: %s", it->second.getSerialized());
+		FASTLOGS(FLog::DataStore, "Running transform function, input: %s", it->second.getSerialized().c_str());
 
 		shared_ptr<Reflection::Tuple> result;
 		try 
@@ -349,7 +349,7 @@ namespace RBX {
 		request.requestType = DataStoreService::HttpRequest::RequestType::UPDATE_ASYNC;
 		request.handler = boost::bind(&DataStore::processSetIf, shared_from(this), key, transform, _1, _2, resumeFunction, errorFunction);
 
-		FASTLOGS(FLog::DataStore, "SetIf on key: %s", key);
+		FASTLOGS(FLog::DataStore, "SetIf on key: %s", key.c_str());
 		logLongValue(newValue);
 		FASTLOG(FLog::DataStore, "Url encoded:");
 		logLongValue(request.postData);
@@ -362,7 +362,7 @@ namespace RBX {
 	void DataStore::processSetIf(std::string key, shared_ptr<Lua::WeakFunctionRef> transform, std::string* response, std::exception* exception,  boost::function<void(shared_ptr<const Reflection::Tuple>)> resumeFunction, boost::function<void(std::string)> errorFunction)
 	{
 		if (response)
-			FASTLOGS(FLog::DataStore, "SetIf returned %s", *response);
+			FASTLOGS(FLog::DataStore, "SetIf returned %s", (*response).c_str());
 
 		DataModel::processHttpRequestResponseOnLock(
 			DataModel::get(this),
@@ -430,7 +430,7 @@ namespace RBX {
 	void DataStore::processFetchSingleKey(std::string* response, std::exception* exception, std::string key, bool expectSubKey, 
 		boost::function<void()> callback, boost::function<void(std::string)> errorFunction)
 	{
-		FASTLOGS(FLog::DataStore, "Fetched key %s from the service", key);
+		FASTLOGS(FLog::DataStore, "Fetched key %s from the service", key.c_str());
 		
 		DataModel::processHttpRequestResponseOnLock(
 			DataModel::get(this),
@@ -445,7 +445,7 @@ namespace RBX {
 		std::string status;
 		if (!LuaWebService::parseWebJSONResponseHelper(response.get(), exception.get(), result, status))
 		{
-			FASTLOGS(FLog::DataStore, "Failed to parse: %s", response ? *response : "Null string");
+			FASTLOGS(FLog::DataStore, "Failed to parse: %s", response ? (*response).c_str() : "Null string");
 			errorFunction(status);
 			return;
 		}
@@ -456,7 +456,7 @@ namespace RBX {
 		{
 			const Reflection::Variant errorValue = itError->second;
 			std::string errorMessage = errorValue.isString() ? errorValue.cast<std::string>() : "Failed to retrieve key";
-			FASTLOGS(FLog::DataStore, "Failed, error message: %s", errorMessage);
+			FASTLOGS(FLog::DataStore, "Failed, error message: %s", errorMessage.c_str());
 			errorFunction("Request rejected");
 			return;
 		}
@@ -573,7 +573,7 @@ namespace RBX {
 		if (rawValue.isString())
 		{
 			serializedValue = rawValue.get<std::string>();
-			FASTLOGS(FLog::DataStore, "Updating based on web string for key %s", key);
+			FASTLOGS(FLog::DataStore, "Updating based on web string for key %s", key.c_str());
 			logLongValue(serializedValue);
 			if (!deserializeVariant(serializedValue, value)) {
 				FASTLOG(FLog::DataStore, "Can't decode returned value");
@@ -593,12 +593,12 @@ namespace RBX {
 
 		if (itSignal == onUpdateKeys.end() || itCached == cachedKeys.end())
 		{
-			FASTLOGS(FLog::DataStore, "Key is not cached, can just store it directly: %s", serializedValue);
+			FASTLOGS(FLog::DataStore, "Key is not cached, can just store it directly: %s", serializedValue.c_str());
 			cachedKeys[key].update(value, serializedValue);
 
 			if (itSignal != onUpdateKeys.end())
 			{
-				FASTLOGS(FLog::DataStore, "Triggering callback: %s", serializedValue);
+				FASTLOGS(FLog::DataStore, "Triggering callback: %s", serializedValue.c_str());
 				(*itSignal->second)(value);
 			}
 
@@ -608,7 +608,7 @@ namespace RBX {
 		if (serializedValue == itCached->second.getSerialized())
 			return true;
 
-		FASTLOGS(FLog::DataStore, "Updating value and triggering: %s", serializedValue);
+		FASTLOGS(FLog::DataStore, "Updating value and triggering: %s", serializedValue.c_str());
 
 		itCached->second.update(value, serializedValue);
 		(*itSignal->second)(value);
@@ -722,7 +722,7 @@ namespace RBX {
 		if (!checkAccess(key, NULL))
 			return rbx::signals::connection();
 
-		FASTLOGS(FLog::DataStore, "Subscribed to key %s", key);
+		FASTLOGS(FLog::DataStore, "Subscribed to key %s", key.c_str());
 		shared_ptr<rbx::signal<void(Reflection::Variant) > >& signal = onUpdateKeys[key];
 		if (!signal)
 			signal = rbx::make_shared<rbx::signal<void(Reflection::Variant)> >();
@@ -764,7 +764,7 @@ namespace RBX {
                 
             }
             
-			FASTLOGS(FLog::DataStore, "Initialized Data Store, url: %s", serviceUrl);
+			FASTLOGS(FLog::DataStore, "Initialized Data Store, url: %s", serviceUrl.c_str());
 
 			scopeUrlEncodedIfNeeded = urlEncodeIfNeeded(scope);
 			nameUrlEncodedIfNeeded = urlEncodeIfNeeded(name);
@@ -800,7 +800,7 @@ namespace RBX {
 			const Reflection::Variant errorValue = itError->second;
 			std::string errorMessage = errorValue.isType<std::string>() ? 
 				errorValue.cast<std::string>() : "Failed to retrieve key";
-			FASTLOGS(FLog::DataStore, "Failed, error message: %s", errorMessage);
+			FASTLOGS(FLog::DataStore, "Failed, error message: %s", errorMessage.c_str());
 			return;
 		}
 
@@ -849,7 +849,7 @@ namespace RBX {
 	void DataStore::sendBatchGet(std::stringstream& keysList)
 	{
 		std::string finalKeyList = keysList.str();
-		FASTLOGS(FLog::DataStore, "Fetching keys: %s", finalKeyList);
+		FASTLOGS(FLog::DataStore, "Fetching keys: %s", finalKeyList.c_str());
 		Http http(constructGetUrl());
 		http.additionalHeaders["Cache-Control"] = "no-cache";
 		http.doNotUseCachedResponse = true;
@@ -880,7 +880,7 @@ namespace RBX {
 		int totalOnUpdateKeysFetched = 0;
 
 		if(refetchState == RefetchOnUpdateKeys) {
-			FASTLOGS(FLog::DataStore, "Next key to fetch: %s", nextKeyToRefetch);
+			FASTLOGS(FLog::DataStore, "Next key to fetch: %s", nextKeyToRefetch.c_str());
 			OnUpdateKeys::iterator it = onUpdateKeys.lower_bound(nextKeyToRefetch);
 
 			for(; it != onUpdateKeys.end(); ++it)
@@ -963,7 +963,7 @@ namespace RBX {
 
 		if ((timestamp - it->second) < Time::Interval(60.0 / DFInt::DataStoreSameKeyPerMinute)) 
 		{
-			FASTLOGS(FLog::DataStore, "Key %s throttled, moving over", key);
+			FASTLOGS(FLog::DataStore, "Key %s throttled, moving over", key.c_str());
 			return true;
 		}
 		return false;
@@ -971,7 +971,7 @@ namespace RBX {
 
 	void DataStore::setKeySetTimestamp(const std::string& key, Time timestamp)
 	{
-		FASTLOGS(FLog::DataStore, "Setting key %s timestamp", key);
+		FASTLOGS(FLog::DataStore, "Setting key %s timestamp", key.c_str());
 		FASTLOG1F(FLog::DataStore, "Timestamp: %f ", timestamp.timestampSeconds());
 		lastSetByKey[key] = timestamp;
 	}
@@ -1135,7 +1135,7 @@ namespace RBX {
 			const Reflection::Variant errorValue = itError->second;
 			std::string errorMessage = errorValue.isType<std::string>() ? 
 				errorValue.cast<std::string>() : "Failed to retrieve key";
-			FASTLOGS(FLog::DataStore, "Failed, error message: %s", errorMessage);
+			FASTLOGS(FLog::DataStore, "Failed, error message: %s", errorMessage.c_str());
 			errorFunction("Request rejected");
 			return;
 		}
