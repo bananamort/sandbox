@@ -220,8 +220,87 @@ namespace RBX
 			std::map<int, std::vector<const ConstRec*> >& getByLine;
 		};
 
+		static bool replaceInExpr(Luau::AstExpr*& slot, Luau::AstExpr* target,
+			Luau::AstExpr* with)
+		{
+			if (slot == target)
+			{
+				slot = with;
+				return true;
+			}
+			if (!slot)
+				return false;
+			if (Luau::AstExprGroup* g = slot->as<Luau::AstExprGroup>())
+				return replaceInExpr(g->expr, target, with);
+			else if (Luau::AstExprCall* c = slot->as<Luau::AstExprCall>())
+			{
+				if (replaceInExpr(c->func, target, with))
+					return true;
+				for (size_t i = 0; i < c->args.size; ++i)
+				{
+					if (replaceInExpr(c->args.data[i], target, with))
+						return true;
+				}
+				return false;
+			}
+			else if (Luau::AstExprIndexName* n = slot->as<Luau::AstExprIndexName>())
+				return replaceInExpr(n->expr, target, with);
+			else if (Luau::AstExprIndexExpr* n = slot->as<Luau::AstExprIndexExpr>())
+			{
+				if (replaceInExpr(n->expr, target, with))
+					return true;
+				return replaceInExpr(n->index, target, with);
+			}
+			else if (Luau::AstExprFunction* fn = slot->as<Luau::AstExprFunction>())
+				return replaceExpr(fn->body, target, with);
+			else if (Luau::AstExprTable* tb = slot->as<Luau::AstExprTable>())
+			{
+				for (size_t i = 0; i < tb->items.size; ++i)
+				{
+					if (tb->items.data[i].key && replaceInExpr(tb->items.data[i].key, target, with))
+						return true;
+					if (replaceInExpr(tb->items.data[i].value, target, with))
+						return true;
+				}
+				return false;
+			}
+			else if (Luau::AstExprUnary* u = slot->as<Luau::AstExprUnary>())
+				return replaceInExpr(u->expr, target, with);
+			else if (Luau::AstExprBinary* b = slot->as<Luau::AstExprBinary>())
+			{
+				if (replaceInExpr(b->left, target, with))
+					return true;
+				return replaceInExpr(b->right, target, with);
+			}
+			else if (Luau::AstExprTypeAssertion* ta = slot->as<Luau::AstExprTypeAssertion>())
+				return replaceInExpr(ta->expr, target, with);
+			else if (Luau::AstExprInstantiate* in = slot->as<Luau::AstExprInstantiate>())
+				return replaceInExpr(in->expr, target, with);
+			else if (Luau::AstExprIfElse* ie = slot->as<Luau::AstExprIfElse>())
+			{
+				if (replaceInExpr(ie->condition, target, with))
+					return true;
+				if (replaceInExpr(ie->trueExpr, target, with))
+					return true;
+				return replaceInExpr(ie->falseExpr, target, with);
+			}
+			else if (Luau::AstExprInterpString* is = slot->as<Luau::AstExprInterpString>())
+			{
+				for (size_t i = 0; i < is->expressions.size; ++i)
+				{
+					if (replaceInExpr(is->expressions.data[i], target, with))
+						return true;
+				}
+				return false;
+			}
+			return false;
+		}
+
 		// Replace one expression node inside a block tree by pointer
-		// identity. Returns true when replaced.
+		// identity. Returns true when replaced. Walks every expression
+		// position (statements, calls, tables, functions, if/while,
+		// for/for-in/repeat/return) so a resolved name is substituted
+		// wherever it appears, not just top-level value slots.
 		static bool replaceExpr(Luau::AstStatBlock* block, Luau::AstExpr* target,
 			Luau::AstExpr* with)
 		{
@@ -230,41 +309,97 @@ namespace RBX
 				Luau::AstStat* st = block->body.data[i];
 				if (Luau::AstStatExpr* e = st->as<Luau::AstStatExpr>())
 				{
-					if (e->expr == target)
-					{
-						e->expr = with;
+					if (replaceInExpr(e->expr, target, with))
 						return true;
-					}
 				}
 				else if (Luau::AstStatLocal* l = st->as<Luau::AstStatLocal>())
 				{
 					for (size_t j = 0; j < l->values.size; ++j)
 					{
-						if (l->values.data[j] == target)
-						{
-							l->values.data[j] = with;
+						if (replaceInExpr(l->values.data[j], target, with))
 							return true;
-						}
 					}
 				}
 				else if (Luau::AstStatAssign* a = st->as<Luau::AstStatAssign>())
 				{
+					for (size_t j = 0; j < a->vars.size; ++j)
+					{
+						if (replaceInExpr(a->vars.data[j], target, with))
+							return true;
+					}
 					for (size_t j = 0; j < a->values.size; ++j)
 					{
-						if (a->values.data[j] == target)
-						{
-							a->values.data[j] = with;
+						if (replaceInExpr(a->values.data[j], target, with))
 							return true;
-						}
 					}
+				}
+				else if (Luau::AstStatReturn* r = st->as<Luau::AstStatReturn>())
+				{
+					for (size_t j = 0; j < r->list.size; ++j)
+					{
+						if (replaceInExpr(r->list.data[j], target, with))
+							return true;
+					}
+				}
+				else if (Luau::AstStatFor* f = st->as<Luau::AstStatFor>())
+				{
+					if (replaceInExpr(f->from, target, with))
+						return true;
+					if (f->step && replaceInExpr(f->step, target, with))
+						return true;
+					if (replaceInExpr(f->to, target, with))
+						return true;
+					if (replaceExpr(f->body, target, with))
+						return true;
+				}
+				else if (Luau::AstStatForIn* fi = st->as<Luau::AstStatForIn>())
+				{
+					for (size_t j = 0; j < fi->values.size; ++j)
+					{
+						if (replaceInExpr(fi->values.data[j], target, with))
+							return true;
+					}
+					if (replaceExpr(fi->body, target, with))
+						return true;
+				}
+				else if (Luau::AstStatRepeat* rp = st->as<Luau::AstStatRepeat>())
+				{
+					if (replaceExpr(rp->body, target, with))
+						return true;
+					if (replaceInExpr(rp->condition, target, with))
+						return true;
+				}
+				else if (Luau::AstStatFunction* fn = st->as<Luau::AstStatFunction>())
+				{
+					if (replaceInExpr(fn->name, target, with))
+						return true;
+					Luau::AstExpr* fbody = fn->func;
+					if (replaceInExpr(fbody, target, with))
+					{
+						fn->func = fbody->as<Luau::AstExprFunction>();
+						return true;
+					}
+				}
+				else if (Luau::AstStatLocalFunction* lf = st->as<Luau::AstStatLocalFunction>())
+				{
+					Luau::AstExpr* fbody = lf->func;
+					if (replaceInExpr(fbody, target, with))
+					{
+						lf->func = fbody->as<Luau::AstExprFunction>();
+						return true;
+					}
+				}
+				else if (Luau::AstStatCompoundAssign* ca = st->as<Luau::AstStatCompoundAssign>())
+				{
+					if (replaceInExpr(ca->var, target, with))
+						return true;
+					if (replaceInExpr(ca->value, target, with))
+						return true;
 				}
 				else if (Luau::AstStatIf* cond = st->as<Luau::AstStatIf>())
 				{
-					if (cond->condition == target)
-					{
-						cond->condition = with;
+					if (replaceInExpr(cond->condition, target, with))
 						return true;
-					}
 					if (replaceExpr(cond->thenbody, target, with))
 						return true;
 					if (cond->elsebody)
@@ -287,11 +422,8 @@ namespace RBX
 				}
 				else if (Luau::AstStatWhile* w = st->as<Luau::AstStatWhile>())
 				{
-					if (w->condition == target)
-					{
-						w->condition = with;
+					if (replaceInExpr(w->condition, target, with))
 						return true;
-					}
 					if (replaceExpr(w->body, target, with))
 						return true;
 				}
