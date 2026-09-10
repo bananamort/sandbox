@@ -222,6 +222,8 @@ namespace RBX
 
 		static bool replaceExpr(Luau::AstStatBlock* block, Luau::AstExpr* target,
 			Luau::AstExpr* with);
+		static bool replaceExprImpl(Luau::AstStatBlock* block, Luau::AstExpr* target,
+			Luau::AstExpr* with);
 
 		static bool replaceInExpr(Luau::AstExpr*& slot, Luau::AstExpr* target,
 			Luau::AstExpr* with)
