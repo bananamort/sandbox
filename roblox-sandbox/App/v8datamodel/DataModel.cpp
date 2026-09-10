@@ -804,7 +804,7 @@ static void closeCallbackContinuation(shared_ptr<CEvent> event)
 
 static void errorCallbackContinuation(std::string error, shared_ptr<CEvent> event)
 {
-	FASTLOGS(FLog::CloseDataModel, "Close Callback error - %s", error);
+	FASTLOGS(FLog::CloseDataModel, "Close Callback error - %s", error.c_str());
 	FASTLOG1(FLog::CloseDataModel, "Close callback resets event on error - %p", event.get());
 	event->Set();
 }

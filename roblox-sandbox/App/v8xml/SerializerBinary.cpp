@@ -227,7 +227,7 @@ namespace RBX
 			out.write(&compressed[0], compressedSize);
 		}
 		
-		FASTLOGS(FLog::Serializer, "Stream: %s", stream.name);
+		FASTLOGS(FLog::Serializer, "Stream: %s", stream.name.c_str());
 		FASTLOG2(FLog::Serializer, "%d -> %d", header.size, header.compressedSize);
 	}
 	

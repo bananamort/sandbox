@@ -1027,7 +1027,7 @@ PluginReceiveResult ServerReplicator::OnReceive(Packet *packet) {
 			RakNet::BitStream inBitstream(packet->data, packet->length, false);
 			inBitstream.IgnoreBits(8); // Ignore the packet id
 			deserializeStringCompressed(initialSpawnName, inBitstream);
-			FASTLOGS(DFLog::NetworkJoin, "initialSpawnName: %s", initialSpawnName);
+			FASTLOGS(DFLog::NetworkJoin, "initialSpawnName: %s", initialSpawnName.c_str());
 		}
 		return RR_STOP_PROCESSING_AND_DEALLOCATE;
 

@@ -3350,7 +3350,7 @@ ScriptContext::Result ScriptContext::resume(ThreadRef thread, int narg)
 
 		FASTLOG1(FLog::ScriptContext, "Resuming script: %p", script.get());
 		if(script.get())
-			FASTLOGS(FLog::ScriptContext, "Pending script name: %s", script->getName());
+			FASTLOGS(FLog::ScriptContext, "Pending script name: %s", script->getName().c_str());
 
         if (FLog::LuaProfiler && !LuaProfiler::instance)
         {

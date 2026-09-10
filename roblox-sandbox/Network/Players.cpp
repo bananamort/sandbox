@@ -1368,8 +1368,8 @@ void Players::setSysHash(std::string hash)
 		goldenHash = hash;
 	}
 
-	FASTLOGS(FLog::GoldenHashes, "Hashses set through script, Windows hash: %s", goldenHash);
-	FASTLOGS(FLog::GoldenHashes, "Mac hash: %s", goldenHash2);
+	FASTLOGS(FLog::GoldenHashes, "Hashses set through script, Windows hash: %s", goldenHash.c_str());
+	FASTLOGS(FLog::GoldenHashes, "Mac hash: %s", goldenHash2.c_str());
 }
 
 void Players::setSysStatsUrl(std::string value)
@@ -1392,9 +1392,9 @@ void Players::setGoldenHashes(const std::string& windowsHash, const std::string&
 		canKickBecauseRunningInRealGameServer = true;
 
 	FASTLOG1(FLog::GoldenHashes, "Golden hashes set, should kick: %u", canKickBecauseRunningInRealGameServer);
-	FASTLOGS(FLog::GoldenHashes, "Windows hash: %s", goldenHash);
-	FASTLOGS(FLog::GoldenHashes, "Mac hash: %s", goldenHash2);
-	FASTLOGS(FLog::GoldenHashes, "WP Beta: %s ", goldenHash3);
+	FASTLOGS(FLog::GoldenHashes, "Windows hash: %s", goldenHash.c_str());
+	FASTLOGS(FLog::GoldenHashes, "Mac hash: %s", goldenHash2.c_str());
+	FASTLOGS(FLog::GoldenHashes, "WP Beta: %s ", goldenHash3.c_str());
 }
 
 void Players::setGoldenHashes2(const std::set<std::string>& hashes)
@@ -1409,7 +1409,7 @@ void Players::setGoldenHashes2(const std::set<std::string>& hashes)
 
 	for (std::set<std::string>::iterator i = goldenHashes.begin(); i != goldenHashes.end(); i++)
 	{
-		FASTLOGS(FLog::GoldenHashes, "hash: %s", *i);
+		FASTLOGS(FLog::GoldenHashes, "hash: %s", (*i).c_str());
 	}
 }
 
@@ -1988,7 +1988,7 @@ bool Players::hashMatches(const std::string& hash)
 		return true;
 	}
 
-	FASTLOGS(FLog::GoldenHashes, "Checking hash: %s", hash);
+	FASTLOGS(FLog::GoldenHashes, "Checking hash: %s", hash.c_str());
 
 	boost::mutex::scoped_lock lock(goldenHashesMutex);
 	if (goldenHashes.find(hash) != goldenHashes.end())

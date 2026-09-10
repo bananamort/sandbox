@@ -120,7 +120,7 @@ TaskScheduler::Job::~Job()
 	}
 
 	FASTLOG1(FLog::TaskSchedulerInit, "Job Destroyed - this(%p)", this);
-	FASTLOGS(FLog::TaskSchedulerInit, "JobName(%s)", name);
+	FASTLOGS(FLog::TaskSchedulerInit, "JobName(%s)", name.c_str());
 }
 
 // Use this to generate the error function if you just want to try to track the desiredHz

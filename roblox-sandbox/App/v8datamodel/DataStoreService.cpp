@@ -297,7 +297,7 @@ namespace RBX {
 			DataStores::iterator it = orderedDataStores.find(key);
 			if(it == orderedDataStores.end())
 			{
-				FASTLOGS(FLog::DataStore, "Creating data store, name: %s", name);
+				FASTLOGS(FLog::DataStore, "Creating data store, name: %s", name.c_str());
 				shared_ptr<DataStore> ds = Creatable<Instance>::create<OrderedDataStore>(name, scope);
 				ds->setName(name);
 				ds->setParent(this);
@@ -313,7 +313,7 @@ namespace RBX {
 			DataStores::iterator it = dataStores.find(key);
 			if(it == dataStores.end())
 			{
-				FASTLOGS(FLog::DataStore, "Creating data store, name: %s", name);
+				FASTLOGS(FLog::DataStore, "Creating data store, name: %s", name.c_str());
 				shared_ptr<DataStore> ds = Creatable<Instance>::create<DataStore>(name, scope, false);
 				ds->setName(name);
 				ds->setParent(this);
