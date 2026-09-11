@@ -12,6 +12,7 @@ detail text):
   - every load with bytes>0 has a loadSource with matching chunk and
     non-empty source text
   - every bridgeGetValue carries class/prop/obj/value keys
+  - (setValue only on reads following an observed write)
   - every resumeEnter/resumeExit carries nargs/result keys
   - every signalConnect event has a matching signalFire or forcedFire
   - at least one coverage record shows exec>0
@@ -97,10 +98,12 @@ def main(path):
             elif not sources[chunk].strip():
                 errors.append("empty source: %s" % chunk)
     # operand payloads present as typed keys; values are objects
-    # {kind, value, truncated}, never rendered text
+    # {kind, value, truncated}, never rendered text. setValue rides
+    # only on reads that follow an observed write (anchored at the
+    # read); plain reads carry no setValue key.
     for rec in records:
         if rec["hook"] == "bridgeGetValue":
-            for k in ("class", "prop", "obj", "value", "setValue"):
+            for k in ("class", "prop", "obj", "value"):
                 if k not in rec:
                     errors.append("bridgeGetValue without key: %s" % k)
                     break
