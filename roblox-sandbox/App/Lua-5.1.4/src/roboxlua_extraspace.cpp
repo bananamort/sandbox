@@ -64,6 +64,7 @@ void onNewState(lua_State* L) {
     es->yieldCaptured = 0;
     es->script.reset();
     es->continuations = nullptr;
+    es->threadNode = nullptr;
     es->scriptContext = nullptr;
     es->parent = nullptr;
     es->legacyShared = nullptr;
@@ -90,6 +91,8 @@ void onCloseState(lua_State* L) {
     if (es) {
         rbx_deleteContinuations(es->continuations);
         es->continuations = nullptr;
+        rbx_freeThreadNode(es->threadNode);
+        es->threadNode = nullptr;
         for (auto* child : es->children) {
             if (child) child->parent = nullptr;
         }
@@ -107,6 +110,7 @@ void onNewThread(lua_State* L, lua_State* parent) {
     es->yieldCaptured = 0;
     es->script = parent_es ? parent_es->script : boost::weak_ptr<RBX::BaseScript>();
     es->continuations = nullptr;
+    es->threadNode = nullptr;
     es->scriptContext = parent_es ? parent_es->scriptContext : nullptr;
     es->ckey = parent_es ? parent_es->ckey : 0;
     es->modKey = parent_es ? parent_es->modKey : 0;
@@ -133,6 +137,8 @@ void onFreeThread(lua_State* L) {
     if (es) {
         rbx_deleteContinuations(es->continuations);
         es->continuations = nullptr;
+        rbx_freeThreadNode(es->threadNode);
+        es->threadNode = nullptr;
         if (es->parent) {
             auto& psib = es->parent->children;
             psib.erase(std::remove(psib.begin(), psib.end(), es), psib.end());

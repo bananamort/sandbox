@@ -54,10 +54,15 @@ struct RobloxExtraSpace {
     // rbx_deleteContinuations (defined where the full type is visible)
     // from onFreeThread/onCloseState.
     RBX::Lua::Continuations* continuations;
-    // node: 2016 stored boost::intrusive_ptr<WeakThreadRef::Node> here for
-    // GC keep-alive. We use std::set in the .cpp instead, so the Node
-    // field is not present in our side-table (avoids pulling the
-    // engine's script/ThreadRef.h into the vendored Luau adapter).
+    // threadNode: one real WeakThreadRef::Node per thread, owned by the
+    // entry (freed with it). Stored as void* because Node's type lives
+    // in the engine's script/ThreadRef.h, which this adapter must not
+    // include. Created on demand by WeakThreadRef::Node::create,
+    // destroyed by rbx_freeThreadNode (both engine-side, full type).
+    // Never the entry pointer itself: Node's intrusive list head
+    // (`first`) is written through this pointer, so aliasing the
+    // entry clobbers the script weak_ptr beside it.
+    void* threadNode;
     RBX::ScriptContext* scriptContext;
     RobloxExtraSpace* parent;
     std::vector<RobloxExtraSpace*> children;
@@ -94,6 +99,9 @@ struct RobloxExtraSpace {
     // call sites compile.
     void createNewNode();
     void getNode(void** outNode) const;  // returns typed pointer
+    // Destroys the per-thread Node (engine-side; needs the full Node
+    // type). Called from onFreeThread/onCloseState before the entry
+    // itself is deleted. The Node destructor drops every member ref.
     template <typename Func>
     void forEachThread(Func func) {
         RobloxExtraSpaceImpl::ExtraSpacesGuard guard;
@@ -135,6 +143,10 @@ namespace RobloxExtraSpaceImpl {
 // Defined where RBX::Lua::Continuations is complete (ScriptContext.cpp).
 // Lets the adapter free continuations without seeing the full type.
 void rbx_deleteContinuations(RBX::Lua::Continuations* p);
+
+// Defined engine-side (ThreadRef.cpp, full Node type). Destroys the
+// per-thread Node: its destructor drops every member WeakThreadRef.
+void rbx_freeThreadNode(void* node);
 
 inline void setRobloxExtraSpaceContext(lua_State* L, RBX::ScriptContext* ctx) {
     if (auto* es = RobloxExtraSpace::get(L)) es->scriptContext = ctx;

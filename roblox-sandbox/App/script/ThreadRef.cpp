@@ -144,26 +144,40 @@ const char* Bridge<boost::intrusive_ptr<WeakThreadRef::Node> >::className = "Wea
 boost::intrusive_ptr<WeakThreadRef::Node> WeakThreadRef::Node::create(lua_State* thread)
 {
 	RobloxExtraSpace* space = RobloxExtraSpace::get(thread);
-
-	space->createNewNode();
-
-	void* node = NULL;
-	space->getNode(&node);
-	FASTLOG1(FLog::WeakThreadRef, "WeakThreadRef::Node::create node %p", node);
-
-	// WS4-C7: getNode returns a per-thread sentinel (RobloxExtraSpace*);
-	// cast through void* to intrusive_ptr<WeakThreadRef::Node> is
-	// invalid because Node is a distinct type. Use a fresh Node
-	// instead so intrusive_ptr holds a real ref-counted object.
+	if (!space)
+		return boost::intrusive_ptr<WeakThreadRef::Node>();
+	if (!space->threadNode)
+	{
+		// One real Node per thread, owned by the side-table entry.
+		// The standing reference is detached: it never drops until
+		// rbx_freeThreadNode releases it at entry teardown, so the
+		// returned temporary (and every WeakThreadRef link) borrows
+		// safely. Aliasing the entry itself is forbidden: Node's
+		// intrusive list head is written through this pointer and
+		// would clobber the adjacent script weak_ptr.
+		boost::intrusive_ptr<WeakThreadRef::Node> standing(new WeakThreadRef::Node());
+		space->threadNode = standing.detach();
+	}
+	FASTLOG1(FLog::WeakThreadRef, "WeakThreadRef::Node::create node %p", space->threadNode);
 	return boost::intrusive_ptr<WeakThreadRef::Node>(
-		new WeakThreadRef::Node(), false);
+		static_cast<WeakThreadRef::Node*>(space->threadNode));
 }
 
 WeakThreadRef::Node* WeakThreadRef::Node::get(lua_State* thread)
 {
-	void* node = NULL;
-	RobloxExtraSpace::get(thread)->getNode(&node);
-	return reinterpret_cast<WeakThreadRef::Node*>(node);
+	RobloxExtraSpace* space = RobloxExtraSpace::get(thread);
+	if (!space)
+		return NULL;
+	return static_cast<WeakThreadRef::Node*>(space->threadNode);
+}
+
+void rbx_freeThreadNode(void* node)
+{
+	// Releases the standing reference held since create: the Node
+	// destructor drops every member WeakThreadRef first.
+	WeakThreadRef::Node* n = static_cast<WeakThreadRef::Node*>(node);
+	if (n)
+		boost::intrusive_ptr_release(n);
 }
 
 namespace RBX
