@@ -190,6 +190,9 @@ jobs:
           name: t3-output
           path: |
             tests/output/
+            bin/capture.jsonl
+            bin/reconstruction.lua
+            bin/reconstruction.md
             bin/t3-stdout.log
             bin/t3-stderr.log
             bin/open-*.xml
